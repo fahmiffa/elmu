@@ -1,7 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
 use App\Models\Unit;
+use App\Models\UnitKelas;
 use Illuminate\Http\Request;
 
 class UnitController extends Controller
@@ -11,14 +13,15 @@ class UnitController extends Controller
      */
     public function index()
     {
-        $items = Unit::all();
+        $items = Unit::with('kelas.kelasName')->latest()->get();
         return view('unit.index', compact('items'));
     }
 
     public function create()
     {
         $action = "Tambah Unit";
-        return view('unit.form', compact('action'));
+        $kelas  = Kelas::latest()->get();
+        return view('unit.form', compact('action', 'kelas'));
     }
 
     /**
@@ -45,6 +48,14 @@ class UnitController extends Controller
         $item->addr = $request->addr;
         $item->save();
 
+        $kelas = $request->kelas;
+        for ($i = 0; $i < count($kelas); $i++) {
+            $kelas           = new UnitKelas;
+            $kelas->kelas_id = $kelas[$i];
+            $kelas->unit_id  = $item->id;
+            $kelas->save();
+        }
+
         return redirect()->route('dashboard.master.unit.index');
     }
 
@@ -59,7 +70,8 @@ class UnitController extends Controller
     {
         $items  = $unit;
         $action = "Edit Unit";
-        return view('unit.form', compact('items', 'action'));
+        $kelas  = Kelas::latest()->get();
+        return view('unit.form', compact('items', 'action', 'kelas'));
     }
 
     /**
@@ -85,6 +97,17 @@ class UnitController extends Controller
         $item->hp   = $request->hp;
         $item->addr = $request->addr;
         $item->save();
+
+        $kelas = $request->kelas;
+        if (count($kelas) > 0) {
+            UnitKelas::where('unit_id', $item->id)->delete();
+        }
+        for ($i = 0; $i < count($kelas); $i++) {
+            $kelasUnit           = new UnitKelas;
+            $kelasUnit->kelas_id = $kelas[$i];
+            $kelasUnit->unit_id  = $item->id;
+            $kelasUnit->save();
+        }
 
         return redirect()->route('dashboard.master.unit.index');
     }

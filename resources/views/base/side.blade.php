@@ -2,21 +2,6 @@
     <aside class="bg-white rounded-lg shadow-md overflow-hidden hidden md:block">
         <div class="bg-orange-600 text-white px-4 py-2 font-bold">MENU</div>
         <ul>
-            <a href="{{ route('dashboard.master.unit.index') }}">
-                <li
-                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.unit.*') ? 'bg-gray-100' : null }}">
-                    <span class="text-orange-500 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-layout-grid-icon lucide-layout-grid">
-                            <rect width="7" height="7" x="3" y="3" rx="1" />
-                            <rect width="7" height="7" x="14" y="3" rx="1" />
-                            <rect width="7" height="7" x="14" y="14" rx="1" />
-                            <rect width="7" height="7" x="3" y="14" rx="1" />
-                        </svg></span> Unit
-
-                </li>
-            </a>
             <a href="{{ route('dashboard.master.kelas.index') }}">
                 <li
                     class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.kelas.*') ? 'bg-gray-100' : null }}">
@@ -37,8 +22,24 @@
                     </span> Kelas
                 </li>
             </a>
-            <a href="{{route('dashboard.master.student.index')}}">
-                <li class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-gray-100' : null }}">
+            <a href="{{ route('dashboard.master.unit.index') }}">
+                <li
+                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.unit.*') ? 'bg-gray-100' : null }}">
+                    <span class="text-orange-500 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                            height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-layout-grid-icon lucide-layout-grid">
+                            <rect width="7" height="7" x="3" y="3" rx="1" />
+                            <rect width="7" height="7" x="14" y="3" rx="1" />
+                            <rect width="7" height="7" x="14" y="14" rx="1" />
+                            <rect width="7" height="7" x="3" y="14" rx="1" />
+                        </svg></span> Unit
+
+                </li>
+            </a>
+            <a href="{{ route('dashboard.master.student.index') }}">
+                <li
+                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-gray-100' : null }}">
                     <span class="text-orange-500 mr-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -51,7 +52,7 @@
                     Murid
                 </li>
             </a>
-            <a href="{{ route('dashboard.master.teach.index') }}"">
+            <a href="{{ route('dashboard.master.teach.index') }}">
                 <li
                     class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.teach.*') ? 'bg-gray-100' : null }}">
                     <span class="text-orange-500 mr-2">
@@ -65,6 +66,19 @@
                             <circle cx="8" cy="11" r="2" />
                         </svg></span>
                     Guru
+                </li>
+            </a>
+            <a href="{{ route('dashboard.master.payment.index') }}">
+                <li
+                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer  {{ Route::is('dashboard.master.payment.*') ? 'bg-gray-100' : null }}">
+                    <span class="text-orange-500 mr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" class="lucide lucide-credit-card-icon lucide-credit-card">
+                            <rect width="20" height="14" x="2" y="5" rx="2" />
+                            <line x1="2" x2="22" y1="10" y2="10" />
+                        </svg></span>
+                    Payment/Kontrak
                 </li>
             </a>
             <a href="{{ route('dashboard.master.program.index') }}">
@@ -82,32 +96,36 @@
                     Program/Paket
                 </li>
             </a>
-            <a href="{{ route('dashboard.master.payment.index') }}">
+            <a href="{{ route('dashboard.master.user') }}">
                 <li
-                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer  {{ Route::is('dashboard.master.payment.*') ? 'bg-gray-100' : null }}">
+                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.user') ? 'bg-gray-100' : null }}">
                     <span class="text-orange-500 mr-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="lucide lucide-credit-card-icon lucide-credit-card">
-                            <rect width="20" height="14" x="2" y="5" rx="2" />
-                            <line x1="2" x2="22" y1="10" y2="10" />
+                            stroke-linejoin="round" class="lucide lucide-users-icon lucide-users">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <circle cx="9" cy="7" r="4" />
                         </svg></span>
-                    Payment/Kontrak
+                    Akun
                 </li>
             </a>
-
-            <li class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer">
-                <span class="text-orange-500 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" class="lucide lucide-users-icon lucide-users">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <path d="M16 3.128a4 4 0 0 1 0 7.744" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <circle cx="9" cy="7" r="4" />
-                    </svg></span>
-                Akun
-            </li>
+            <a href="{{ route('dashboard.master.layanan.index') }}">
+                <li
+                    class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.layanan.*') ? 'bg-gray-100' : null }}">
+                    <span class="text-orange-500 mr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" class="lucide lucide-copy-plus-icon lucide-copy-plus">
+                            <line x1="15" x2="15" y1="12" y2="18" />
+                            <line x1="12" x2="18" y1="15" y2="15" />
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg></span>
+                    Layanan
+                </li>
+            </a>
         </ul>
     </aside>
 @else

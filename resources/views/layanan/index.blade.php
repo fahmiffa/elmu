@@ -7,7 +7,7 @@
             <input type="text" x-model="search" placeholder="Cari Nama"
                 class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
-            <a href="{{ route('dashboard.master.teach.create') }}"
+            <a href="{{ route('dashboard.master.layanan.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
             </a>
@@ -19,11 +19,9 @@
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Umur</th>
-                        <th class="px-4 py-2">HP</th>
-                        <th class="px-4 py-2">Pendiikan</th>
-                        <th class="px-4 py-2">Alamat</th>
+                        <th class="cursor-pointer px-4 py-2">Deskripsi</th>
+                        <th class="cursor-pointer px-4 py-2">Gambar</th>
+                        <th class="cursor-pointer px-4 py-2">Harga</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -32,18 +30,16 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
-                            <td class="px-4 py-2 items-center">
+                            <td class="px-4 py-2" x-text="row.des"></td>
+                            <td class="px-4 py-2">
                                 <div class="w-14 h-14 overflow-hidden">
                                     <img :src="'/storage/' + row.img" :alt="row.name" class="w-full object-cover" />
                                 </div>
                             </td>
-                            <td class="px-4 py-2 text-center" x-text="row.age"></td>
-                            <td class="px-4 py-2" x-text="row.hp"></td>
-                             <td class="px-4 py-2" x-text="row.study"></td>
-                            <td class="px-4 py-2" x-text="row.addr"></td>
+                            <td class="px-4 py-2" x-text="formatNumber(row.price.harga)"></td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
-                                    <a :href="'/dashboard/master/teach/' + row.id + '/edit'"
+                                    <a :href="'/dashboard/master/layanan/' + row.id + '/edit'"
                                         class="text-orange-600 hover:text-orange-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -54,8 +50,8 @@
                                             <path d="m15 5 4 4" />
                                         </svg>
                                     </a>
-    
-                                    <form :action="'/dashboard/master/teach/' + row.id" method="POST"
+
+                                    <form :action="'/dashboard/master/layanan/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf
                                         @method('DELETE')

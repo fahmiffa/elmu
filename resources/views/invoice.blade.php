@@ -71,15 +71,15 @@
         </tr>
         <tr>
             <td style="border: none" width="30%">Alamat</td>
-            <td style="border:none">: {{ $items->reg->murid->alamat_sekolah }}</td>
+            <td style="border:none">: {{ $items->reg->murid->alamat }}</td>
         </tr>
         <tr>
             <td style="border: none">Kelas</td>
-            <td style="border:none">: {{ $items->reg->class->name }}</td>
+            <td style="border:none">: {{ $items->reg->product->class->name }}</td>
         </tr>
         <tr>
             <td style="border: none">Program Belajar</td>
-            <td style="border:none">: {{ $items->reg->paket->name }}</td>
+            <td style="border:none">: {{ $items->reg->product->program->name }}</td>
         </tr>
         <tr>
             <td style="border: none">Jenis Pembayaran</td>
@@ -97,7 +97,7 @@
         </tr>
         <tr>
             <td style="border: none" width="30%">Nominal</td>
-            <td style="border:none">: {{ number_format($items->reg->paket->price, 0, ',', '.') }}</td>
+            <td style="border:none">: {{ number_format($items->reg->product->harga, 0, ',', '.') }}</td>
         </tr>
         <tr>
             <td style="border: none" width="30%">Jatuh Tempo</td>

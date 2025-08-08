@@ -9,8 +9,42 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
+
+    protected $appends = ['state', 'roles'];
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    public function getstateAttribute()
+    {
+        return $this->status == 0 ? 'TIdak Aktif' : 'Aktif';
+    }
+
+    public function getrolesAttribute()
+    {
+        if ($this->role == 0) {
+            return "Admin";
+        }
+
+        if ($this->role == 3) {
+            return "Guru";
+        }
+
+        if ($this->role == 2) {
+            return "User";
+        }
+    }
+
+    public function data()
+    {
+        if($this->role == 3)
+        {
+            return $this->hasOne(Teach::class, 'account', 'id');
+        }
+        else
+        {
+            return null;
+        }
+    }
 
     /**
      * The attributes that are mass assignable.

@@ -1,13 +1,13 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Program extends Model
+class Addon extends Model
 {
-
     public function price()
     {
-        return $this->hasMany(Price::class, 'product', 'id');
+        return $this->belongsTo(Price::class, 'id', 'product')->whereNull('kelas');
     }
 }

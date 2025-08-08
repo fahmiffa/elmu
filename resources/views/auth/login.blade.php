@@ -2,20 +2,11 @@
 @section('title', 'Login')
 @section('content')
     <div class="min-h-screen flex items-center justify-center">
-        <div
-            class="relative bg-[#FF4F00] p-8 shadow-md md:w-full max-w-md rounded-bl-lg rounded-tl-lg h-100 hidden md:block">
-            <img src="{{ asset('logo.png') }}" class="w-50">
-            <div class="h-45"></div>
-            <div class="text-white text-xs flex-col">
-                <div class="font-semibold">PT MUMTAZ CERIA EDUKASI</div>
-                <div class="font-light">Jl. Saditan Baru, Saditan, Brebes, Kec. Brebes, Kabupaten Brebes, Jawa
-                    Tengah 52212 (Gg. Flamboyan RT 06/RW 05, Kel. Brebes)
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-8 shadow-md md:w-full max-w-md rounded-lg md:rounded-br-lg md:rounded-tr-lg h-100">
+        <div class="bg-white p-8 shadow-md md:w-full max-w-md rounded-lg md:mx-0 mx-5">
+            <img src="https://murikaceria.co.id/v2/wp-content/uploads/2024/01/LogoTypeOrange.svg" class="w-48 object-contain mx-auto"
+                alt="Logo Murika">
             <div class="flex my-3">
-                <div class="text-xl md:text-2xl font-bold text-orange-600">Login</div>
+                <div class="text-sm md:text-2xl font-bold text-orange-600">Login</div>
             </div>
             <form method="POST" action="{{ route('login') }}">
                 @csrf
@@ -77,6 +68,12 @@
                     </button>
                 </div>
             </form>
+            <div class="text-xs flex-col mt-8">
+                <div class="font-semibold">PT MUMTAZ CERIA EDUKASI</div>
+                <div class="font-semibold">Jl. Saditan Baru, Saditan, Brebes, Kec. Brebes, Kabupaten Brebes, Jawa
+                    Tengah 52212 (Gg. Flamboyan RT 06/RW 05, Kel. Brebes)
+                </div>
+            </div>
         </div>
     </div>
 @endsection

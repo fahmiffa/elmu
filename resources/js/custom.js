@@ -1,8 +1,12 @@
+import md5 from "blueimp-md5";
+
 export const layout = () => {
     return {
         sidebarOpen: true,
+         modal: null,
         init() {
             this.sidebarOpen = localStorage.getItem("sidebarOpen") === "true";
+             this.modal = this.modalHandler(); 
         },
         toggleSidebar() {
             this.sidebarOpen = !this.sidebarOpen;
@@ -18,10 +22,27 @@ export const layout = () => {
                 this.sidebarOpen = false;
             }
         },
+        md5Component(da) {
+            return md5(da);
+        },
+        modalHandler() {
+            return {
+                activeModal: null,
+                openModal(id) {
+                    this.activeModal = id;
+                    document.body.classList.add("overflow-hidden");
+                },
+                closeModal() {
+                    this.activeModal = null;
+                    document.body.classList.remove("overflow-hidden");
+                },
+            };
+        },
     };
 };
 
 export const dataTable = (data) => {
+    console.log(data);
     return {
         search: "",
         sortColumn: "name",
@@ -87,16 +108,21 @@ export const dataTable = (data) => {
                 e.target.submit();
             }
         },
+        formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
     };
 };
 
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
+
 export function dropdownSelect() {
     return {
         init() {
             new TomSelect(this.$el, {
-                placeholder: "Pilih opsi",
+                plugins: ["remove_button"],
+                placeholder: "Pilih Item",
             });
         },
     };
@@ -161,6 +187,30 @@ export function generateBill() {
                         }
                     });
             }, 1000);
+        },
+    };
+}
+
+export function reg(kelas, program, unit) {
+    const val = kelas.map((e) => ({ value: e.id, label: e.name }));
+    return {
+        selectedKelas: "",
+        optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
+        selectedProgram: "",
+        selectedUnit: "",
+        get filteredPrograms() {
+            if (!this.selectedKelas)
+                return [{ value: "", label: "Pilih Program" }];
+            return program
+                .filter((p) => p.kelas == Number(this.selectedKelas))
+                .map((e) => ({ value: e.id, label: e.program.name }));
+        },
+        get filteredUnits() {
+            if (!this.selectedKelas)
+                return [{ value: "", label: "Pilih Unit" }];
+            return unit
+                .filter((p) => p.kelas_id == Number(this.selectedKelas))
+                .map((e) => ({ value: e.unit.id, label: e.unit.name }));
         },
     };
 }

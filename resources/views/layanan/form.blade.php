@@ -4,10 +4,10 @@
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
         <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
         @isset($items)
-            <form method="POST" action="{{ route('dashboard.master.unit.update', $items->id) }}">
+            <form method="POST" action="{{ route('dashboard.master.layanan.update', ['layanan' => $items->id]) }}"  enctype="multipart/form-data">
                 @method('PUT')
             @else
-                <form method="POST" action="{{ route('dashboard.master.unit.store') }}">
+                <form method="POST" action="{{ route('dashboard.master.layanan.store') }}"  enctype="multipart/form-data">
                 @endisset
                 @csrf
                 <div class="grid grid-cols-2 gap-2">
@@ -21,46 +21,42 @@
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor HP</label>
-                        <input type="number" name="hp" value="{{ old('hp', $items->hp ?? '') }}"
-                            class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                        @error('hp')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
+
+                    <div class="mb-4" x-data="{ imagePreview: null }">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Photo</label>
+                        <input type="file" name="image" accept="image/*"
+                            @change="let file = $event.target.files[0]; imagePreview = URL.createObjectURL(file)"
+                            class="block w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0
+                       file:text-sm file:font-semibold file:bg-blue-50 file:text-orange-700 
+                       hover:file:bg-blue-100 cursor-pointer" />
+                        <template x-if="imagePreview">
+                            <img :src="imagePreview"
+                                class="w-24 h-24 object-cover rounded border border-gray-300 my-3" />
+                        </template>
+
                     </div>
+
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">PIC</label>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Harga</label>
                         <div class="relative">
-                            <input type="text" name="pic" value="{{ old('pic', $items->pic ?? '') }}"
+                            <input type="text" name="price" value="{{ old('price', $items->price->harga ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
-                        @error('pic')
+                        @error('price')
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror
                     </div>
+                    <div></div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat</label>
-                        <textarea name="addr" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('addr', $items->addr ?? '') }}</textarea>
-                        @error('addr')
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Deskripsi</label>
+                        <textarea name="des" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('des', $items->des ?? '') }}</textarea>
+                        @error('des')
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Kelas</label>
-                        <select name="kelas[]" required x-data="dropdownSelect()"
-                             multiple>
-                            <option value="">Pilih Kelas</option>
-                            @foreach ($kelas as $row)
-                                <option value="{{ $row->id }}">{{ $row->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('kelas')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
+
                 </div>
+
                 <div class="flex items-center">
                     <button type="submit"
                         class="cursor-pointer bg-orange-500 text-sm hover:bg-orange-700 text-white font-bold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">

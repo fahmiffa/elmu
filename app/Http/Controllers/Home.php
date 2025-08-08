@@ -7,8 +7,11 @@ use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Paid;
 use App\Models\Payment;
+use App\Models\Price;
 use App\Models\Program;
 use App\Models\Student;
+use App\Models\Unit;
+use App\Models\UnitKelas;
 use App\Models\User;
 use Auth;
 use Illuminate\Http\Request;
@@ -20,6 +23,29 @@ use PDF;
 class Home extends Controller
 {
 
+    public function user()
+    {
+        $items = User::all();
+        return view('user.index', compact('items'));
+    }
+
+    public function userUpdate(Request $request, User $user)
+    {
+        $user->status = $user->status == 1 ? 0 : 1;
+        $user->save();
+        return back();
+    }
+
+    public function userEdit($id)
+    {
+        $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        if ($user->role != 0) {
+            return view('user.detail', compact('user'));
+        } else {
+            return back();
+        }
+    }
+
     public function bill(Request $request)
     {
 
@@ -28,9 +54,10 @@ class Home extends Controller
 
         $head = Head::select('id')->get();
         foreach ($head as $val) {
-            $paid = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
+            $first = Paid::where('head', $val->id)->exists();
+            $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
             if ($paid == false) {
-                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y")];
+                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first'=>!$first ? 1 :0];
             }
         }
 
@@ -49,27 +76,53 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid')->with('paket')->with('kontrak')->with('class')->get();
+        $items = Head::with('murid')->with('product.program', 'product.class')->with('kontrak')->with('units')->get();
         return view('reg.index', compact('items'));
     }
 
     public function invoice($id)
     {
-        $paid = Paid::findOrFail($id);
-        $pdf  = PDF::loadView('invoice', [
+        $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        // dd($paid->reg->product);
+        $pdf = PDF::loadView('invoice', [
             'items' => $paid,
         ]);
 
         return $pdf->stream('invoice.pdf');
     }
 
+    public function payment(Request $request, $id)
+    {
+        $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        if ($paid->status == 0) {
+            $user = $paid->reg->murid->users;
+            if ($user->status == 0) {
+                $user->status = 1;
+                $user->save();
+            }
+            $paid->status = 1;
+            $paid->time   = date("Y-m-d H:i:s");
+            $paid->ket    = $request->ket;
+            $paid->via    = $request->via;
+            $paid->save();
+        }
+
+        return back();
+    }
+
     public function AddReg()
     {
-        $kelas   = Kelas::all();
-        $paket   = Program::all();
+        $kelas = Kelas::with('kelas_unit')->get();
+        $paket = Price::select('id', 'harga', 'product', 'kelas')
+            ->with('program:id,name')
+            ->latest()
+            ->get();
         $kontrak = Payment::all();
-        $action  = "Form Pendaftaran";
-        return view('reg.form', compact('action', 'kelas', 'kontrak', 'paket'));
+        $unit    = UnitKelas::select('id', 'kelas_id', 'unit_id')
+            ->with('unit:id,name')
+            ->get();
+        $action = "Form Pendaftaran";
+        return view('reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit'));
     }
 
     public function regStore(Request $request)
@@ -78,16 +131,17 @@ class Home extends Controller
             // Wajib diisi
             'grade'                 => 'required|string|in:pra_tk,tk,sd,smp,sma',
             'kelas'                 => 'required|string',
-            'gender'                => 'required|in:1,2',
-            'place'                 => 'required|string',
-            'birth'                 => 'required|date',
-            'dad'                   => 'required|string',
-            'dadJob'                => 'required|string',
-            'mom'                   => 'required|string',
-            'momJob'                => 'required|string',
-            'hp_parent'             => 'required|string',
+            'gender'                => 'nullable|in:1,2',
+            'place'                 => 'nullable|string',
+            'birth'                 => 'nullable|date',
+            'dad'                   => 'nullable|string',
+            'dadJob'                => 'nullable|string',
+            'mom'                   => 'nullable|string',
+            'momJob'                => 'nullable|string',
+            'hp_parent'             => 'nullable|string',
             'kontrak'               => 'required',
-            'paket'                 => 'required',
+            'program'               => 'required',
+            'email'                 => 'required',
 
             // Optional
             'induk'                 => 'nullable|string',
@@ -115,8 +169,17 @@ class Home extends Controller
                 $path = $request->file('image')->store('images', 'public');
             }
 
+            $user           = new User;
+            $user->name     = $request->name;
+            $user->email    = $request->email;
+            $user->role     = 2;
+            $user->status   = 0;
+            $user->password = bcrypt('murik@');
+            $user->save();
+
             // Simpan ke tabel students
             $siswa                        = new Student;
+            $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
             $siswa->img                   = $path;
             $siswa->induk                 = $request->induk;
@@ -145,8 +208,8 @@ class Home extends Controller
             // Simpan ke tabel head
             $head           = new Head;
             $head->students = $siswa->id;
-            $head->kelas    = $request->kelas;
-            $head->program  = $request->paket;
+            $head->unit     = $request->unit;
+            $head->price    = $request->program;
             $head->payment  = $request->kontrak;
             $head->save();
 
@@ -171,9 +234,10 @@ class Home extends Controller
         $items = Paid::has('reg')->with('reg.murid', 'reg.paket', 'reg.class', 'reg.kontrak')->get();
         return view('schedule.index', compact('items'));
     }
+
     public function pay()
     {
-        $items = Paid::has('reg')->with('reg.murid', 'reg.paket', 'reg.class', 'reg.kontrak')->get();
+        $items = Paid::has('reg')->with('reg.murid', 'reg.product.class', 'reg.product.program', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
         return view('pay.index', compact('items'));
     }
 

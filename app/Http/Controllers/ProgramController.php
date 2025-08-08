@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
+use App\Models\Price;
 use App\Models\Program;
 use Illuminate\Http\Request;
 
@@ -11,7 +13,7 @@ class ProgramController extends Controller
      */
     public function index()
     {
-        $items = Program::all();
+        $items = Program::with('price.class')->latest()->get();
         return view('program.index', compact('items'));
     }
 
@@ -21,7 +23,8 @@ class ProgramController extends Controller
     public function create()
     {
         $action = "Tambah Program";
-        return view('program.form', compact('action'));
+        $kelas  = Kelas::all();
+        return view('program.form', compact('action', 'kelas'));
     }
 
     /**
@@ -30,20 +33,34 @@ class ProgramController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required',
-            'des'   => 'required',
-            'level' => 'required',
+            'name'    => 'required',
+            'des'     => 'required',
+            'level'   => 'required',
             'price' => 'required',
+            'price.*' => 'required',
+            'kelas' => 'required',
+            'kelas.*' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
+        $kelas = $request->id;
+        $harga = $request->price;
+
 
         $item        = new Program;
         $item->name  = $request->name;
         $item->des   = $request->des;
         $item->level = $request->level;
-        $item->price = $request->price;
         $item->save();
+
+
+        for ($i = 0; $i < count($kelas); $i++) {
+            $price          = new Price;
+            $price->product = $item->id;
+            $price->kelas   = $kelas[$i];
+            $price->harga   = $harga[$i];
+            $price->save();
+        }
 
         return redirect()->route('dashboard.master.program.index');
     }
@@ -63,7 +80,8 @@ class ProgramController extends Controller
     {
         $items  = $program;
         $action = "Edit Program";
-        return view('program.form', compact('items', 'action'));
+        $kelas  = Kelas::all();
+        return view('program.form', compact('items', 'action', 'kelas'));
     }
 
     /**

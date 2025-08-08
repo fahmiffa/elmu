@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Teach;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TeachController extends Controller
@@ -32,24 +33,42 @@ class TeachController extends Controller
         $request->validate([
             'name'  => 'required',
             'birth' => 'required',
+            'email' => 'required',
             'hp'    => 'required',
             'addr'  => 'required',
             'study' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
             'birth.required' => 'Tanggal lahir wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
             'addr.required'  => 'Alamat wajib diisi.',
             'hp.required'    => 'Nomor HP wajib diisi.',
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
         ]);
 
+        $path = null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images/teach', 'public');
+        }
+
         $item        = new Teach;
+        $item->img   = $path;
         $item->name  = $request->name;
         $item->birth = $request->birth;
         $item->hp    = $request->hp;
         $item->addr  = $request->addr;
         $item->study = $request->study;
         $item->save();
+
+        $user           = new User;
+        $user->account  = $user->id;
+        $user->name     = $request->name;
+        $user->email    = $request->email;
+        $user->nomor    = $request->hp;
+        $user->status   = 3;
+        $user->password = bcrypt('rahasia');
+        $user->save();
 
         return redirect()->route('dashboard.master.teach.index');
     }
@@ -83,6 +102,7 @@ class TeachController extends Controller
             'hp'    => 'required',
             'addr'  => 'required',
             'study' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
             'birth.required' => 'Tanggal lahir wajib diisi.',
@@ -91,7 +111,13 @@ class TeachController extends Controller
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
         ]);
 
-        $item        = $teach;
+        $path = null;
+
+        $item = $teach;
+        if ($request->hasFile('image')) {
+            $path      = $request->file('image')->store('teach', 'public');
+            $item->img = $path;
+        }
         $item->name  = $request->name;
         $item->birth = $request->birth;
         $item->hp    = $request->hp;

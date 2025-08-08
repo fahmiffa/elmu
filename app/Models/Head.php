@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Price;
 
 class Head extends Model
 {
@@ -24,9 +25,14 @@ class Head extends Model
         return $this->belongsTo(Payment::class, 'payment', 'id');
     }
 
-    public function class()
+    public function product()
     {
-        return $this->belongsTo(Kelas::class, 'kelas', 'id');
+        return $this->belongsTo(Price::class, 'price', 'id');
+    }
+
+    public function units()
+    {
+        return $this->belongsTo(Unit::class, 'unit', 'id');
     }
 
     public function bill()

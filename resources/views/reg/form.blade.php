@@ -19,10 +19,11 @@
                 @method('PUT')
             @else
                 <form method="POST" action="{{ route('dashboard.reg.store') }}" class="flex flex-col"
-                enctype="multipart/form-data">
+                    enctype="multipart/form-data">
                 @endisset
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2"
+                    x-data=reg(@json($kelas),@json($paket),@json($unit))>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Induk</label>
                         <div class="relative">
@@ -51,14 +52,74 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Kelas</label>
-                        <select name="kelas" required
-                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                            <option value="">Pilih Kelas</option>
-                            @foreach ($kelas as $row)
-                                <option value="{{ $row->id }}">{{ $row->name }}</option>
-                            @endforeach
+                        <select x-model="selectedKelas" name="kelas"
+                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
+                            required>
+                            <template x-for="option in optionsKelas" :key="option.value">
+                                <option :value="option.value" x-text="option.label"></option>
+                            </template>
                         </select>
                         @error('kelas')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Pembayaran</label>
+                        <select name="kontrak" required
+                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                            <option value="">Pilih Pembayaran</option>
+                            @foreach ($kontrak as $row)
+                                <option value="{{ $row->id }}">{{ $row->name }} ({{ $row->month }} Bulan)
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('kontrak')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Program Belajar</label>
+                        <select x-model="selectedProgram" name="program"
+                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
+                            required>
+                            <template x-for="option in filteredPrograms" :key="option.value">
+                                <option :value="option.value" x-text="option.label"></option>
+                            </template>
+                        </select>
+                        @error('paket')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Unit</label>
+                        <select x-model="selectedProgram" name="unit"
+                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
+                            required>
+                            <template x-for="option in filteredUnits" :key="option.value">
+                                <option :value="option.value" x-text="option.label"></option>
+                            </template>
+                        </select>
+                        @error('unit')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Siswa</label>
+                        <div class="relative">
+                            <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
+                                class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                        </div>
+                        @error('name')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Email</label>
+                        <div class="relative">
+                            <input type="email" name="email" value="{{ old('email', $items->email ?? '') }}" required
+                                class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                        </div>
+                        @error('email')
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror
                     </div>
@@ -71,16 +132,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
-                        <div class="relative">
-                            <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
-                                class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                        </div>
-                        @error('name')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
                     <div class="mb-4" x-data="{ imagePreview: null }">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Photo</label>
                         <input type="file" name="image" accept="image/*"
@@ -96,7 +147,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Gender</label>
-                        <select name="gender" required
+                        <select name="gender"
                             class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                             <option value="">Pilih Gender</option>
                             <option value="1">Laki-laki</option>
@@ -111,9 +162,9 @@
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Tempat, Tanggal lahir</label>
                         <div class="flex items-center gap-2">
                             <input type="text" name="place" placeholder="Tempat lahir"
-                                value="{{ old('place', $items->place ?? '') }}" required
+                                value="{{ old('place', $items->place ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                            <input type="date" name="birth" value="{{ old('birth', $items->birth ?? '') }}" required
+                            <input type="date" name="birth" value="{{ old('birth', $items->birth ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
                     </div>
@@ -202,10 +253,10 @@
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Ayah</label>
                         <div class="flex items-center gap-2">
                             <input type="text" name="dad" placeholder="Nama"
-                                value="{{ old('dad', $items->dad ?? '') }}" required
+                                value="{{ old('dad', $items->dad ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                             <input type="text" placeholder="Pekerjaan" name="dadJob"
-                                value="{{ old('dadJob', $items->dadJob ?? '') }}" required
+                                value="{{ old('dadJob', $items->dadJob ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
                     </div>
@@ -213,10 +264,10 @@
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Ibu</label>
                         <div class="flex items-center gap-2">
                             <input type="text" name="mom" placeholder="Nama"
-                                value="{{ old('mom', $items->mom ?? '') }}" required
+                                value="{{ old('mom', $items->mom ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                             <input type="text" placeholder="Pekerjaan" name="momJob"
-                                value="{{ old('momJob', $items->momJob ?? '') }}" required
+                                value="{{ old('momJob', $items->momJob ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
                     </div>
@@ -224,7 +275,7 @@
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor HP Orang Tua</label>
                         <div class="flex items-center gap-2">
                             <input type="text" name="hp_parent" placeholder="Nomor HP"
-                                value="{{ old('hp_parent', $items->hp_parent ?? '') }}" required
+                                value="{{ old('hp_parent', $items->hp_parent ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
                     </div>
@@ -262,33 +313,6 @@
                             class="trix-content bg-transparent border rounded p-2"></trix-editor>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Kontrak</label>
-                        <select name="kontrak" required
-                            class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                            <option value="">Pilih kontrak</option>
-                            @foreach ($kontrak as $row)
-                                <option value="{{ $row->id }}">{{ $row->name }} ({{ $row->month }} Bulan)
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('kontrak')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="mb-4" ">
-                                                <label class="block text-gray-700 text-sm font-semibold mb-2">Paket</label>
-                                                <select name="paket" required  class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                                                    <option value="">Pilih paket</option>
-                                                          @foreach ($paket as $row)
-                        <option value="{{ $row->id }}">{{ $row->name }}
-                        </option>
-                        @endforeach
-                        </select>
-                        @error('paket')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
                 </div>
 
                 <div class="flex items-center">

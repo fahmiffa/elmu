@@ -18,10 +18,12 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
+                        <th class="px-4 py-2">Kode</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">PIC</th>
                         <th class="px-4 py-2">HP</th>
                         <th class="px-4 py-2">Alamat</th>
+                        <th class="px-4 py-2">Kelas</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -29,39 +31,49 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="px-4 py-2" x-text="row.kode"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2" x-text="row.pic"></td>
                             <td class="px-4 py-2" x-text="row.hp"></td>
                             <td class="px-4 py-2" x-text="row.addr"></td>
-                            <td class="px-4 py-2 flex items-center gap-1">
-                                <a :href="'/dashboard/master/unit/' + row.id + '/edit'"
-                                    class="text-orange-600 hover:text-orange-700">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil">
-                                        <path
-                                            d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-                                        <path d="m15 5 4 4" />
-                                    </svg>
-                                </a>
-    
-                                <form :action="'/dashboard/master/unit/' + row.id" method="POST"
-                                    @submit.prevent="deleteRow($event)">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-500">
+                            <td class="px-4 py-2">
+                                <ul>
+                                    <template x-for="(col, index) in row.kelas" :key="index">
+                                        <li x-text="col.kelas_name.name ?? ''"></li>
+                                    </template>
+                                </ul>
+                            </td>
+                            <td class="px-4 py-2">
+                                <div class=" flex items-center gap-1">
+                                    <a :href="'/dashboard/master/unit/' + row.id + '/edit'"
+                                        class="text-orange-600 hover:text-orange-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-trash2-icon lucide-trash-2">
-                                            <path d="M10 11v6" />
-                                            <path d="M14 11v6" />
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                                            <path d="M3 6h18" />
-                                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            class="lucide lucide-pencil-icon lucide-pencil">
+                                            <path
+                                                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                                            <path d="m15 5 4 4" />
                                         </svg>
-                                    </button>
-                                </form>
+                                    </a>
+                                    <form :action="'/dashboard/master/unit/' + row.id" method="POST"
+                                        @submit.prevent="deleteRow($event)">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="lucide lucide-trash2-icon lucide-trash-2">
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     </template>
