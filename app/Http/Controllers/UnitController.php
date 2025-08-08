@@ -48,10 +48,11 @@ class UnitController extends Controller
         $item->addr = $request->addr;
         $item->save();
 
-        $kelas = $request->kelas;
-        for ($i = 0; $i < count($kelas); $i++) {
+        $class = $request->kelas;
+        // dd($request->input());
+        for ($i = 0; $i < count($class); $i++) {
             $kelas           = new UnitKelas;
-            $kelas->kelas_id = $kelas[$i];
+            $kelas->kelas_id = $class[$i];
             $kelas->unit_id  = $item->id;
             $kelas->save();
         }

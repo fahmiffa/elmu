@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Midtrans\Snap;
 use Midtrans\Config;
+use App\Models\Paid;
 
 class MidtransController extends Controller
 {
@@ -23,24 +24,30 @@ class MidtransController extends Controller
         $request->validate([
             'id' => 'required|integer',
         ]);
-
-        $params = [
-            'transaction_details' => [
-                'order_id' => $request->id,
-                'gross_amount' => 50000,
-            ],
-            'credit_card' => [
-                'secure' => true,
-            ],
-            'customer_details' => [
-                'first_name' => 'Nama',
-                'last_name' => 'Pembeli',
-                'email' => 'email@example.com',
-                'phone' => '08123456789',
-            ],
-        ];
-
+        
+        
         try {
+            $kode = date("YmdHis");
+            $order = Paid::where('id',$request->id)->first();
+            $order->mid = $kode;
+            $order->save();
+            
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $order->mid,
+                    'gross_amount' => 60000,
+                ],
+                'credit_card' => [
+                    'secure' => true,
+                ],
+                'customer_details' => [
+                    'first_name' => 'Nama',
+                    'last_name' => 'Pembeli',
+                    'email' => 'email@example.com',
+                    'phone' => '08123456789',
+                ],
+            ];
+
             $snap = Snap::createTransaction($params);
             $redirectUrl = $snap->redirect_url;
 

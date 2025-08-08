@@ -3,6 +3,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MidtransController;
 
+Route::post('/webhook', [App\Http\Controllers\MidtransWebhookController::class, 'handle']);
 Route::post('/pay', [MidtransController::class, 'createTransaction']);
 Route::prefix('fire')->group(function () {
     Route::post('/login', [ApiController::class, 'login']);

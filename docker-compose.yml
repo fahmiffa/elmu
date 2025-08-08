@@ -1,0 +1,10 @@
+services:
+  frankenphp:
+    build: .
+    container_name: elmu
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/franken/elmu:/app
+      - /home/franken/elmu/Caddyfile:/etc/frankenphp/Caddyfile
+    restart: unless-stopped

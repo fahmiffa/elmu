@@ -34,7 +34,7 @@ class AddonController extends Controller
         $request->validate([
             'name'  => 'required|string',
             'des'   => 'nullable|string',
-            'price' => 'required|number',
+            'price' => 'required',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 

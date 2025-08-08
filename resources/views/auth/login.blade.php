@@ -3,7 +3,7 @@
 @section('content')
     <div class="min-h-screen flex items-center justify-center">
         <div class="bg-white p-8 shadow-md md:w-full max-w-md rounded-lg md:mx-0 mx-5">
-            <img src="https://murikaceria.co.id/v2/wp-content/uploads/2024/01/LogoTypeOrange.svg" class="w-48 object-contain mx-auto"
+            <img src="https://murikaceria.co.id/v2/wp-content/uploads/2024/01/LogoTypeOrange.svg" class="w-50 object-contain mx-auto"
                 alt="Logo Murika">
             <div class="flex my-3">
                 <div class="text-sm md:text-2xl font-bold text-orange-600">Login</div>
@@ -68,7 +68,7 @@
                     </button>
                 </div>
             </form>
-            <div class="text-xs flex-col mt-8">
+            <div class="text-xs flex-col mt-10">
                 <div class="font-semibold">PT MUMTAZ CERIA EDUKASI</div>
                 <div class="font-semibold">Jl. Saditan Baru, Saditan, Brebes, Kec. Brebes, Kabupaten Brebes, Jawa
                     Tengah 52212 (Gg. Flamboyan RT 06/RW 05, Kel. Brebes)

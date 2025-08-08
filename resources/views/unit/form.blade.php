@@ -30,7 +30,7 @@
                         @enderror
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">PIC</label>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Leader</label>
                         <div class="relative">
                             <input type="text" name="pic" value="{{ old('pic', $items->pic ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">

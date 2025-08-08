@@ -12,6 +12,8 @@ use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
 
+
+
 Route::get('/clear', function () {       
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');

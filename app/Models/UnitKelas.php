@@ -7,7 +7,7 @@ class UnitKelas extends Model
 {
     public function kelasName()
     {
-        return $this->belongsTo(kelas::class, 'kelas_id', 'id');
+        return $this->belongsTo(Kelas::class, 'kelas_id', 'id');
     }
 
     public function unit()
