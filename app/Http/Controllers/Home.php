@@ -13,6 +13,7 @@ use App\Models\Student;
 use App\Models\Unit;
 use App\Models\UnitKelas;
 use App\Models\User;
+use App\Services\Midtrans\Transaction;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,57 @@ use PDF;
 
 class Home extends Controller
 {
+    public function fcm()
+    {
+        return FirebaseMessage::sendFCMMessage();
+    }
+
+    public function midtransPay(Request $request)
+    {
+
+        $request->validate([
+            'id' => 'required|integer',
+        ]);
+
+        try {
+
+            $kode       = date("YmdHis");
+            $order      = Paid::where('id', 1)->first();
+            $order->mid = $kode;
+            $order->save();
+            $params = [
+                'transaction_details' => [
+                    'order_id'     => $order->mid,
+                    'gross_amount' => $order->reg->product->harga,
+                ],
+                'credit_card'         => [
+                    'secure' => true,
+                ],
+                'customer_details'    => [
+                    'first_name' => $order->reg->murid->name,
+                    'last_name'  => $order->reg->murid->dad . '' . $order->reg->murid->mom,
+                    'email'      => $order->reg->murid->users->email,
+                    'phone'      => $order->reg->murid->users->hp,
+                ],
+            ];
+
+            return Transaction::create($params);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Gagal membuat transaksi: ' . $e->getMessage(),
+            ], 500);
+        }
+
+    }
+
+    public function midtransHook(Request $request)
+    {
+        Log::info('Midtrans Webhook Received:', $request->all());
+        $data = $request->all();
+        return Transaction::hook($data);
+
+    }
 
     public function user()
     {
@@ -57,7 +109,7 @@ class Home extends Controller
             $first = Paid::where('head', $val->id)->exists();
             $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
             if ($paid == false) {
-                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first'=>!$first ? 1 :0];
+                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => ! $first ? 1 : 0];
             }
         }
 

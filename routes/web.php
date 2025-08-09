@@ -11,10 +11,7 @@ use App\Http\Controllers\TeachController;
 use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
-
-
-
-Route::get('/clear', function () {       
+Route::get('/clear', function () {
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';
@@ -25,9 +22,9 @@ Route::get('/login', [AuthController::class, 'loginForm'])->name('login')->middl
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
-
 Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(function () {
     Route::get('/', [Home::class, 'index'])->name('home');
+    Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
     Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg');
     Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
     Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
