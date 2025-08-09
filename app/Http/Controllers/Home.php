@@ -38,7 +38,7 @@ class Home extends Controller
         try {
 
             $kode       = date("YmdHis");
-            $order      = Paid::where('id', 1)->first();
+            $order      = Paid::where('id', $request->id)->first();
             $order->mid = $kode;
             $order->save();
             $params = [
