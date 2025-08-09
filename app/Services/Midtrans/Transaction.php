@@ -7,17 +7,16 @@ use Midtrans\Snap;
 
 class Transaction
 {
-    public function __construct()
-    {
-        Config::$serverKey    = env('MIDTRANS_SERVER_KEY');
-        Config::$clientKey    = env('MIDTRANS_CLIENT_KEY');
-        Config::$isProduction = false;
-        Config::$isSanitized  = true;
-        Config::$is3ds        = true;
-    }
 
     public static function create($params)
     {
+
+        $serverKey    = env('MIDTRANS_SERVER_KEY');
+        $clientKey    = env('MIDTRANS_CLIENT_KEY');
+        $isProduction = false;
+        $isSanitized  = true;
+        $is3ds        = true;
+
         try {
             $snap        = Snap::createTransaction($params);
             $redirectUrl = $snap->redirect_url;
