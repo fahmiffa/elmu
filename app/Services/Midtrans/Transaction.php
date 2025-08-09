@@ -11,11 +11,11 @@ class Transaction
     public static function create($params)
     {
 
-        $serverKey    = env('MIDTRANS_SERVER_KEY');
-        $clientKey    = env('MIDTRANS_CLIENT_KEY');
-        $isProduction = false;
-        $isSanitized  = true;
-        $is3ds        = true;
+        Config::$serverKey    = env('MIDTRANS_SERVER_KEY');
+        Config::$clientKey    = env('MIDTRANS_CLIENT_KEY');
+        Config::$isProduction = env('MODE_MIDTRANS');
+        Config::$isSanitized  = true;
+        Config::$is3ds        = true;
 
         try {
             $snap        = Snap::createTransaction($params);
