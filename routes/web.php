@@ -34,6 +34,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('setting', [Home::class, 'setting'])->name('setting');
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
+    Route::post('/send/{id}', [Home::class, 'send'])->name('send');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
 
     Route::get('/job-progress/{jobId}', function ($jobId) {

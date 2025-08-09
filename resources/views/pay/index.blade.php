@@ -125,9 +125,23 @@
                                         </svg>
                                     </a>
 
-                                    <button
-                                    x-show="row.status == 0"
-                                    @click="modal.openModal('+row.id+')"
+                                    <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null" method="post" :action="'/dashboard/send/' + md5Component(row.id) + ''">
+                                        @csrf
+                                        <button type="submit" class="text-orange-600 hover:text-orange-700 cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                class="lucide lucide-send-icon lucide-send">
+                                                <path
+                                                    d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+                                                <path d="m21.854 2.147-10.94 10.939" />
+                                            </svg>
+                                        </button>
+                                    </form>
+
+                   
+
+                                    <button x-show="row.status == 0" @click="modal.openModal('+row.id+')"
                                         class="cursor-pointer text-xs  text-orange-600 font-semibold p-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -140,7 +154,8 @@
                                     </button>
 
                                     <div x-show="modal.activeModal === '+row.id+'"
-                                        class="fixed inset-0 flex items-center justify-center h-100" style="display: none;">
+                                        class="fixed inset-0 flex items-center justify-center h-100"
+                                        style="display: none;">
                                         <div @click.away="modal.closeModal()"
                                             class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
                                             x-transition:enter="transition ease-out duration-300"

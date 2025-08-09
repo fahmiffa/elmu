@@ -13,6 +13,7 @@ use App\Models\Student;
 use App\Models\Unit;
 use App\Models\UnitKelas;
 use App\Models\User;
+use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
 use Auth;
 use Illuminate\Http\Request;
@@ -26,6 +27,36 @@ class Home extends Controller
     public function fcm()
     {
         return FirebaseMessage::sendFCMMessage();
+    }
+
+    public function send(Request $request, $id)
+    {
+
+        try {
+
+            $order = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
+            $kit   = $order->kit ? $order->kit->price->harga : 0;
+            $harga = $order->reg->product->harga + $kit;
+            $fcm   = $order->reg->murid->users->fcm;
+
+            $message = [
+                "message" => [
+                    "token"        => $fcm,
+                    "notification" => [
+                        "title" => "Tagihan",
+                        // "body"  => "Anda punya Tagihan bulan ".$order->bulan.", ".number_format($harga, 0, '', '.'),
+                        "body"  => "Anda punya Tagihan bulan ".$order->bulan
+                    ],
+                    // "data"         => [
+                    //     "customData" => "12345",
+                    // ],
+                ],
+            ];
+            FirebaseMessage::sendFCMMessage($message);
+            return back();
+        } catch (\Exception $e) {
+            dd($e);
+        }
     }
 
     public function midtransPay(Request $request)
@@ -292,7 +323,7 @@ class Home extends Controller
 
     public function pay()
     {
-        $items = Paid::has('reg')->with('reg.murid', 'reg.product.class', 'reg.product.program', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
+        $items = Paid::has('reg')->with('reg.murid', 'reg.murid.users', 'reg.product.class', 'reg.product.program', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
         return view('pay.index', compact('items'));
     }
 
