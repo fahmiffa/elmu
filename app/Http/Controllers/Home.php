@@ -37,14 +37,17 @@ class Home extends Controller
 
         try {
 
-            $kode       = date("YmdHis");
-            $order      = Paid::where('id', $request->id)->first();
+            $kode  = date("YmdHis");
+            $order = Paid::where('id', $request->id)->first();
+
+            $kit = $order->kit ? $order->kit->price->harga : 0;
+
             $order->mid = $kode;
             $order->save();
             $params = [
                 'transaction_details' => [
                     'order_id'     => $order->mid,
-                    'gross_amount' => $order->reg->product->harga,
+                    'gross_amount' => $order->reg->product->harga + $kit,
                 ],
                 'credit_card'         => [
                     'secure' => true,

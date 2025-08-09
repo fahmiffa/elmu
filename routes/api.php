@@ -5,7 +5,6 @@ use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\Home;
 
 Route::post('/webhook', [Home::class, 'midtransHook']);
-Route::post('/pay', [Home::class, 'midtransPay']);
 
 Route::prefix('fire')->group(function () {
     Route::post('/login', [ApiController::class, 'login']);
@@ -13,6 +12,7 @@ Route::prefix('fire')->group(function () {
 });
 
 Route::middleware('jwt')->group(function () {
+    Route::post('/pay', [Home::class, 'midtransPay']);
     Route::get('/kelas', [ApiController::class, 'kelas']);
     Route::get('/data', [ApiController::class, 'data']);
     Route::get('/program', [ApiController::class, 'program']);
