@@ -45,7 +45,7 @@ class Home extends Controller
                     "notification" => [
                         "title" => "Tagihan",
                         // "body"  => "Anda punya Tagihan bulan ".$order->bulan.", ".number_format($harga, 0, '', '.'),
-                        "body"  => "Anda punya Tagihan bulan ".$order->bulan
+                        "body"  => "Anda punya Tagihan bulan " . $order->bulan,
                     ],
                     // "data"         => [
                     //     "customData" => "12345",
@@ -169,8 +169,7 @@ class Home extends Controller
     public function invoice($id)
     {
         $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-        // dd($paid->reg->product);
-        $pdf = PDF::loadView('invoice', [
+        $pdf  = PDF::loadView('invoice', [
             'items' => $paid,
         ]);
 
@@ -230,10 +229,10 @@ class Home extends Controller
             'email'                 => 'required',
 
             // Optional
-            'induk'                 => 'nullable|string',
             'name'                  => 'nullable|string',
             'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'sekolah_kelas'         => 'nullable|string',
+            'alamat'                => 'nullable|string',
             'alamat_sekolah'        => 'nullable|string',
             'dream'                 => 'nullable|string',
             'hp_siswa'              => 'nullable|string',
@@ -268,8 +267,8 @@ class Home extends Controller
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
             $siswa->img                   = $path;
-            $siswa->induk                 = $request->induk;
             $siswa->jenjang               = $request->grade;
+            $siswa->alamat                = $request->alamat;
             $siswa->place                 = $request->place;
             $siswa->birth                 = $request->birth;
             $siswa->sekolah_kelas         = $request->sekolah_kelas;
@@ -291,8 +290,10 @@ class Home extends Controller
             $siswa->gender                = $request->gender;
             $siswa->save();
 
-            // Simpan ke tabel head
+            $unit = Head::where('unit', $request->unit)->count() + 1;
+
             $head           = new Head;
+            $head->number   = $unit;
             $head->students = $siswa->id;
             $head->unit     = $request->unit;
             $head->price    = $request->program;

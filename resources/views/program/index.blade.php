@@ -34,11 +34,11 @@
                             <td class="px-4 py-2 text-center" x-text="row.level"></td>
                             <td class="px-4 py-2">
                                 <table class="w-full">
-                                    <template x-for="(col, index) in row.price" :key="index">
+                                    <template x-for="(col, index) in row.kelas" :key="index">
                                         <tr>
                                             <td class="p-1 text-sm text-gray-700 text-right">
-                                                <span x-text="col.class?.name ?? 'Tanpa Kelas'"></span>
-                                                <span x-text="formatNumber(col.harga)"></span>
+                                                <span x-text="col.name ?? 'Tanpa Kelas'"></span>
+                                                <span x-text="formatNumber(row.price[index].harga)"></span>
                                             </td>
                                         </tr>
                                     </template>

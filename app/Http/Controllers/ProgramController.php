@@ -13,7 +13,7 @@ class ProgramController extends Controller
      */
     public function index()
     {
-        $items = Program::with('price.class')->latest()->get();
+        $items = Program::with(['kelas','price'])->latest()->get();
         return view('program.index', compact('items'));
     }
 
@@ -36,23 +36,21 @@ class ProgramController extends Controller
             'name'    => 'required',
             'des'     => 'required',
             'level'   => 'required',
-            'price' => 'required',
-            'price.*' => 'required',
-            'kelas' => 'required',
+            'harga'   => 'required',
+            'harga.*' => 'required',
+            'kelas'   => 'required',
             'kelas.*' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
         $kelas = $request->id;
-        $harga = $request->price;
-
+        $harga = $request->harga;
 
         $item        = new Program;
         $item->name  = $request->name;
         $item->des   = $request->des;
         $item->level = $request->level;
         $item->save();
-
 
         for ($i = 0; $i < count($kelas); $i++) {
             $price          = new Price;
@@ -78,10 +76,19 @@ class ProgramController extends Controller
      */
     public function edit(Program $program)
     {
-        $items  = $program;
+        $items = $program->load('price.class');
+        $data = $items->price->map(function ($kp) {
+            return [
+                'id'    => $kp->class->id,
+                'price' => $kp->id,
+                'name'  => $kp->class->name,
+                'value' => $kp->harga,
+            ];
+        });
+
         $action = "Edit Program";
         $kelas  = Kelas::all();
-        return view('program.form', compact('items', 'action', 'kelas'));
+        return view('program.form', compact('items', 'action', 'kelas', 'data'));
     }
 
     /**
@@ -99,12 +106,30 @@ class ProgramController extends Controller
             'required' => 'Field wajib diisi.',
         ]);
 
+        $kelas = $request->id;
+        $price = $request->price;
+        $harga = $request->harga;
+
         $item        = $program;
         $item->name  = $request->name;
         $item->des   = $request->des;
         $item->level = $request->level;
-        $item->price = $request->price;
         $item->save();
+
+        $pr = Price::where('product', $item->id)->pluck('id')->toArray();
+        $remove = array_values(array_diff($pr,$price));
+
+        for ($i=0; $i < count($remove); $i++) { 
+            Price::where('id',$remove[$i])->delete();
+        }
+
+        for ($i = 0; $i < count($price); $i++) {
+            Price::where('id', $price[$i])->update([
+                'product'=>$item->id,
+                'harga' => $harga[$i],
+                'kelas' => $kelas[$i]
+            ]);
+        }
 
         return redirect()->route('dashboard.master.program.index');
     }

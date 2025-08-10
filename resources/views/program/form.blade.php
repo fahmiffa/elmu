@@ -38,10 +38,12 @@
                     </div>
                     <div class="mb-4 col-span-2" x-data="{
                         kelas: '',
-                        fields: [],
+                        fields: {{ json_encode($data ?? []) }},
                         addField() {
                             if (!this.selectedId) return;
-                            if (this.fields.find(f => f.id === this.selectedId)) return;
+                            if (this.fields.find(f => f.id == this.selectedId)) {
+                                return;
+                            }
                             this.fields.push({ id: this.selectedId, value: '', name: this.getSelectedText() });
                         },
                         removeField(index) {
@@ -75,8 +77,9 @@
                             <div class="w-1/2 mb-3">
                                 <label x-text="'Harga Kelas ' + field.name"></label>
                                 <div class="flex items-center space-x-2">
+                                    <input type="hidden" :value="field.price" :name="'price[' + index + ']'">
                                     <input type="hidden" :value="field.id" :name="'id[' + index + ']'">
-                                    <input type="number" x-model="field.value" :name="'price[' + index + ']'"
+                                    <input type="number" x-model="field.value" :name="'harga[' + index + ']'"
                                         :placeholder="kelas"
                                         class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]" />
                                     <button type="button" x-on:click="removeField(index)"

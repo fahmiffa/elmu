@@ -1,14 +1,15 @@
 <?php
 namespace App\Models;
 
+use App\Models\Head;
+use App\Models\Price;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Price;
 
 class Head extends Model
 {
     protected $table   = 'head';
-    protected $appends = ['kode', 'waktu'];
+    protected $appends = ['kode', 'waktu', 'induk'];
 
     public function murid()
     {
@@ -51,6 +52,12 @@ class Head extends Model
         $date             = Carbon::parse($this->created_at)->locale('id');
         return $formatted = $date->translatedFormat('l, d F Y H:i');
 
+    }
+
+    public function getindukAttribute()
+    {
+        $nom  = str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        return $nom;
     }
 
 }

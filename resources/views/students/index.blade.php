@@ -30,7 +30,7 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
-                            <td class="px-4 py-2" x-text="row.age"></td>
+                            <td class="px-4 py-2" x-text="row.birth ? row.age : null"></td>
                             <td class="px-4 py-2" x-text="row.genders"></td>
                             <td class="px-4 py-2" x-text="row.alamat_sekolah"></td>
                             <td class="px-4 py-2 flex items-center gap-1">
@@ -45,7 +45,7 @@
                                     </svg>
                                 </a>
     
-                                <form :action="'/dashboard/master/unit/' + row.id" method="POST"
+                                {{-- <form :action="'/dashboard/master/unit/' + row.id" method="POST"
                                     @submit.prevent="deleteRow($event)">
                                     @csrf
                                     @method('DELETE')
@@ -61,7 +61,7 @@
                                             <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                         </svg>
                                     </button>
-                                </form>
+                                </form> --}}
                             </td>
                         </tr>
                     </template>

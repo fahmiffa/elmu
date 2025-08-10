@@ -7,6 +7,7 @@ class Unit extends Model
 {
 
     protected $appends = ['kode'];
+    protected $guarded = [];
 
     public function getkodeAttribute()
     {
@@ -16,6 +17,6 @@ class Unit extends Model
 
     public function kelas()
     {
-        return $this->hasMany(UnitKelas::class, 'unit_id', 'id');
+        return $this->belongsToMany(Kelas::class, 'unit_kelas', 'unit_id', 'kelas_id');
     }
 }

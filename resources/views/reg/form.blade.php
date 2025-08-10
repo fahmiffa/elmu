@@ -25,16 +25,6 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2"
                     x-data=reg(@json($kelas),@json($paket),@json($unit))>
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Induk</label>
-                        <div class="relative">
-                            <input type="text" name="induk" value="{{ old('induk', $items->induk ?? '') }}"
-                                class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                        </div>
-                        @error('induk')
-                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Jenjang</label>
                         <select name="grade" required
                             class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
@@ -143,7 +133,15 @@
                             <img :src="imagePreview"
                                 class="w-24 h-24 object-cover rounded border border-gray-300 my-3" />
                         </template>
+                    </div>
 
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat</label>
+                        <textarea name="alamat"
+                            class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('alamat', $items->alamat ?? '') }}</textarea>
+                        @error('alamat')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Gender</label>

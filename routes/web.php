@@ -17,12 +17,15 @@ Route::get('/clear', function () {
     return 'Log cleared';
 });
 
-Route::get('/', [AuthController::class, 'loginForm'])->name('home')->middleware('guest');
-Route::get('/login', [AuthController::class, 'loginForm'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
-Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::middleware('guest')->group(function () {
+    Route::get('/', [AuthController::class, 'loginForm']);
+    Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
 
 Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(function () {
+    Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
     Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg');

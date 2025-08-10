@@ -107,8 +107,9 @@ class AddonController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Addon $addon)
+    public function destroy(Addon $layanan)
     {
-        //
+        $layanan->delete();
+        return back();
     }
 }

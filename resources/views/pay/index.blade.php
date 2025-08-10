@@ -125,7 +125,8 @@
                                         </svg>
                                     </a>
 
-                                    <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null" method="post" :action="'/dashboard/send/' + md5Component(row.id) + ''">
+                                    <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null" method="post"
+                                        :action="'/dashboard/send/' + md5Component(row.id) + ''">
                                         @csrf
                                         <button type="submit" class="text-orange-600 hover:text-orange-700 cursor-pointer">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -138,8 +139,6 @@
                                             </svg>
                                         </button>
                                     </form>
-
-                   
 
                                     <button x-show="row.status == 0" @click="modal.openModal('+row.id+')"
                                         class="cursor-pointer text-xs  text-orange-600 font-semibold p-1">

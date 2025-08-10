@@ -39,7 +39,7 @@
                             <td class="px-4 py-2">
                                 <ul>
                                     <template x-for="(col, index) in row.kelas" :key="index">
-                                        <li x-text="col.kelas_name.name ?? ''"></li>
+                                        <li x-text="col.name ?? ''"></li>
                                     </template>
                                 </ul>
                             </td>

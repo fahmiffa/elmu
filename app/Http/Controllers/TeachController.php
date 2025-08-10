@@ -62,7 +62,7 @@ class TeachController extends Controller
         $item->save();
 
         $user           = new User;
-        $user->account  = $user->id;
+        $user->user     = $user->id;
         $user->name     = $request->name;
         $user->email    = $request->email;
         $user->nomor    = $request->hp;

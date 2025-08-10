@@ -13,7 +13,7 @@ class UnitController extends Controller
      */
     public function index()
     {
-        $items = Unit::with('kelas.kelasName')->latest()->get();
+        $items = Unit::with('kelas')->latest()->get();
         return view('unit.index', compact('items'));
     }
 
@@ -69,7 +69,7 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit)
     {
-        $items  = $unit;
+        $items = $unit->load('kelas');
         $action = "Edit Unit";
         $kelas  = Kelas::latest()->get();
         return view('unit.form', compact('items', 'action', 'kelas'));
@@ -81,36 +81,22 @@ class UnitController extends Controller
     public function update(Request $request, Unit $unit)
     {
         $request->validate([
-            'name' => 'required',
-            'pic'  => 'required',
-            'hp'   => 'required',
-            'addr' => 'required',
-        ], [
-            'name.required' => 'Nama sekarang wajib diisi.',
-            'pic.required'  => 'PIC wajib diisi.',
-            'addr.required' => 'Alamat wajib diisi.',
-            'hp.required'   => 'Nomor HP wajib diisi.',
+            'name'    => 'required',
+            'pic'     => 'required',
+            'hp'      => 'required',
+            'addr'    => 'required',
+            'kelas'   => 'array',           // Pastikan ini array
+            'kelas.*' => 'exists:kelas,id', // Pastikan kelas valid
         ]);
 
-        $item       = $unit;
-        $item->name = $request->name;
-        $item->pic  = $request->pic;
-        $item->hp   = $request->hp;
-        $item->addr = $request->addr;
-        $item->save();
+        $unit->update($request->only('name', 'pic', 'hp', 'addr', 'center'));
 
-        $kelas = $request->kelas;
-        if (count($kelas) > 0) {
-            UnitKelas::where('unit_id', $item->id)->delete();
-        }
-        for ($i = 0; $i < count($kelas); $i++) {
-            $kelasUnit           = new UnitKelas;
-            $kelasUnit->kelas_id = $kelas[$i];
-            $kelasUnit->unit_id  = $item->id;
-            $kelasUnit->save();
-        }
+        // Sync kelas
+        $kelas = $request->input('kelas', []);
+        $unit->kelas()->sync($kelas);
 
-        return redirect()->route('dashboard.master.unit.index');
+        return redirect()->route('dashboard.master.unit.index')
+            ->with('success', 'Data unit berhasil diperbarui.');
     }
 
     /**

@@ -10,4 +10,9 @@ class Program extends Model
     {
         return $this->hasMany(Price::class, 'product', 'id');
     }
+
+    public function kelas()
+    {
+        return $this->belongsToMany(Kelas::class, 'prices', 'product', 'kelas');
+    }
 }
