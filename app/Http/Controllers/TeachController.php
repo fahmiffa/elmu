@@ -33,7 +33,7 @@ class TeachController extends Controller
         $request->validate([
             'name'  => 'required',
             'birth' => 'required',
-            'email' => 'required',
+            'email' => 'required|unique:users,email',
             'hp'    => 'required',
             'addr'  => 'required',
             'study' => 'required',
@@ -42,6 +42,7 @@ class TeachController extends Controller
             'name.required'  => 'Nama sekarang wajib diisi.',
             'birth.required' => 'Tanggal lahir wajib diisi.',
             'email.required' => 'Email wajib diisi.',
+            'email.unique'   => 'Email Sudah ada.',
             'addr.required'  => 'Alamat wajib diisi.',
             'hp.required'    => 'Nomor HP wajib diisi.',
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
@@ -52,6 +53,14 @@ class TeachController extends Controller
             $path = $request->file('image')->store('images/teach', 'public');
         }
 
+        $user           = new User;
+        $user->name     = $request->name;
+        $user->email    = $request->email;
+        $user->nomor    = $request->hp;
+        $user->status   = 3;
+        $user->password = bcrypt('rahasia');
+        $user->save();
+
         $item        = new Teach;
         $item->img   = $path;
         $item->name  = $request->name;
@@ -59,16 +68,8 @@ class TeachController extends Controller
         $item->hp    = $request->hp;
         $item->addr  = $request->addr;
         $item->study = $request->study;
+        $item->user  = $user->id;
         $item->save();
-
-        $user           = new User;
-        $user->user     = $user->id;
-        $user->name     = $request->name;
-        $user->email    = $request->email;
-        $user->nomor    = $request->hp;
-        $user->status   = 3;
-        $user->password = bcrypt('rahasia');
-        $user->save();
 
         return redirect()->route('dashboard.master.teach.index');
     }

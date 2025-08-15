@@ -6,6 +6,7 @@ use App\Http\Controllers\Home;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
 use App\Http\Controllers\UnitController;
@@ -23,7 +24,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-
 Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [Home::class, 'index'])->name('home');
@@ -33,12 +33,13 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
     Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
     Route::post('/pembayaran/{id}', [Home::class, 'payment'])->name('payment');
-    Route::get('/penjadwalan', [Home::class, 'schedule'])->name('schedule');
+    Route::get('/pembelajaran', [Home::class, 'study'])->name('study');
     Route::get('setting', [Home::class, 'setting'])->name('setting');
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/send/{id}', [Home::class, 'send'])->name('send');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
+    Route::resource('jadwal', ScheduleController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         // $total = DB::table('head')->where('bulan', $jobId)->count();

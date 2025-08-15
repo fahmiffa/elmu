@@ -34,17 +34,38 @@
                             <td class="px-4 py-2" x-text="row.genders"></td>
                             <td class="px-4 py-2" x-text="row.alamat_sekolah"></td>
                             <td class="px-4 py-2 flex items-center gap-1">
-                                <a :href="'/dashboard/master/unit/' + row.id + '/edit'"
+                                <a :href="'/dashboard/master/student/' + row.id + '/edit'"
                                     class="text-orange-600 hover:text-orange-700">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-pencil-icon lucide-pencil">
                                         <path
                                             d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
                                         <path d="m15 5 4 4" />
                                     </svg>
                                 </a>
-    
+
+                                <a :href="'/dashboard/master/user/' + md5Component(row.data.id) + '/detail'"
+                                    class="text-orange-600 hover:text-orange-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-user-round-cog-icon lucide-user-round-cog">
+                                        <path d="m14.305 19.53.923-.382" />
+                                        <path d="m15.228 16.852-.923-.383" />
+                                        <path d="m16.852 15.228-.383-.923" />
+                                        <path d="m16.852 20.772-.383.924" />
+                                        <path d="m19.148 15.228.383-.923" />
+                                        <path d="m19.53 21.696-.382-.924" />
+                                        <path d="M2 21a8 8 0 0 1 10.434-7.62" />
+                                        <path d="m20.772 16.852.924-.383" />
+                                        <path d="m20.772 19.148.924.383" />
+                                        <circle cx="10" cy="8" r="5" />
+                                        <circle cx="18" cy="18" r="3" />
+                                    </svg>
+                                </a>
+
                                 {{-- <form :action="'/dashboard/master/unit/' + row.id" method="POST"
                                     @submit.prevent="deleteRow($event)">
                                     @csrf

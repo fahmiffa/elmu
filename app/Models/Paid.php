@@ -1,8 +1,8 @@
 <?php
 namespace App\Models;
 
-use Carbon\Carbon;
 use App\Models\Addon;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Paid extends Model
@@ -25,6 +25,11 @@ class Paid extends Model
 
     public function getkitAttribute()
     {
-        return $this->first == 1 ? Addon::select('id','name')->with(['price:harga,product'])->first() : null;
+        return $this->first == 1 ? Addon::select('id', 'name')->with(['price:harga,product'])->first() : null;
+    }
+
+    public function murid()
+    {
+        return $this->belongsTo(Student::class, 'head', 'students', 'id');
     }
 }

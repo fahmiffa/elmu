@@ -3,10 +3,10 @@ import md5 from "blueimp-md5";
 export const layout = () => {
     return {
         sidebarOpen: true,
-         modal: null,
+        modal: null,
         init() {
             this.sidebarOpen = localStorage.getItem("sidebarOpen") === "true";
-             this.modal = this.modalHandler(); 
+            this.modal = this.modalHandler();
         },
         toggleSidebar() {
             this.sidebarOpen = !this.sidebarOpen;
@@ -42,7 +42,7 @@ export const layout = () => {
 };
 
 export const dataTable = (data) => {
-    console.log(data);
+    console.log(data)
     return {
         search: "",
         sortColumn: "name",
@@ -211,6 +211,43 @@ export function reg(kelas, program, unit) {
             return unit
                 .filter((p) => p.kelas_id == Number(this.selectedKelas))
                 .map((e) => ({ value: e.unit.id, label: e.unit.name }));
+        },
+    };
+}
+
+export function jadwal() {
+    return {
+        pertemuanList: [
+            {
+                nama: "Pertemuan 1",
+                tanggalList: [{ tanggal: "2025-08-15T10:00", materi: "" }],
+            },
+        ],
+        addPertemuan() {
+            this.pertemuanList.push({
+                nama: "",
+                tanggalList: [],
+            });
+        },
+        addTanggal(index) {
+            this.pertemuanList[index].tanggalList.push({
+                tanggal: "",
+                materi: "",
+            });
+        },
+        formatWIB(datetimeStr) {
+            if (!datetimeStr) return "";
+            const date = new Date(datetimeStr);
+            return (
+                date.toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }) + " WIB"
+            );
         },
     };
 }

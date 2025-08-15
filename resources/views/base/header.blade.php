@@ -1,8 +1,7 @@
 <header class="bg-orange-700 text-white">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-5 md:px-6 py-3">
         <div class="text-2xl font-bold">
             ELMU<span class="font-light"></span>
-            {{-- <img src="{{asset('logo.jpg')}}" class="w-20"> --}}
         </div>
         <nav class="space-x-6">
             <a href="{{ route('dashboard.home') }}"

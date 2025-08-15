@@ -1,7 +1,7 @@
 @extends('base.layout')
 @section('title', 'Dashboard')
 @section('content')
-<div class="flex flex-col w-1/2 bg-white rounded-lg shadow-md p-6">
+<div class="flex flex-col w-full md:w-1/2 bg-white rounded-lg shadow-md p-6">
     <div class="font-semibold mb-3 text-xl">Ubah Password</div>
     <form method="POST" action="{{ route('dashboard.pass') }}">
         @csrf

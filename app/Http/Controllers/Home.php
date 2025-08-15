@@ -24,10 +24,6 @@ use PDF;
 
 class Home extends Controller
 {
-    public function fcm()
-    {
-        return FirebaseMessage::sendFCMMessage();
-    }
 
     public function send(Request $request, $id)
     {
@@ -55,7 +51,7 @@ class Home extends Controller
             FirebaseMessage::sendFCMMessage($message);
             return back();
         } catch (\Exception $e) {
-            dd($e);
+            return back();
         }
     }
 
@@ -192,7 +188,25 @@ class Home extends Controller
             $paid->save();
         }
 
-        return back();
+        $fcm   = $paid->reg->murid->users->fcm;
+        $kit   = $paid->kit ? $paid->kit->price->harga : 0;
+        $harga = $paid->reg->product->harga + $kit;
+
+        if ($fcm) {
+            $message = [
+                "message" => [
+                    "token"        => $fcm,
+                    "notification" => [
+                        "title" => "Tagihan",
+                        "body"  => "Pembayaran Tagihan bulan " . $paid->bulan. " Berhasil",
+                    ],
+                ],
+            ];
+            FirebaseMessage::sendFCMMessage($message);
+
+        }
+
+        return back()->with('status', 'Pembayaran berhasil');
     }
 
     public function AddReg()
@@ -248,7 +262,6 @@ class Home extends Controller
         DB::beginTransaction();
 
         try {
-            // Upload image jika ada
             $path = null;
             if ($request->hasFile('image')) {
                 $path = $request->file('image')->store('images', 'public');
@@ -262,7 +275,6 @@ class Home extends Controller
             $user->password = bcrypt('murik@');
             $user->save();
 
-            // Simpan ke tabel students
             $siswa                        = new Student;
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
@@ -307,7 +319,6 @@ class Home extends Controller
         } catch (\Throwable $e) {
             DB::rollback();
 
-            // Hapus gambar jika sempat ter-upload
             if (isset($path)) {
                 Storage::disk('public')->delete($path);
             }

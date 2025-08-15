@@ -20,7 +20,7 @@
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Gambar</th>
-                        <th class="px-4 py-2">Umur</th>
+                        {{-- <th class="px-4 py-2">Umur</th> --}}
                         <th class="px-4 py-2">HP</th>
                         <th class="px-4 py-2">Pendiikan</th>
                         <th class="px-4 py-2">Alamat</th>
@@ -37,7 +37,7 @@
                                     <img :src="'/storage/' + row.img" :alt="row.name" class="w-full object-cover" />
                                 </div>
                             </td>
-                            <td class="px-4 py-2 text-center" x-text="row.age"></td>
+                            {{-- <td class="px-4 py-2 text-center" x-text="row.age"></td> --}}
                             <td class="px-4 py-2" x-text="row.hp"></td>
                              <td class="px-4 py-2" x-text="row.study"></td>
                             <td class="px-4 py-2" x-text="row.addr"></td>

@@ -13,7 +13,8 @@
                 Generate
             </button>
 
-            <div x-show="open" class="fixed inset-0 flex items-center justify-center" style="display: none;">
+            <div x-show="open" x-transition
+                class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="display: none;">
                 <!-- Modal box -->
                 <div @click.away="open = false" class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
                     x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-90"
@@ -140,7 +141,7 @@
                                         </button>
                                     </form>
 
-                                    <button x-show="row.status == 0" @click="modal.openModal('+row.id+')"
+                                    <button x-show="row.status == 0" @click="modal.openModal(row.id)"
                                         class="cursor-pointer text-xs  text-orange-600 font-semibold p-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -152,19 +153,29 @@
                                         </svg>
                                     </button>
 
-                                    <div x-show="modal.activeModal === '+row.id+'"
-                                        class="fixed inset-0 flex items-center justify-center h-100"
+                                    <div x-show="modal.activeModal === row.id" x-transition
+                                        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
                                         style="display: none;">
-                                        <div @click.away="modal.closeModal()"
-                                            class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+                                        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
                                             x-transition:enter="transition ease-out duration-300"
                                             x-transition:enter-start="opacity-0 scale-90"
                                             x-transition:enter-end="opacity-100 scale-100"
                                             x-transition:leave="transition ease-in duration-200"
                                             x-transition:leave-start="opacity-100 scale-100"
                                             x-transition:leave-end="opacity-0 scale-90">
-                                            <h2 class="text-xl font-bold mb-4"
-                                                x-text="'Pembayaran ' + row.reg.murid.name"></h2>
+                                            <div class="flex justify-between items-start">
+                                                <h2 class="text-xl font-bold mb-4"
+                                                    x-text="'Pembayaran ' + row.reg.murid.name"></h2>
+                                                <button class="item-center p-1" @click="modal.closeModal()">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                        class="lucide lucide-x-icon lucide-x">
+                                                        <path d="M18 6 6 18" />
+                                                        <path d="m6 6 12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
 
                                             <form method="POST"
                                                 :action="'/dashboard/pembayaran/' + md5Component(row.id) + ''">

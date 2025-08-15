@@ -8,6 +8,7 @@ import {
     editor,
     generateBill,
     reg,
+    jadwal,
 } from "./custom.js";
 
 window.Alpine = Alpine;
@@ -16,6 +17,7 @@ Alpine.data("layout", layout);
 Alpine.data("editor", editor);
 Alpine.data("dataTable", dataTable);
 Alpine.data("generateBill", generateBill);
+Alpine.data("jadwal", jadwal);
 Alpine.data("reg", reg);
 Alpine.store("unit");
 
