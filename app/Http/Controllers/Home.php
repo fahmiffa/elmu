@@ -24,6 +24,10 @@ use PDF;
 
 class Home extends Controller
 {
+    public function study()
+    {
+        return back();
+    }
 
     public function send(Request $request, $id)
     {
