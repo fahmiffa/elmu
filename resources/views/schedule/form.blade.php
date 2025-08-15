@@ -41,7 +41,7 @@
                         <template x-for="(pertemuan, index) in pertemuanList" :key="index">
                             <div class="border border-gray-300 p-4 mb-4 rounded-xl shadow">
                                 <div class="mb-2">
-                                    <label class="block text-sm font-medium">Nama Pertemuan</label>
+                                    <label class="block text-sm font-medium">Nama</label>
                                     <div class="flex gap-2">
                                         <input type="text"  :name="`pertemuan[${index}][nama]`" x-model="pertemuan.nama"
                                             class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
