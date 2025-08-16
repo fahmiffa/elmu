@@ -51,8 +51,11 @@
                         <select name="kelas[]" required x-data="dropdownSelect()"
                              multiple>
                             <option value="">Pilih Kelas</option>
+                            @php
+
+                            @endphp
                             @foreach ($kelas as $row)
-                                <option value="{{ $row->id }}" @selected(in_array($row->id,$items->kelas->pluck('id')->toArray()))>{{ $row->name }}
+                                <option value="{{ $row->id }}" @selected(in_array($row->id,isset($items) ? $items->kelas->pluck('id')->toArray() : [])))>{{ $row->name }}
                                 </option>
                             @endforeach
                         </select>
