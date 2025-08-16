@@ -111,6 +111,20 @@ export const dataTable = (data) => {
         formatNumber(number) {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         },
+        formatWIB(datetimeStr) {
+            if (!datetimeStr) return "";
+            const date = new Date(datetimeStr);
+            return (
+                date.toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }) + " WIB"
+            );
+        },
     };
 };
 

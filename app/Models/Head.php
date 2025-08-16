@@ -16,6 +16,11 @@ class Head extends Model
         return $this->belongsTo(Student::class, 'students', 'id');
     }
 
+    public function jadwal()
+    {
+        return $this->belongsTo(Schedule::class, 'id', 'head');
+    }
+
     public function paket()
     {
         return $this->belongsTo(Program::class, 'program', 'id');
@@ -56,8 +61,7 @@ class Head extends Model
 
     public function getindukAttribute()
     {
-        $nom  = str_pad($this->number, 4, '0', STR_PAD_LEFT);
-        return $nom;
+        return str_pad($this->number, 4, '0', STR_PAD_LEFT);
     }
 
 }

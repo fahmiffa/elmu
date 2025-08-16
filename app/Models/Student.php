@@ -25,11 +25,11 @@ class Student extends Model
 
     public function getgendersAttribute()
     {
-        if ($this->gender == "1") {
+        if ($this->gender == 1) {
             return "Laki-laki";
         }
 
-        if ($this->gender == "2") {
+        if ($this->gender == 2) {
             return "Perempuan";
         }
     }

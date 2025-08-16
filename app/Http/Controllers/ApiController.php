@@ -106,16 +106,20 @@ class ApiController extends Controller
     {
         $id      = JWTAuth::user()->id;
         $Student = Student::where('user', $id)
-            ->select('id', 'name', 'induk', 'img', 'user')
-            ->with([
-                'reg:id,students,price,unit',
+            ->select('id', 'name', 'img', 'user','gender')
+            ->with(
+                'reg:id,students,price,unit,number',
                 'reg.product:id,harga,product,kelas',
                 'reg.product.class:id,name',
                 'reg.product.program:id,name',
                 // 'reg.units:id,name',
                 'reg.bill:id,head,time,bulan,tahun,via,status,first',
                 // 'users:id,name,role,status'
-                ])
+                'reg.jadwal:id,head,teach_id,status',
+                'reg.jadwal.guru:id,name,hp',
+                'reg.jadwal.meet:id,name,schedule_id',
+                'reg.jadwal.meet.waktu:id,schedule_meet_id,waktu,status'
+                )
             ->first();
         return response()->json($Student);
     }

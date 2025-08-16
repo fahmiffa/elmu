@@ -35,7 +35,7 @@
                                         <dl>
                                             <dt x-text="meet.name" class="font-semibold"></dt>
                                             <template x-for="(time, i) in meet.waktu" :key="i">
-                                                <dd x-text="`- ${time.waktu}`"></dd>
+                                                <dd x-text="`- ${formatWIB(time.waktu)}`"></dd>
                                             </template>
                                         </dl>
                                     </template>
