@@ -26,14 +26,21 @@
                     x-data=reg(@json($kelas),@json($paket),@json($unit))>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Jenjang</label>
+                        @php
+                            $grades = [
+                                'pra_tk' => 'Pra TK',
+                                'tk' => 'TK',
+                                'sd' => 'SD',
+                                'smp' => 'SMP',
+                                'alumni' => 'Alumni',
+                            ];
+                        @endphp
                         <select name="grade" required
                             class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                             <option value="">Pilih Jenjang</option>
-                            <option value="pra_tk">Pra TK</option>
-                            <option value="tk">TK</option>
-                            <option value="sd">SD</option>
-                            <option value="smp">SMP</option>
-                            <option value="alumni">Alumni</option>
+                            @foreach($grades as $val => $label)
+                            <option value="{{$val}}">{{$label}}</option>
+                            @endforeach
                         </select>
 
                         @error('grade')
@@ -137,8 +144,7 @@
 
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat</label>
-                        <textarea name="alamat"
-                            class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('alamat', $items->alamat ?? '') }}</textarea>
+                        <textarea name="alamat" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('alamat', $items->alamat ?? '') }}</textarea>
                         @error('alamat')
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror

@@ -55,7 +55,7 @@
 
                             @endphp
                             @foreach ($kelas as $row)
-                                <option value="{{ $row->id }}" @selected(in_array($row->id,isset($items) ? $items->kelas->pluck('id')->toArray() : [])))>{{ $row->name }}
+                                <option value="{{ $row->id }}" @selected(in_array($row->id,isset($items) ? $items->kelas->pluck('id')->toArray() : []))>{{ $row->name }}
                                 </option>
                             @endforeach
                         </select>

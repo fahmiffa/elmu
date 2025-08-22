@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('user');
             $table->string('name')->nullable();
+            $table->string('img')->nullable();
             $table->string('jenjang')->nullable();
             $table->integer('kelas')->nullable();
             $table->string('place')->nullable();
@@ -35,6 +36,8 @@ return new class extends Migration
             $table->string('hp_parent')->nullable();
             $table->string('study')->nullable();
             $table->string('rank')->nullable();
+            $table->text('pendidikan_non_formal')->nullable();
+            $table->text('prestasi')->nullable();
             $table->timestamps();
         });
     }

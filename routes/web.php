@@ -13,6 +13,9 @@ use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear', function () {
+    // Artisan::call('db:wipe');
+    // Artisan::call('migrate');
+    // Artisan::call('db:seed');
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('prices', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('product');
+            $table->bigInteger('kelas')->nullable();
             $table->decimal('harga', 8, 0);
             $table->timestamps();
         });

@@ -14,4 +14,9 @@ class Kelas extends Model
     {
         return $this->belongsToMany(Unit::class, 'unit_kelas', 'kelas_id', 'unit_id');
     }
+
+    public function program()
+    {
+        return $this->belongsToMany(Program::class, 'prices', 'kelas', 'product');
+    }
 }

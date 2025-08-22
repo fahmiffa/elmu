@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->text('note')->nullable();
             $table->date('tanggal')->nullable();
+            $table->integer('number')->nullable();
             $table->Biginteger('students')->nullable();
             $table->Biginteger('unit')->nullable();
             $table->Biginteger('kelas')->nullable();
-            $table->Biginteger('program')->nullable();
+            $table->Biginteger('price')->nullable();
             $table->Biginteger('payment')->nullable();
             $table->timestamps();
         });
