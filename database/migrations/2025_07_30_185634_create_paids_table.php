@@ -19,7 +19,8 @@ return new class extends Migration
             $table->text('ket')->nullable();
             $table->integer('status')->default(0);
             $table->integer('bulan')->default(0);
-            $table->string('tahun')->nullable(0);
+            $table->string('tahun')->nullable();
+            $table->string('mid')->nullable();
             $table->timestamps(); // created_at dan updated_at
         });
     }
