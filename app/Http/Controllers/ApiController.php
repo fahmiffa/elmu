@@ -209,7 +209,7 @@ class ApiController extends Controller
             'program'               => 'required',
             'unit'                  => 'required',
             'email'                 => 'required|email|unique:users,email',
-            'hp'                    => 'required',
+            // 'hp'                    => 'required',
 
             // Optional
             'name'                  => 'required|string',
