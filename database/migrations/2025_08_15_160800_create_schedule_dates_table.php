@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->Biginteger('schedule_meet_id')->nullable();
             $table->datetime('waktu')->nullable();
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }

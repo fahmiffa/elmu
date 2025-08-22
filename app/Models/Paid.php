@@ -26,6 +26,7 @@ class Paid extends Model
     public function getkitAttribute()
     {
         return $this->first == 1 ? Addon::select('id', 'name')->with(['price:harga,product'])->first() : null;
+        // return Addon::select('id', 'name')->with(['price:harga,product'])->first();
     }
 
     public function murid()

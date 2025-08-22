@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->Biginteger('schedule_id')->nullable();
             $table->string('name')->nullable();
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }

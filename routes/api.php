@@ -6,7 +6,6 @@ use App\Http\Controllers\Home;
 
 Route::post('/webhook', [Home::class, 'midtransHook']);
 
-
 Route::prefix('fire')->group(function () {
     Route::post('/reg', [ApiController::class, 'reg']);
     Route::post('/refresh', [ApiController::class, 'refresh']);
