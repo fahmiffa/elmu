@@ -63,7 +63,7 @@
         </tr>
         <tr>
             <td style="border: none" width="30%">Nomor Induk</td>
-            <td style="border:none">: {{ $items->reg->murid->induk }}</td>
+            <td style="border:none">: {{ $items->reg->induk }}</td>
         </tr>
         <tr>
             <td style="border: none" width="30%">Nama</td>
@@ -85,6 +85,10 @@
             <td style="border: none">Jenis Pembayaran</td>
             <td style="border:none">: {{ $items->reg->kontrak->name }} ({{ $items->reg->kontrak->month }} Bulan)</td>
         </tr>
+        <tr>
+            <td style="border: none">Unit</td>
+            <td style="border:none">: {{ $items->reg->units->name }}</td>
+        </tr>
     </table>
 
     <table style="width: 100%; border:none; font-size:12px;margin-bottom:2rem">
@@ -97,7 +101,10 @@
         </tr>
         <tr>
             <td style="border: none" width="30%">Nominal</td>
-            <td style="border:none">: {{ number_format($items->reg->product->harga, 0, ',', '.') }}</td>
+            @php
+                $kit = $items->kit ? $items->kit->price->harga : 0;
+            @endphp
+            <td style="border:none">: {{ number_format($items->reg->product->harga + $kit, 0, ',', '.') }}</td>
         </tr>
         <tr>
             <td style="border: none" width="30%">Jatuh Tempo</td>

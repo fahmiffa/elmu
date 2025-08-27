@@ -4,9 +4,9 @@
         <span class="text-orange-500 mr-2">
 
 
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" class="lucide lucide-school-icon lucide-school">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-school-icon lucide-school">
                 <path d="M14 22v-4a2 2 0 1 0-4 0v4" />
                 <path
                     d="m18 10 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7.382a1 1 0 0 1 .553-.894L6 10" />
@@ -21,10 +21,9 @@
 <a href="{{ route('dashboard.master.unit.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.unit.*') ? 'bg-gray-100' : null }}">
-        <span class="text-orange-500 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-layout-grid-icon lucide-layout-grid">
+        <span class="text-orange-500 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-layout-grid-icon lucide-layout-grid">
                 <rect width="7" height="7" x="3" y="3" rx="1" />
                 <rect width="7" height="7" x="14" y="3" rx="1" />
                 <rect width="7" height="7" x="14" y="14" rx="1" />
@@ -33,13 +32,29 @@
 
     </li>
 </a>
+<a href="{{ route('dashboard.master.zone.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.zone.*') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-land-plot-icon lucide-land-plot">
+                <path d="m12 8 6-3-6-3v10" />
+                <path d="m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12" />
+                <path d="m6.49 12.85 11.02 6.3" />
+                <path d="M17.51 12.85 6.5 19.15" />
+            </svg>
+        </span> Zona
+
+    </li>
+</a>
 <a href="{{ route('dashboard.master.student.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" class="lucide lucide-graduation-cap-icon lucide-graduation-cap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-graduation-cap-icon lucide-graduation-cap">
                 <path
                     d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
                 <path d="M22 10v6" />
@@ -52,9 +67,9 @@
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.teach.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" class="lucide lucide-gpu-icon lucide-gpu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-gpu-icon lucide-gpu">
                 <path d="M2 21V3" />
                 <path d="M2 5h18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2.26" />
                 <path d="M7 17v3a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-3" />
@@ -68,9 +83,9 @@
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer  {{ Route::is('dashboard.master.payment.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" class="lucide lucide-credit-card-icon lucide-credit-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-credit-card-icon lucide-credit-card">
                 <rect width="20" height="14" x="2" y="5" rx="2" />
                 <line x1="2" x2="22" y1="10" y2="10" />
             </svg></span>
@@ -120,5 +135,18 @@
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
             </svg></span>
         Layanan
+    </li>
+</a>
+<a href="{{ route('dashboard.master.grade.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.grade.*') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-gauge-icon lucide-gauge">
+                <path d="m12 14 4-4" />
+                <path d="M3.34 19a10 10 0 1 1 17.32 0" />
+            </svg></span>
+        Jenjang
     </li>
 </a>

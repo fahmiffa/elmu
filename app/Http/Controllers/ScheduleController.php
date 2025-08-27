@@ -6,8 +6,8 @@ use App\Models\Schedule;
 use App\Models\Schedule_date;
 use App\Models\Schedule_meet;
 use App\Models\Teach;
-use Illuminate\Http\Request;
 use DB;
+use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
@@ -16,8 +16,8 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $items = Schedule::with('waktu','meet.waktu','reg.murid','guru')->get();
-        return view('schedule.index', compact('items'));
+        $items = Schedule::with('waktu', 'meet.waktu', 'reg.murid', 'reg.units')->get();
+        return view('home.schedule.index', compact('items'));
     }
 
     /**
@@ -29,8 +29,8 @@ class ScheduleController extends Controller
         $guru   = Teach::select('id', 'name')->latest()->get();
         $murid  = Head::with('murid')->whereDoesntHave('bill', function ($q) {
             $q->where('status', '!=', 1);
-        })->get();
-        return view('schedule.form', compact('action', 'guru', 'murid'));
+        })->DoesntHave('jadwal')->get();
+        return view('home.schedule.form', compact('action', 'guru', 'murid'));
     }
 
     /**
@@ -39,16 +39,17 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'guru'  => 'required',
             'murid' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
+
+        $meet = $request->pertemuan;
+
         DB::beginTransaction();
         try {
-            $sch           = new Schedule;
-            $sch->head     = $request->murid;
-            $sch->teach_id = $request->guru;
+            $sch       = new Schedule;
+            $sch->head = $request->murid;
             $sch->save();
 
             $meet = $request->pertemuan;
@@ -73,7 +74,7 @@ class ScheduleController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             dd($e);
-            return back()->with('err',$e);
+            return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
 
     }
@@ -89,17 +90,64 @@ class ScheduleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Schedule $schedule)
+    public function edit(Schedule $jadwal)
     {
-        //
+        $action = "Edit Jadwal " . $jadwal->reg->murid->name;
+        $items  = $jadwal;
+        foreach ($items->meet as $val) {
+
+            foreach ($val->waktu as $waktu) {
+                $tanggalList[] = [
+                    'tanggal' => \Carbon\Carbon::parse($waktu->tanggal)->format('Y-m-d\TH:i'),
+                ];
+            }
+
+            $da[] = [
+                'nama'        => $val->name,
+                'tanggalList' => $tanggalList,
+            ];
+        }
+        return view('home.schedule.form', compact('action', 'items', 'da'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Schedule $schedule)
+    public function update(Request $request, Schedule $jadwal)
     {
-        //
+
+        $meet = $request->pertemuan;
+
+        DB::beginTransaction();
+        try {
+
+            Schedule_date::whereIn('schedule_meet_id',$jadwal->meet->pluck('id')->toArray())->delete();
+            Schedule_meet::where('schedule_id',$jadwal->id)->delete();
+
+            $meet = $request->pertemuan;
+
+            for ($i = 0; $i < count($meet); $i++) {
+                $sch_meet              = new Schedule_meet;
+                $sch_meet->schedule_id = $jadwal->id;
+                $sch_meet->name        = $meet[$i]['nama'];
+                $sch_meet->save();
+
+                $date = $meet[$i]['tanggal'];
+                for ($x = 0; $x < count($date); $x++) {
+                    $sch_date                   = new Schedule_date;
+                    $sch_date->schedule_meet_id = $sch_meet->id;
+                    $sch_date->waktu            = $date[$x];
+                    $sch_date->save();
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('dashboard.jadwal.index')->with('status', 'Update Jadwal berhasil');
+        } catch (\Exception $e) {
+            DB::rollback();
+            dd($e);
+            return back()->with('err', 'Terjadi Kesalahan Proses Input');
+        }
     }
 
     /**

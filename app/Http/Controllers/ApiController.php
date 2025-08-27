@@ -9,6 +9,7 @@ use App\Models\Program;
 use App\Models\Student;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Grade;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -101,13 +102,7 @@ class ApiController extends Controller
                 $items->units->each->makeHidden('pivot');
                 $items->program->each->makeHidden('pivot');
             });
-        $grades = [
-            'pra_tk' => 'Pra TK',
-            'tk'     => 'TK',
-            'sd'     => 'SD',
-            'smp'    => 'SMP',
-            'alumni' => 'Alumni',
-        ];
+        $grades = Grade::select('id','name')->get();
         return response()->json(['items' => $products, 'grade' => $grades]);
     }
 
@@ -177,8 +172,6 @@ class ApiController extends Controller
             ], 400);
         }
 
-        // $id = JWTAuth::user()->id;
-
         $paid         = Paid::where('id', $request->bill)->firstOrFail();
         $paid->status = 1;
         $paid->time   = date("Y-m-d H:i:s");
@@ -195,7 +188,7 @@ class ApiController extends Controller
     public function reg(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'grade'                 => 'required|string|in:pra_tk,tk,sd,smp,sma',
+            'grade_id'                 => 'required',
             'kelas'                 => 'required',
             'gender'                => 'nullable|in:1,2',
             'place'                 => 'nullable|string',
@@ -209,7 +202,6 @@ class ApiController extends Controller
             'program'               => 'required',
             'unit'                  => 'required',
             'email'                 => 'required|email|unique:users,email',
-            // 'hp'                    => 'required',
 
             // Optional
             'name'                  => 'required|string',
@@ -251,7 +243,7 @@ class ApiController extends Controller
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
             $siswa->img                   = $path;
-            $siswa->jenjang               = $request->grade;
+            $siswa->grade_id              = $request->grade;
             $siswa->alamat                = $request->alamat;
             $siswa->place                 = $request->place;
             $siswa->birth                 = $request->birth;

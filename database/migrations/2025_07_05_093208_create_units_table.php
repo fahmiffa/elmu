@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('hp');
-            $table->string('pic');
             $table->text('addr');
             $table->timestamps();
         });

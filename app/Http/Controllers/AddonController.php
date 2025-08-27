@@ -14,7 +14,7 @@ class AddonController extends Controller
     public function index()
     {
         $items = Addon::with('price')->latest()->get();
-        return view('layanan.index', compact('items'));
+        return view('master.layanan.index', compact('items'));
     }
 
     /**
@@ -23,7 +23,7 @@ class AddonController extends Controller
     public function create()
     {
         $action = "Tambah Layanan";
-        return view('layanan.form', compact('action'));
+        return view('master.layanan.form', compact('action'));
     }
 
     /**
@@ -73,7 +73,7 @@ class AddonController extends Controller
     {
         $items  = $layanan;
         $action = "Edit Layanan";
-        return view('layanan.form', compact('action', 'items'));
+        return view('master.layanan.form', compact('action', 'items'));
     }
 
     /**

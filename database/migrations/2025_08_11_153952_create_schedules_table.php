@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->Biginteger('head')->nullable();
-            $table->Biginteger('teach_id')->nullable();
-            $table->Biginteger('student_id')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();
         });

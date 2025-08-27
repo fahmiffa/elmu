@@ -42,7 +42,7 @@ export const layout = () => {
 };
 
 export const dataTable = (data) => {
-    console.log(data)
+    console.log(data);
     return {
         search: "",
         sortColumn: "name",
@@ -206,6 +206,7 @@ export function generateBill() {
 }
 
 export function reg(kelas, program, unit) {
+    console.log(kelas);
     const val = kelas.map((e) => ({ value: e.id, label: e.name }));
     return {
         selectedKelas: "",
@@ -229,12 +230,13 @@ export function reg(kelas, program, unit) {
     };
 }
 
-export function jadwal() {
+export function jadwal(par) {
+    console.log(par)
     return {
-        pertemuanList: [
+        pertemuanList: par ?? [
             {
                 nama: "Pertemuan 1",
-                tanggalList: [{ tanggal: "2025-08-15T10:00", materi: "" }],
+                tanggalList: [{ tanggal: "2025-08-15T10:00"}],
             },
         ],
         addPertemuan() {
@@ -246,7 +248,6 @@ export function jadwal() {
         addTanggal(index) {
             this.pertemuanList[index].tanggalList.push({
                 tanggal: "",
-                materi: "",
             });
         },
         formatWIB(datetimeStr) {
@@ -262,6 +263,236 @@ export function jadwal() {
                     minute: "2-digit",
                 }) + " WIB"
             );
+        },
+    };
+}
+
+import Chart from "@toast-ui/chart";
+import "@toast-ui/chart/dist/toastui-chart.min.css";
+
+export function salesChart(par, reg) {
+    return {
+        selectedMonth: new Date().getMonth() + 1,
+        selectedYear: new Date().getFullYear(),
+        months: [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ],
+
+        async fetchData(actionUrl) {
+            const method = "GET";
+            fetch(actionUrl, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector(
+                        "meta[name=csrf-token]"
+                    ),
+                },
+            })
+                .then((res) => res.json())
+                .then((da) => {
+                    this.years = da.Year;
+                    this.dummyData = da.data;
+                    this.$nextTick(() => {
+                        this.renderChart();
+                    });
+                });
+        },
+
+        chartInstance: null,
+
+        updateChart() {
+            this.renderChart();
+        },
+
+        renderChart() {
+            const dataByYear = this.dummyData[this.selectedYear] || {};
+            const categories = Object.keys(dataByYear);
+            const total = Object.values(dataByYear);
+
+            const chartData = {
+                categories: categories,
+                series: [
+                    {
+                        name: par,
+                        data: total,
+                    },
+                ],
+            };
+
+            const options = {
+                chart: {
+                    width: 700,
+                    height: 400,
+                    title: par,
+                    // title: `Grafik Penjualan Tahun ${this.selectedYear}`,
+                },
+                xAxis: {
+                    title: "Bulan",
+                },
+                yAxis: {
+                    title: "Jumlah",
+                },
+                series: {
+                    verticalAlign: true,
+                },
+                responsive: {
+                    animation: true,
+                },
+            };
+
+            const container = document.getElementById(reg);
+            container.innerHTML = "";
+
+            this.chartInstance = Chart.columnChart({
+                el: container,
+                data: chartData,
+                options,
+            });
+        },
+    };
+}
+
+export function payChart(par, reg) {
+    return {
+        selectedMonth: new Date().getMonth() + 1,
+        selectedYear: new Date().getFullYear(),
+        months: [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ],
+
+        async fetchData(actionUrl) {
+            const method = "GET";
+            fetch(actionUrl, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector(
+                        "meta[name=csrf-token]"
+                    ),
+                },
+            })
+                .then((res) => res.json())
+                .then((da) => {
+                    this.years = da.Year;
+                    this.dummyData = da.data;
+                    this.$nextTick(() => {
+                        this.renderChart();
+                    });
+                });
+        },
+
+        chartInstance: null,
+
+        updateChart() {
+            this.renderChart();
+        },
+
+        renderChart() {
+            const dataByYear = this.dummyData[this.selectedYear] || {};
+            const categories = Object.keys(dataByYear);
+            const total = Object.values(dataByYear);
+
+            const bayarData = categories.map(
+                (month) => dataByYear[month]?.bayar || 0
+            );
+            const belumData = categories.map(
+                (month) => dataByYear[month]?.belum || 0
+            );
+
+            const chartData = {
+                categories: categories,
+                series: [
+                    {
+                        name: "Bayar",
+                        data: bayarData,
+                    },
+                    {
+                        name: "Belum Bayar",
+                        data: belumData,
+                    },
+                ],
+            };
+
+            const options = {
+                chart: {
+                    width: 700,
+                    height: 400,
+                    title: par,
+                    // title: `Grafik Penjualan Tahun ${this.selectedYear}`,
+                },
+                xAxis: {
+                    title: "Bulan",
+                },
+                yAxis: {
+                    title: "Jumlah",
+                },
+                series: {
+                    verticalAlign: true,
+                },
+                responsive: {
+                    animation: true,
+                },
+            };
+
+            const container = document.getElementById(reg);
+            container.innerHTML = "";
+
+            this.chartInstance = Chart.columnChart({
+                el: container,
+                data: chartData,
+                options,
+            });
+        },
+    };
+}
+
+export function countUp(target) {
+    return {
+        display: "0",
+        current: 0,
+        target: target,
+        duration: 1000, // in ms
+        steps: 60,
+        stepValue: 0,
+
+        start() {
+            this.stepValue = this.target / this.steps;
+            let interval = this.duration / this.steps;
+            let counter = setInterval(() => {
+                this.current += this.stepValue;
+                if (this.current >= this.target) {
+                    this.current = this.target;
+                    clearInterval(counter);
+                }
+                this.display = this.formatNumber(Math.floor(this.current));
+            }, interval);
+        },
+
+        formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         },
     };
 }

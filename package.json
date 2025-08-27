@@ -16,8 +16,10 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
+        "@toast-ui/chart": "^4.6.1",
         "alpinejs": "^3.14.9",
         "blueimp-md5": "^2.19.0",
+        "chartjs": "^0.3.24",
         "escpos-usb": "^3.0.0-alpha.4",
         "tom-select": "^2.4.3",
         "trix": "^2.1.15"

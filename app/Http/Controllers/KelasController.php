@@ -12,7 +12,7 @@ class KelasController extends Controller
     public function index()
     {
         $items = Kelas::all();
-        return view('kelas.index', compact('items'));
+        return view('master.kelas.index', compact('items'));
     }
 
     /**
@@ -21,7 +21,7 @@ class KelasController extends Controller
     public function create()
     {
         $action = "Tambah kelas";
-        return view('kelas.form', compact('action'));
+        return view('master.kelas.form', compact('action'));
     }
 
     /**
@@ -57,7 +57,7 @@ class KelasController extends Controller
     {
         $items  = $kela;
         $action = "Edit kelas";
-        return view('kelas.form', compact('items', 'action'));
+        return view('master.kelas.form', compact('items', 'action'));
     }
 
     /**

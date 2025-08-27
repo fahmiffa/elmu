@@ -53,7 +53,7 @@
 </a>
 <a href="{{ route('dashboard.study') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.study') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.study.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -67,5 +67,34 @@
                 <path d="M6 8h2" />
             </svg>
         </span> Pembelajaran
+    </li>
+</a>
+<a href="{{ route('dashboard.slide.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.slide.*') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-image-icon lucide-image">
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+        </span> Gambar
+    </li>
+</a>
+<a href="{{ route('dashboard.slide.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.slide') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-message-square-warning-icon lucide-message-square-warning">
+                <path
+                    d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+                <path d="M12 15h.01" />
+                <path d="M12 7v4" />
+            </svg>
+        </span> Laporan
     </li>
 </a>

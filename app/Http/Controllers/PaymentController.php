@@ -12,7 +12,7 @@ class PaymentController extends Controller
     public function index()
     {
         $items = Payment::all();
-        return view('payment.index', compact('items'));
+        return view('master.payment.index', compact('items'));
     }
 
     /**
@@ -21,7 +21,7 @@ class PaymentController extends Controller
     public function create()
     {
         $action = "Tambah Pembayaran";
-        return view('payment.form', compact('action'));
+        return view('master.payment.form', compact('action'));
     }
 
     /**
@@ -59,7 +59,7 @@ class PaymentController extends Controller
     {
         $items  = $payment;
         $action = "Edit Payment";
-        return view('payment.form', compact('items', 'action'));
+        return view('master.payment.form', compact('items', 'action'));
     }
 
     /**

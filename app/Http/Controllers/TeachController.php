@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Teach;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class TeachController extends Controller
     public function index()
     {
         $items = Teach::all();
-        return view('teach.index', compact('items'));
+        return view('master.teach.index', compact('items'));
     }
 
     /**
@@ -22,7 +23,8 @@ class TeachController extends Controller
     public function create()
     {
         $action = "Tambah Guru";
-        return view('teach.form', compact('action'));
+        $unit   = Unit::all();
+        return view('master.teach.form', compact('action', 'unit'));
     }
 
     /**
@@ -37,6 +39,7 @@ class TeachController extends Controller
             'hp'    => 'required',
             'addr'  => 'required',
             'study' => 'required',
+            'unit'  => 'required',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
@@ -46,6 +49,7 @@ class TeachController extends Controller
             'addr.required'  => 'Alamat wajib diisi.',
             'hp.required'    => 'Nomor HP wajib diisi.',
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
+            'required'       => 'Field wajib diisi.',
         ]);
 
         $path = null;
@@ -61,14 +65,15 @@ class TeachController extends Controller
         $user->password = bcrypt('rahasia');
         $user->save();
 
-        $item        = new Teach;
-        $item->img   = $path;
-        $item->name  = $request->name;
-        $item->birth = $request->birth;
-        $item->hp    = $request->hp;
-        $item->addr  = $request->addr;
-        $item->study = $request->study;
-        $item->user  = $user->id;
+        $item          = new Teach;
+        $item->img     = $path;
+        $item->unit_id = $request->unit;
+        $item->name    = $request->name;
+        $item->birth   = $request->birth;
+        $item->hp      = $request->hp;
+        $item->addr    = $request->addr;
+        $item->study   = $request->study;
+        $item->users    = $user->id;
         $item->save();
 
         return redirect()->route('dashboard.master.teach.index');
@@ -89,7 +94,7 @@ class TeachController extends Controller
     {
         $items  = $teach;
         $action = "Edit Guru";
-        return view('teach.form', compact('items', 'action'));
+        return view('master.teach.form', compact('items', 'action'));
     }
 
     /**

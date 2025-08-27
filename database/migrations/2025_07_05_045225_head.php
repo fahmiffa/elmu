@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->date('tanggal')->nullable();
             $table->integer('number')->nullable();
+            $table->integer('done')->default(0);
             $table->Biginteger('students')->nullable();
             $table->Biginteger('unit')->nullable();
             $table->Biginteger('kelas')->nullable();

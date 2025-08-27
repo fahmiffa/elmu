@@ -9,6 +9,9 @@ import {
     generateBill,
     reg,
     jadwal,
+    salesChart,
+    payChart,
+    countUp
 } from "./custom.js";
 
 window.Alpine = Alpine;
@@ -19,6 +22,9 @@ Alpine.data("dataTable", dataTable);
 Alpine.data("generateBill", generateBill);
 Alpine.data("jadwal", jadwal);
 Alpine.data("reg", reg);
+Alpine.data('salesChart', salesChart);
+Alpine.data('payChart', payChart);
+Alpine.data('countUp', countUp);
 Alpine.store("unit");
 
 Alpine.start();

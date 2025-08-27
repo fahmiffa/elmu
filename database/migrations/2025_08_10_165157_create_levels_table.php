@@ -17,6 +17,7 @@ return new class extends Migration
             $table->bigInteger('programs_id');
             $table->text("note")->nullable();
             $table->integer('level')->defalut(0);
+            $table->integer('status')->defalut(0);
             $table->timestamps();
         });
     }

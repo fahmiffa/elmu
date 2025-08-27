@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\BulkInsertJob;
 use App\Models\App;
+use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Paid;
@@ -112,7 +113,7 @@ class Home extends Controller
     public function user()
     {
         $items = User::all();
-        return view('user.index', compact('items'));
+        return view('master.user.index', compact('items'));
     }
 
     public function userUpdate(Request $request, User $user)
@@ -126,7 +127,7 @@ class Home extends Controller
     {
         $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
         if ($user->role != 0) {
-            return view('user.detail', compact('user'));
+            return view('master.user.detail', compact('user'));
         } else {
             return back();
         }
@@ -157,13 +158,13 @@ class Home extends Controller
 
     public function index()
     {
-        return view('home');
+        return view('home.index');
     }
 
     public function reg()
     {
         $items = Head::with('murid')->with('product.program', 'product.class')->with('kontrak')->with('units')->get();
-        return view('reg.index', compact('items'));
+        return view('home.reg.index', compact('items'));
     }
 
     public function invoice($id)
@@ -202,7 +203,7 @@ class Home extends Controller
                     "token"        => $fcm,
                     "notification" => [
                         "title" => "Tagihan",
-                        "body"  => "Pembayaran Tagihan bulan " . $paid->bulan. " Berhasil",
+                        "body"  => "Pembayaran Tagihan bulan " . $paid->bulan . " Berhasil",
                     ],
                 ],
             ];
@@ -221,18 +222,19 @@ class Home extends Controller
             ->latest()
             ->get();
         $kontrak = Payment::all();
+        $grade   = Grade::all();
         $unit    = UnitKelas::select('id', 'kelas_id', 'unit_id')
             ->with('unit:id,name')
             ->get();
         $action = "Form Pendaftaran";
-        return view('reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit'));
+        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit','grade'));
     }
 
     public function regStore(Request $request)
     {
         $validated = $request->validate([
             // Wajib diisi
-            'grade'                 => 'required|string|in:pra_tk,tk,sd,smp,sma',
+            'grade'                 => 'required',
             'kelas'                 => 'required|string',
             'gender'                => 'nullable|in:1,2',
             'place'                 => 'nullable|string',
@@ -283,7 +285,7 @@ class Home extends Controller
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
             $siswa->img                   = $path;
-            $siswa->jenjang               = $request->grade;
+            $siswa->grade_id              = $request->grade;
             $siswa->alamat                = $request->alamat;
             $siswa->place                 = $request->place;
             $siswa->birth                 = $request->birth;
@@ -334,61 +336,99 @@ class Home extends Controller
     public function schedule()
     {
         $items = Paid::has('reg')->with('reg.murid', 'reg.paket', 'reg.class', 'reg.kontrak')->get();
-        return view('schedule.index', compact('items'));
+        return view('home.schedule.index', compact('items'));
     }
 
     public function pay()
     {
         $items = Paid::has('reg')->with('reg.murid', 'reg.murid.users', 'reg.product.class', 'reg.product.program', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
-        return view('pay.index', compact('items'));
+        return view('home.pay.index', compact('items'));
     }
 
     public function master()
     {
-        return view('master');
+        return view('master.index');
     }
 
-    public function chart()
+    public function chart($par)
     {
-
-        $data = DB::table('carts')
-            ->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, SUM(count) as total_penjualan')
-            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
-            ->orderByRaw('YEAR(created_at), MONTH(created_at)')
-            ->get();
-
         $bulanMap = [
             1 => 'Jan', 2  => 'Feb', 3  => 'Mar', 4  => 'Apr',
             5 => 'Mei', 6  => 'Jun', 7  => 'Jul', 8  => 'Aug',
             9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
         ];
 
-        $dummyData = [];
-
-        foreach ($data->pluck('tahun')->unique() as $tahun) {
-            foreach ($bulanMap as $num => $namaBulan) {
-                $dummyData[$tahun][$namaBulan] = 0;
-            }
-        }
-
-        foreach ($data as $item) {
-            $tahun                     = $item->tahun;
-            $bulan                     = $bulanMap[$item->bulan];
-            $dummyData[$tahun][$bulan] = (int) $item->total_penjualan;
-        }
-
         $now   = (int) date('Y');
         $start = (int) env('APP_START');
-        $year  = [];
 
-        for ($tahun = $now; $tahun >= $start; $tahun--) {
-            array_push($year, $tahun);
+        if ($par == 'reg') {
+            $data = DB::table('head')
+                ->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
+                ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+                ->orderByRaw('YEAR(created_at), MONTH(created_at)')
+                ->get();
+
+            foreach ($data->pluck('tahun')->unique() as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = 0;
+                }
+            }
+
+            foreach ($data as $item) {
+                $tahun                     = $item->tahun;
+                $bulan                     = $bulanMap[$item->bulan];
+                $dummyData[$tahun][$bulan] = (int) $item->total;
+            }
+
+            $year = [];
+
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
         }
 
-        $da = [
-            "Year" => $year,
-            "data" => $dummyData,
-        ];
+        if ($par == 'pay') {
+
+            $data = DB::table('paids')
+                ->selectRaw('tahun, bulan, status, count(*) as total')
+                ->groupBy('bulan', 'tahun', 'status')
+                ->orderBy('tahun', 'asc')
+                ->orderBy('bulan', 'asc')
+                ->get();
+
+            foreach ($data->pluck('tahun')->unique() as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = [
+                        'bayar' => 0,
+                        'belum' => 0,
+                    ];
+                }
+            }
+
+            foreach ($data as $item) {
+                $tahun     = $item->tahun;
+                $bulan     = $bulanMap[$item->bulan];
+                $statusKey = $item->status == 1 ? 'bayar' : 'belum';
+
+                $dummyData[$tahun][$bulan][$statusKey] = (int) $item->total;
+            }
+
+            $year = [];
+
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
+        }
 
         return response()->json($da, 200);
     }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Grade;
 use App\Models\Student;
 use DB;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class StudentController extends Controller
     public function index()
     {
         $items = Student::all();
-        return view('students.index', compact('items'));
+        return view('master.students.index', compact('items'));
     }
 
     /**
@@ -46,7 +47,8 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $action = "Edit Murid " . $student->name;
-        return view('students.form', compact('student', 'action'));
+        $grade  = Grade::all();
+        return view('master.students.form', compact('student', 'action','grade'));
     }
 
     /**
@@ -55,7 +57,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         $validated = $request->validate([
-            'grade'                 => 'required|string|in:pra_tk,tk,sd,smp,sma',
+            'grade'                 => 'required',
             'gender'                => 'nullable|in:1,2',
             'place'                 => 'nullable|string',
             'birth'                 => 'nullable|date',

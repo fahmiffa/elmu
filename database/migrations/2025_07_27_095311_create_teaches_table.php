@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->Biginteger('users')->nullable();
+            $table->Biginteger('unit_id');
             $table->string('hp');
             $table->string('img')->nullable();
             $table->string('study');

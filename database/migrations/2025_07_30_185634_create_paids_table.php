@@ -17,8 +17,10 @@ return new class extends Migration
             $table->date('tanggal')->nullable();
             $table->timestamp('time')->nullable(); // waktu khusus jika perlu
             $table->text('ket')->nullable();
+            $table->text('via')->nullable();
             $table->integer('status')->default(0);
             $table->integer('bulan')->default(0);
+            $table->integer('first')->default(0);
             $table->string('tahun')->nullable();
             $table->string('mid')->nullable();
             $table->timestamps(); // created_at dan updated_at

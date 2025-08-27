@@ -14,14 +14,14 @@ class UnitController extends Controller
     public function index()
     {
         $items = Unit::with('kelas')->latest()->get();
-        return view('unit.index', compact('items'));
+        return view('master.unit.index', compact('items'));
     }
 
     public function create()
     {
         $action = "Tambah Unit";
         $kelas  = Kelas::latest()->get();
-        return view('unit.form', compact('action', 'kelas'));
+        return view('master.unit.form', compact('action', 'kelas'));
     }
 
     /**
@@ -30,26 +30,24 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'pic'  => 'required',
-            'hp'   => 'required',
-            'addr' => 'required',
+            'name'    => ['required', 'regex:/^\S*$/'],
+            'addr'    => 'required',
+            'kelas'   => 'array',
+            'kelas.*' => 'exists:kelas,id',
         ], [
             'name.required' => 'Nama sekarang wajib diisi.',
             'pic.required'  => 'PIC wajib diisi.',
             'addr.required' => 'Alamat wajib diisi.',
             'hp.required'   => 'Nomor HP wajib diisi.',
+            'regex' => 'Tidak boleh memakai spasi'
         ]);
 
         $item       = new Unit;
         $item->name = $request->name;
-        $item->pic  = $request->pic;
-        $item->hp   = $request->hp;
         $item->addr = $request->addr;
         $item->save();
 
         $class = $request->kelas;
-        // dd($request->input());
         for ($i = 0; $i < count($class); $i++) {
             $kelas           = new UnitKelas;
             $kelas->kelas_id = $class[$i];
@@ -69,10 +67,10 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit)
     {
-        $items = $unit->load('kelas');
+        $items  = $unit->load('kelas');
         $action = "Edit Unit";
         $kelas  = Kelas::latest()->get();
-        return view('unit.form', compact('items', 'action', 'kelas'));
+        return view('master.unit.form', compact('items', 'action', 'kelas'));
     }
 
     /**
@@ -81,15 +79,13 @@ class UnitController extends Controller
     public function update(Request $request, Unit $unit)
     {
         $request->validate([
-            'name'    => 'required',
-            'pic'     => 'required',
-            'hp'      => 'required',
+            'name'    => ['required', 'regex:/^\S*$/'],
             'addr'    => 'required',
-            'kelas'   => 'array',           // Pastikan ini array
-            'kelas.*' => 'exists:kelas,id', // Pastikan kelas valid
+            'kelas'   => 'array',
+            'kelas.*' => 'exists:kelas,id',
         ]);
 
-        $unit->update($request->only('name', 'pic', 'hp', 'addr', 'center'));
+        $unit->update($request->only('name', 'addr', 'center'));
 
         // Sync kelas
         $kelas = $request->input('kelas', []);

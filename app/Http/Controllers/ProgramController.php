@@ -14,7 +14,7 @@ class ProgramController extends Controller
     public function index()
     {
         $items = Program::with(['kelas','price'])->latest()->get();
-        return view('program.index', compact('items'));
+        return view('master.program.index', compact('items'));
     }
 
     /**
@@ -24,7 +24,7 @@ class ProgramController extends Controller
     {
         $action = "Tambah Program";
         $kelas  = Kelas::all();
-        return view('program.form', compact('action', 'kelas'));
+        return view('master.program.form', compact('action', 'kelas'));
     }
 
     /**
@@ -88,7 +88,7 @@ class ProgramController extends Controller
 
         $action = "Edit Program";
         $kelas  = Kelas::all();
-        return view('program.form', compact('items', 'action', 'kelas', 'data'));
+        return view('master.program.form', compact('items', 'action', 'kelas', 'data'));
     }
 
     /**
