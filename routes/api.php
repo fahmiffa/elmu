@@ -1,8 +1,7 @@
 <?php
 use App\Http\Controllers\ApiController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\Home;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/webhook', [Home::class, 'midtransHook']);
 
@@ -20,6 +19,9 @@ Route::middleware('jwt')->group(function () {
     Route::get('/program', [ApiController::class, 'program']);
     Route::get('/unit', [ApiController::class, 'unit']);
     Route::get('/bill', [ApiController::class, 'bill']);
+    Route::get('/tagihan', [ApiController::class, 'tagihan']);
     Route::post('/bill', [ApiController::class, 'billStore']);
     Route::get('/price/{kelas}/{product}', [ApiController::class, 'price']);
+    Route::get('/jadwal', [ApiController::class, 'jadwal']);
+    Route::post('/jadwal', [ApiController::class, 'UpJadwal']);
 });

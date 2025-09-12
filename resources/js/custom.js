@@ -206,7 +206,6 @@ export function generateBill() {
 }
 
 export function reg(kelas, program, unit) {
-    console.log(kelas);
     const val = kelas.map((e) => ({ value: e.id, label: e.name }));
     return {
         selectedKelas: "",
@@ -218,7 +217,7 @@ export function reg(kelas, program, unit) {
                 return [{ value: "", label: "Pilih Program" }];
             return program
                 .filter((p) => p.kelas == Number(this.selectedKelas))
-                .map((e) => ({ value: e.id, label: e.program.name }));
+                .map((e) => ({ value: e.program.id, label: e.program.name }));
         },
         get filteredUnits() {
             if (!this.selectedKelas)
@@ -230,13 +229,235 @@ export function reg(kelas, program, unit) {
     };
 }
 
+// export function schedule(data) {
+//     console.log(data);
+//     return {
+//         selectedUnit: "",
+//         selectedPrgram: "",
+//         selectedKelas: "",
+//         tom: null,
+
+//         get programs() {
+//             let val = [];
+//             if (!this.selectedUnit)
+//                 return [{ value: "", label: "Pilih Program" }];
+//             val = data
+//                 .filter((p) => p.unit == Number(this.selectedUnit) && p.kelas == Number(this.selectedKelas))
+//                 .map((e) => ({
+//                     value: e.programs.id,
+//                     label: e.programs.name,
+//                 }))
+//                 .filter(
+//                     (item, index, self) =>
+//                         index === self.findIndex((t) => t.value === item.value)
+//                 );
+
+//             if (val.length < 1) return [{ value: "", label: "Pilih Program" }];
+
+//             return [
+//                 { value: "", label: "Pilih Program" },
+//                 ...Array.from(val.values()),
+//             ];
+//         },
+
+//         get kelas() {
+//             let val = [];
+//             if (!this.selectedUnit)
+//                 return [{ value: "", label: "Pilih Kelas" }];
+//             val = data
+//                 .filter((p) => p.unit == Number(this.selectedUnit))
+//                 .map((e) => ({
+//                     value: e.class.id,
+//                     label: e.class.name,
+//                 }))
+//                 .filter(
+//                     (item, index, self) =>
+//                         index === self.findIndex((t) => t.value === item.value)
+//                 );
+
+//             if (val.length < 1) return [{ value: "", label: "Pilih Kelas" }];
+
+//             return [
+//                 { value: "", label: "Pilih Kelas" },
+//                 ...Array.from(val.values()),
+//             ];
+//         },
+
+//         init() {
+//             this.$nextTick(() => {
+//                 this.initTomSelect();
+
+//                 this.$watch("selectedUnit", () => {
+//                     this.selectedPrgram = ""; // reset program
+//                     this.updateOptions();
+//                 });
+
+//                 this.$watch("selectedPrgram", () => {
+//                     this.updateOptions();
+//                 });
+//             });
+//         },
+
+//         initTomSelect() {
+//             const selectEl = this.$refs.selectMurid;
+
+//             if (selectEl.tomselect) {
+//                 this.tom = selectEl.tomselect;
+//                 return;
+//             }
+
+//             this.tom = new TomSelect(selectEl, {
+//                 plugins: ["remove_button"],
+//                 placeholder: "Pilih Murid",
+//                 options: this.getFilteredMurid(),
+//                 items: [],
+//             });
+//         },
+
+//         getFilteredMurid() {
+//             if (!this.selectedUnit || !this.selectedPrgram) return [];
+
+//             return data
+//                 .filter(
+//                     (p) =>
+//                         Number(p.unit) === Number(this.selectedUnit) &&
+//                         Number(p.program) === Number(this.selectedPrgram)
+//                 )
+//                 .map((e) => ({
+//                     value: e.murid.id,
+//                     text: e.murid.name,
+//                 }));
+//         },
+
+//         updateOptions() {
+//             if (!this.tom) return;
+//             this.tom.clear();
+//             const newOptions = this.getFilteredMurid();
+//             this.tom.clearOptions();
+//             this.tom.addOptions(newOptions);
+//             this.tom.refreshOptions(false);
+//         },
+//     };
+// }
+
+export function schedule(data, initial = {}) {
+    return {
+        selectedUnit: initial.unit || "",
+        selectedKelas: initial.kelas || "",
+        selectedProgram: initial.program || "",
+        selectedMurid: initial.murid || [],
+        tom: null,
+
+
+        get programs() {
+            if (!this.selectedUnit || !this.selectedKelas)
+                return [{ value: "", label: "Pilih Program" }];
+
+            const filtered = data
+                .filter(
+                    (p) =>
+                        p.unit == this.selectedUnit &&
+                        p.kelas == this.selectedKelas
+                )
+                .map((p) => ({ value: p.programs.id, label: p.programs.name }));
+
+            const unique = Array.from(
+                new Map(filtered.map((i) => [i.value, i])).values()
+            );
+
+            return [{ value: "", label: "Pilih Program" }, ...unique];
+        },
+
+        get kelas() {
+            if (!this.selectedUnit)
+                return [{ value: "", label: "Pilih Kelas" }];
+
+            const filtered = data
+                .filter((p) => p.unit == this.selectedUnit)
+                .map((p) => ({ value: p.class.id, label: p.class.name }));
+
+            const unique = Array.from(
+                new Map(filtered.map((i) => [i.value, i])).values()
+            );
+
+            return [{ value: "", label: "Pilih Kelas" }, ...unique];
+        },
+
+        init() {
+            this.$nextTick(() => {
+                this.initTomSelect();
+
+                this.$watch("selectedUnit", () => {
+                    this.selectedProgram = "";
+                    this.updateOptions();
+                });
+
+                this.$watch("selectedKelas", () => {
+                    this.selectedProgram = "";
+                    this.updateOptions();
+                });
+
+                this.$watch("selectedProgram", () => {
+                    this.updateOptions();
+                });
+            });
+        },
+
+        initTomSelect() {
+            const el = this.$refs.selectMurid;
+
+            if (el.tomselect) {
+                this.tom = el.tomselect;
+                return;
+            }
+
+            this.tom = new TomSelect(el, {
+                plugins: ["remove_button"],
+                placeholder: "Pilih Murid",
+                options: this.getFilteredMurid(),
+                items: this.selectedMurid,
+            });
+        },
+
+        getFilteredMurid() {
+            if (!this.selectedUnit || !this.selectedProgram) return [];
+
+            return data
+                .filter(
+                    (p) =>
+                        p.unit == this.selectedUnit &&
+                        p.program == this.selectedProgram
+                )
+                .map((p) => ({
+                    value: p.id,
+                    text: p.murid.name,
+                }));
+        },
+
+        updateOptions() {
+            if (!this.tom) return;
+
+            this.tom.clear();
+            const newOptions = this.getFilteredMurid();
+
+            this.tom.clearOptions();
+            this.tom.addOptions(newOptions);
+
+            if (this.selectedMurid.length) {
+                this.tom.setValue(this.selectedMurid);
+            }
+
+            this.tom.refreshOptions(false);
+        },
+    };
+}
+
 export function jadwal(par) {
-    console.log(par)
     return {
         pertemuanList: par ?? [
             {
                 nama: "Pertemuan 1",
-                tanggalList: [{ tanggal: "2025-08-15T10:00"}],
+                tanggalList: [{ tanggal: "2025-08-15T10:00" }],
             },
         ],
         addPertemuan() {

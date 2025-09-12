@@ -13,7 +13,7 @@ class TeachController extends Controller
      */
     public function index()
     {
-        $items = Teach::all();
+        $items = Teach::with('akun','unit')->get();
         return view('master.teach.index', compact('items'));
     }
 
@@ -62,6 +62,7 @@ class TeachController extends Controller
         $user->email    = $request->email;
         $user->nomor    = $request->hp;
         $user->status   = 3;
+        $user->role     = 3;
         $user->password = bcrypt('rahasia');
         $user->save();
 
@@ -73,7 +74,7 @@ class TeachController extends Controller
         $item->hp      = $request->hp;
         $item->addr    = $request->addr;
         $item->study   = $request->study;
-        $item->users    = $user->id;
+        $item->user    = $user->id;
         $item->save();
 
         return redirect()->route('dashboard.master.teach.index');
@@ -94,7 +95,8 @@ class TeachController extends Controller
     {
         $items  = $teach;
         $action = "Edit Guru";
-        return view('master.teach.form', compact('items', 'action'));
+        $unit   = Unit::all();
+        return view('master.teach.form', compact('items', 'action', 'unit'));
     }
 
     /**
@@ -102,12 +104,15 @@ class TeachController extends Controller
      */
     public function update(Request $request, Teach $teach)
     {
+        $teach->load('akun');
+
         $request->validate([
             'name'  => 'required',
             'birth' => 'required',
             'hp'    => 'required',
             'addr'  => 'required',
             'study' => 'required',
+            'unit'  => 'required',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
@@ -115,21 +120,32 @@ class TeachController extends Controller
             'addr.required'  => 'Alamat wajib diisi.',
             'hp.required'    => 'Nomor HP wajib diisi.',
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
+            'unit.required'  => 'Unit wajib dipilih.',
+            'image.max'      => 'Ukuran gambar maksimal 2MB.',
+            'image.image'    => 'File harus berupa gambar.',
+            'image.mimes'    => 'Gambar harus berformat jpeg, png, atau jpg.',
         ]);
 
-        $path = null;
-
-        $item = $teach;
+        // Update image if present
         if ($request->hasFile('image')) {
-            $path      = $request->file('image')->store('teach', 'public');
-            $item->img = $path;
+            if ($teach->img && \Storage::disk('public')->exists($teach->img)) {
+                \Storage::disk('public')->delete($teach->img);
+            }
+
+            $path       = $request->file('image')->store('images/teach', 'public');
+            $teach->img = $path;
         }
-        $item->name  = $request->name;
-        $item->birth = $request->birth;
-        $item->hp    = $request->hp;
-        $item->addr  = $request->addr;
-        $item->study = $request->study;
-        $item->save();
+
+        // Update other fields
+        $teach->name    = $request->name;
+        $teach->birth   = $request->birth;
+        $teach->hp      = $request->hp;
+        $teach->addr    = $request->addr;
+        $teach->study   = $request->study;
+        $teach->unit_id = $request->unit;
+
+        // Save updated model
+        $teach->save();
 
         return redirect()->route('dashboard.master.teach.index');
     }

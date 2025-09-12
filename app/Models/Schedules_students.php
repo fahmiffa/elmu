@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Schedule_meet extends Model
+class Schedules_students extends Model
 {
     protected $hidden = ['created_at', 'updated_at'];
     
-    public function waktu()
+    public function jadwal()
     {
-        return $this->hasMany(Schedule_date::class, 'schedule_meet_id', 'id');
+        return $this->belongsTo(Schedule::class, 'schedule_id', 'id');
     }
 }

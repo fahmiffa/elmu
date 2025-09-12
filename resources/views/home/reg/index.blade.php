@@ -18,7 +18,7 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2">Nomor Induk</th>
+                        <th class="px-4 py-2 text-nowrap">Nomor Induk</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Kontrak</th>
                         <th class="px-4 py-2">Program Belajar</th>
@@ -35,8 +35,8 @@
                             <td class="px-4 py-2" x-text="row.induk"></td>
                             <td class="px-4 py-2" x-text="row.murid.name"></td>
                             <td class="px-4 py-2" x-text="row.kontrak.name"></td>
-                            <td class="px-4 py-2" x-text="row.product.program.name"></td>
-                            <td class="px-4 py-2" x-text="row.product.class.name"></td>
+                            <td class="px-4 py-2" x-text="row.programs.name"></td>
+                            <td class="px-4 py-2" x-text="row.class.name"></td>
                             <td class="px-4 py-2" x-text="row.units.name"></td>
                             <td class="px-4 py-2" x-text="row.waktu"></td>
                             {{-- <td class="px-4 py-2">

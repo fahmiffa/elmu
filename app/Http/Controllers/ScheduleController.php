@@ -3,9 +3,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Head;
 use App\Models\Schedule;
+use App\Models\Schedules_students;
 use App\Models\Schedule_date;
 use App\Models\Schedule_meet;
-use App\Models\Teach;
 use DB;
 use Illuminate\Http\Request;
 
@@ -16,7 +16,7 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $items = Schedule::with('waktu', 'meet.waktu', 'reg.murid', 'reg.units')->get();
+        $items = Schedule::with('waktu', 'meet.waktu', 'murid', 'units', 'programs', 'class')->get();
         return view('home.schedule.index', compact('items'));
     }
 
@@ -26,11 +26,26 @@ class ScheduleController extends Controller
     public function create()
     {
         $action = "Tambah Jadwal";
-        $guru   = Teach::select('id', 'name')->latest()->get();
-        $murid  = Head::with('murid')->whereDoesntHave('bill', function ($q) {
-            $q->where('status', '!=', 1);
-        })->DoesntHave('jadwal')->get();
-        return view('home.schedule.form', compact('action', 'guru', 'murid'));
+        $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students')
+            ->with('murid:id,name', 'units:id,name', 'programs:id,name', 'class:id,name')
+            ->whereHas('bill', function ($q) {
+                $q->where('first', 1)
+                    ->where('status', 1);
+            })
+            ->DoesntHave('jadwal')
+            ->get();
+
+        $unit = $murid->pluck('units')
+            ->unique('id')
+            ->map(function ($unit) {
+                return [
+                    'id'   => $unit->id,
+                    'name' => $unit->name,
+                ];
+            })
+            ->values();
+
+        return view('home.schedule.form', compact('action', 'murid', 'unit'));
     }
 
     /**
@@ -39,7 +54,11 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'murid' => 'required',
+            'murid'   => 'required',
+            'murid.*' => 'required',
+            'unit'    => 'required',
+            'program' => 'required',
+            'kelas'   => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
@@ -48,9 +67,21 @@ class ScheduleController extends Controller
 
         DB::beginTransaction();
         try {
-            $sch       = new Schedule;
-            $sch->head = $request->murid;
+            $sch          = new Schedule;
+            $sch->unit    = $request->unit;
+            $sch->kelas   = $request->kelas;
+            $sch->program = $request->program;
             $sch->save();
+
+            $murid = $request->murid;
+            for ($i = 0; $i < count($murid); $i++) {
+                $head = Head::where('id',$murid[$i])->first();
+                $students              = new Schedules_students;
+                $students->head        = $head->id;
+                $students->student_id  = $head->students;
+                $students->schedule_id = $sch->id;
+                $students->save();
+            }
 
             $meet = $request->pertemuan;
 
@@ -92,8 +123,8 @@ class ScheduleController extends Controller
      */
     public function edit(Schedule $jadwal)
     {
-        $action = "Edit Jadwal " . $jadwal->reg->murid->name;
-        $items  = $jadwal;
+        $action = "Edit Jadwal";
+        $items  = $jadwal->load('class', 'units', 'programs', 'murid');
         foreach ($items->meet as $val) {
 
             foreach ($val->waktu as $waktu) {
@@ -107,7 +138,34 @@ class ScheduleController extends Controller
                 'tanggalList' => $tanggalList,
             ];
         }
-        return view('home.schedule.form', compact('action', 'items', 'da'));
+
+        $murid = Head::select('id', 'kelas', 'unit', 'program', 'students')
+            ->with('murid:id,name', 'units:id,name', 'programs:id,name', 'class:id,name')
+            ->whereHas('bill', function ($q) {
+                $q->where('first', 1)
+                    ->where('status', 1);
+            })
+        // ->DoesntHave('jadwal')
+            ->get();
+
+        $unit = $murid->pluck('units')
+            ->unique('id')
+            ->map(function ($unit) {
+                return [
+                    'id'   => $unit->id,
+                    'name' => $unit->name,
+                ];
+            })
+            ->values();
+
+        $selected = [
+            'unit'    => optional($jadwal->units)->id,
+            'kelas'   => optional($jadwal->class)->id,
+            'program' => optional($jadwal->programs)->id,
+            'murid'   => $items->siswa->pluck('head')->toArray(),
+        ];
+
+        return view('home.schedule.form', compact('action', 'items', 'da', 'unit', 'murid', 'selected'));
     }
 
     /**
@@ -116,16 +174,39 @@ class ScheduleController extends Controller
     public function update(Request $request, Schedule $jadwal)
     {
 
+        $request->validate([
+            'murid'   => 'required',
+            'murid.*' => 'required',
+            'unit'    => 'required',
+            'program' => 'required',
+            'kelas'   => 'required',
+        ], [
+            'required' => 'Field wajib diisi.',
+        ]);
+
         $meet = $request->pertemuan;
 
         DB::beginTransaction();
         try {
 
-            Schedule_date::whereIn('schedule_meet_id',$jadwal->meet->pluck('id')->toArray())->delete();
-            Schedule_meet::where('schedule_id',$jadwal->id)->delete();
+            $sch          = $jadwal;
+            $sch->unit    = $request->unit;
+            $sch->kelas   = $request->kelas;
+            $sch->program = $request->program;
+            $sch->save();
 
+            Schedules_students::where('schedule_id', $jadwal->id)->delete();
+            $murid = $request->murid;
+            for ($i = 0; $i < count($murid); $i++) {
+                $students              = new Schedules_students;
+                $students->student_id  = $murid[$i];
+                $students->schedule_id = $sch->id;
+                $students->save();
+            }
+
+            Schedule_date::whereIn('schedule_meet_id', $jadwal->meet->pluck('id')->toArray())->delete();
+            Schedule_meet::where('schedule_id', $jadwal->id)->delete();
             $meet = $request->pertemuan;
-
             for ($i = 0; $i < count($meet); $i++) {
                 $sch_meet              = new Schedule_meet;
                 $sch_meet->schedule_id = $jadwal->id;

@@ -20,9 +20,9 @@
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Gambar</th>
-                        {{-- <th class="px-4 py-2">Umur</th> --}}
                         <th class="px-4 py-2">HP</th>
                         <th class="px-4 py-2">Pendiikan</th>
+                        <th class="px-4 py-2">Unit</th>
                         <th class="px-4 py-2">Alamat</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
@@ -37,9 +37,9 @@
                                     <img :src="'/storage/' + row.img" :alt="row.name" class="w-full object-cover" />
                                 </div>
                             </td>
-                            {{-- <td class="px-4 py-2 text-center" x-text="row.age"></td> --}}
                             <td class="px-4 py-2" x-text="row.hp"></td>
-                             <td class="px-4 py-2" x-text="row.study"></td>
+                            <td class="px-4 py-2" x-text="row.study"></td>
+                            <td class="px-4 py-2" x-text="row.unit.name"></td>
                             <td class="px-4 py-2" x-text="row.addr"></td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
@@ -54,7 +54,7 @@
                                             <path d="m15 5 4 4" />
                                         </svg>
                                     </a>
-    
+
                                     <form :action="'/dashboard/master/teach/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf

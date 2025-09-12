@@ -36,13 +36,13 @@ class User extends Authenticatable implements JWTSubject
 
     public function data()
     {
-        if ($this->role == 3) {
-            return $this->hasOne(Teach::class, 'user', 'id');
-        }
+        // if ($this->role == 3) {
+        //     return $this->hasOne(Teach::class, 'user', 'id');
+        // }
 
-        if ($this->role == 2) {
-            return $this->hasOne(Student::class, 'user', 'id');
-        }
+        // if ($this->role == 2) {
+        // }
+        return $this->hasOne(Student::class, 'user', 'id');
     }
 
     /**

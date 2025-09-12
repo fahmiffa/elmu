@@ -21,6 +21,7 @@ return new class extends Migration
             $table->Biginteger('unit')->nullable();
             $table->Biginteger('kelas')->nullable();
             $table->Biginteger('price')->nullable();
+            $table->Biginteger('program')->nullable();
             $table->Biginteger('payment')->nullable();
             $table->timestamps();
         });

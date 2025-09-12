@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use PDF;
+use Illuminate\Validation\Rule;
 
 class Home extends Controller
 {
@@ -163,7 +164,7 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid')->with('product.program', 'product.class')->with('kontrak')->with('units')->get();
+        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units')->get();
         return view('home.reg.index', compact('items'));
     }
 
@@ -227,15 +228,17 @@ class Home extends Controller
             ->with('unit:id,name')
             ->get();
         $action = "Form Pendaftaran";
-        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit','grade'));
+        $head   = Head::get();
+        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit', 'grade', 'head'));
     }
 
     public function regStore(Request $request)
     {
         $validated = $request->validate([
             // Wajib diisi
+            'murid'                 => "required_if:option,2",
             'grade'                 => 'required',
-            'kelas'                 => 'required|string',
+            'kelas'                 => ['required', Rule::in(Kelas::pluck('id')->toArray())],
             'gender'                => 'nullable|in:1,2',
             'place'                 => 'nullable|string',
             'birth'                 => 'nullable|date',
@@ -245,11 +248,12 @@ class Home extends Controller
             'momJob'                => 'nullable|string',
             'hp_parent'             => 'nullable|string',
             'kontrak'               => 'required',
-            'program'               => 'required',
-            'email'                 => 'required',
+            'program'               => ['required', Rule::in(Program::pluck('id')->toArray())],
+            'unit'                  => ['required', Rule::in(Unit::pluck('id')->toArray())],
+            'email'                 => 'required_if:option,1|unique:users,email',
 
             // Optional
-            'name'                  => 'nullable|string',
+            'name'                  => 'required_if:option,1',
             'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'sekolah_kelas'         => 'nullable|string',
             'alamat'                => 'nullable|string',
@@ -263,60 +267,106 @@ class Home extends Controller
             'rank'                  => 'nullable|string',
             'pendidikan_non_formal' => 'nullable|string',
             'prestasi'              => 'nullable|string',
-        ]);
+        ],
+            [
+                'required'    => 'Field Wajib disi',
+                'required_if' => 'Field Wajib disi',
+
+            ]
+        );
 
         DB::beginTransaction();
 
         try {
-            $path = null;
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('images', 'public');
+            if ($request->option == 1) {
+
+                $path = null;
+                if ($request->hasFile('image')) {
+                    $path = $request->file('image')->store('images', 'public');
+                }
+
+                $user           = new User;
+                $user->name     = $request->name;
+                $user->email    = $request->email;
+                $user->role     = 2;
+                $user->status   = 0;
+                $user->password = bcrypt('murik@');
+                $user->save();
+
+                $siswa                        = new Student;
+                $siswa->user                  = $user->id;
+                $siswa->name                  = $request->name;
+                $siswa->img                   = $path;
+                $siswa->grade_id              = $request->grade;
+                $siswa->alamat                = $request->alamat;
+                $siswa->place                 = $request->place;
+                $siswa->birth                 = $request->birth;
+                $siswa->sekolah_kelas         = $request->sekolah_kelas;
+                $siswa->alamat_sekolah        = $request->alamat_sekolah;
+                $siswa->dream                 = $request->dream;
+                $siswa->hp_siswa              = $request->hp_siswa;
+                $siswa->agama                 = $request->agama;
+                $siswa->sosmedChild           = $request->sosmedChild;
+                $siswa->sosmedOther           = $request->sosmedOther;
+                $siswa->dad                   = $request->dad;
+                $siswa->dadJob                = $request->dadJob;
+                $siswa->mom                   = $request->mom;
+                $siswa->momJob                = $request->momJob;
+                $siswa->hp_parent             = $request->hp_parent;
+                $siswa->study                 = $request->study;
+                $siswa->rank                  = $request->rank;
+                $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;
+                $siswa->prestasi              = $request->prestasi;
+                $siswa->gender                = $request->gender;
+                $siswa->save();
+
+                $price = Price::where('kelas', $request->kelas)
+                    ->where('product', $request->program)
+                    ->first();
+
+                $head           = new Head;
+                $head->number   = Head::count() + 1;
+                $head->students = $siswa->id;
+                $head->unit     = $request->unit;
+                $head->kelas    = $request->kelas;
+                $head->price    = $price->id;
+                $head->program  = $request->program;
+                $head->payment  = $request->kontrak;
+                $head->save();
+
+                $paid        = new Paid;
+                $paid->head  = $head->id;
+                $paid->bulan = date("m");
+                $paid->tahun = date("Y");
+                $paid->first = 1;
+                $paid->save();
+
+            } else {
+
+                $parent = Head::where('id', $request->murid)->firstOrFail();
+
+                $price = Price::where('kelas', $request->kelas)
+                    ->where('product', $request->program)
+                    ->first();
+
+                $head           = new Head;
+                $head->number   = Head::count() + 1;
+                $head->parent   = $parent->id;
+                $head->students = $parent->students;
+                $head->unit     = $request->unit;
+                $head->kelas    = $request->kelas;
+                $head->price    = $price->id;
+                $head->program  = $request->program;
+                $head->payment  = $request->kontrak;
+                $head->save();
+
+                $paid        = new Paid;
+                $paid->head  = $head->id;
+                $paid->bulan = date("m");
+                $paid->tahun = date("Y");
+                $paid->first = 1;
+                $paid->save();
             }
-
-            $user           = new User;
-            $user->name     = $request->name;
-            $user->email    = $request->email;
-            $user->role     = 2;
-            $user->status   = 0;
-            $user->password = bcrypt('murik@');
-            $user->save();
-
-            $siswa                        = new Student;
-            $siswa->user                  = $user->id;
-            $siswa->name                  = $request->name;
-            $siswa->img                   = $path;
-            $siswa->grade_id              = $request->grade;
-            $siswa->alamat                = $request->alamat;
-            $siswa->place                 = $request->place;
-            $siswa->birth                 = $request->birth;
-            $siswa->sekolah_kelas         = $request->sekolah_kelas;
-            $siswa->alamat_sekolah        = $request->alamat_sekolah;
-            $siswa->dream                 = $request->dream;
-            $siswa->hp_siswa              = $request->hp_siswa;
-            $siswa->agama                 = $request->agama;
-            $siswa->sosmedChild           = $request->sosmedChild;
-            $siswa->sosmedOther           = $request->sosmedOther;
-            $siswa->dad                   = $request->dad;
-            $siswa->dadJob                = $request->dadJob;
-            $siswa->mom                   = $request->mom;
-            $siswa->momJob                = $request->momJob;
-            $siswa->hp_parent             = $request->hp_parent;
-            $siswa->study                 = $request->study;
-            $siswa->rank                  = $request->rank;
-            $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;
-            $siswa->prestasi              = $request->prestasi;
-            $siswa->gender                = $request->gender;
-            $siswa->save();
-
-            $unit = Head::where('unit', $request->unit)->count() + 1;
-
-            $head           = new Head;
-            $head->number   = $unit;
-            $head->students = $siswa->id;
-            $head->unit     = $request->unit;
-            $head->price    = $request->program;
-            $head->payment  = $request->kontrak;
-            $head->save();
 
             DB::commit();
 
@@ -341,7 +391,7 @@ class Home extends Controller
 
     public function pay()
     {
-        $items = Paid::has('reg')->with('reg.murid', 'reg.murid.users', 'reg.product.class', 'reg.product.program', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
+        $items = Paid::has('reg')->with('reg.murid', 'reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
         return view('home.pay.index', compact('items'));
     }
 

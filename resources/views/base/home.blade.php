@@ -69,7 +69,7 @@
         </span> Pembelajaran
     </li>
 </a>
-<a href="{{ route('dashboard.slide.index') }}">
+{{-- <a href="{{ route('dashboard.slide.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.slide.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
@@ -82,7 +82,7 @@
             </svg>
         </span> Gambar
     </li>
-</a>
+</a> --}}
 <a href="{{ route('dashboard.slide.index') }}">
     <li
         class="flex items-center px-4 py-3 border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.slide') ? 'bg-gray-100' : null }}">

@@ -103,14 +103,14 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.reg?.murid?.name ?? '-'"></td>
-                            <td class="px-4 py-2" x-text="row.reg?.product.program.name ?? '-'"></td>
-                            <td class="px-4 py-2" x-text="row.reg?.product.class?.name ?? '-'"></td>
+                            <td class="px-4 py-2" x-text="row.reg?.programs.name ?? '-'"></td>
+                            <td class="px-4 py-2" x-text="row.reg?.class?.name ?? '-'"></td>
                             <td class="px-4 py-2" x-text="row.reg?.units?.name ?? '-'"></td>
                             <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
                             <td class="px-4 py-2" x-text="row.status == 0 ? 'Tagihan' : 'Lunas' "></td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
-                                    <a :href="'/dashboard/invoice/' + md5Component(row.id) + ''"
+                                    <a target="_blank" :href="'/dashboard/invoice/' + md5Component(row.id) + ''"
                                         class="text-orange-600 hover:text-orange-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

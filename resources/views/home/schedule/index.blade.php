@@ -16,8 +16,10 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2" @click="sortBy('name')">Nama</th>
+                        <th class="px-4 py-2">Murid</th>
                         <th class="px-4 py-2">Unit</th>
+                        <th class="px-4 py-2">Program</th>
+                        <th class="px-4 py-2">Kelas</th>
                         <th class="px-4 py-2">Jadwal</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
@@ -26,8 +28,18 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.reg?.murid?.name ?? '-'"></td>
-                            <td class="px-4 py-2" x-text="row.reg.units.name ?? '-'"></td>
+                            <td class="px-4 py-2">
+                                <div class="whitespace-nowrap">
+                                    <template x-for="(murid, index) in row.murid" :key="index">
+                                        <dl>
+                                            <dt x-text="murid.name" class="font-semibold capitalize"></dt>
+                                        </dl>
+                                    </template>
+                                </div>
+                            </td>
+                            <td class="px-4 py-2" x-text="row.units.name ?? '-'"></td>
+                            <td class="px-4 py-2" x-text="row.programs.name ?? '-'"></td>
+                            <td class="px-4 py-2" x-text="row.class.name ?? '-'"></td>
                             <td class="px-4 py-2">
                                 <div class="whitespace-nowrap">
                                     <template x-for="(meet, index) in row.meet" :key="index">

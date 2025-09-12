@@ -5,12 +5,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Price extends Model
 {
+    protected $hidden = ['created_at', 'updated_at'];
     public function class ()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }
 
-     public function program()
+    public function program()
     {
         return $this->belongsTo(Program::class, 'product', 'id');
     }

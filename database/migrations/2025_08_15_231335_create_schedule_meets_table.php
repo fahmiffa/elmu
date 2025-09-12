@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('schedule_meets', function (Blueprint $table) {
             $table->id();
-            $table->Biginteger('schedule_id')->nullable();
+            $table->Biginteger('schedule_id');
             $table->string('name')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();

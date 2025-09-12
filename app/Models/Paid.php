@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paid extends Model
 {
-    protected $appends = ['tempo', 'kit'];
+    protected $appends = ['tempo', 'kit','total'];
 
     public function reg()
     {
@@ -26,7 +26,13 @@ class Paid extends Model
     public function getkitAttribute()
     {
         return $this->first == 1 ? Addon::select('id', 'name')->with(['price:harga,product'])->first() : null;
-        // return Addon::select('id', 'name')->with(['price:harga,product'])->first();
+    }
+
+    public function gettotalAttribute()
+    {
+        $price = (int) $this->reg->prices->harga;
+        $kit   = (int) Addon::select('id', 'name')->with(['price:harga,product'])->first()->price->harga;
+        return (int) $this->first == 1 ? $price + $kit : $price;
     }
 
     public function murid()

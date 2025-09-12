@@ -88,14 +88,12 @@ class AddonController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $path = null;
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images/layanan', 'public');
-        }
-
         $item       = $layanan;
         $item->name = $request->name;
-        $item->img  = $path;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('images/layanan', 'public');
+            $item->img  = $path;
+        }
         $item->des  = $request->des;
         $item->save();
 

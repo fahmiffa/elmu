@@ -5,9 +5,11 @@ use App\Models\Head;
 use App\Models\Price;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Head extends Model
 {
+    use SoftDeletes;
     protected $table   = 'head';
     protected $appends = ['kode', 'waktu', 'induk'];
 
@@ -18,7 +20,7 @@ class Head extends Model
 
     public function jadwal()
     {
-        return $this->belongsTo(Schedule::class, 'id', 'head');
+        return $this->belongsTo(Schedules_students::class, 'id', 'head');
     }
 
     public function paket()
@@ -36,6 +38,21 @@ class Head extends Model
         return $this->belongsTo(Price::class, 'price', 'id');
     }
 
+    public function prices()
+    {
+        return $this->belongsTo(Price::class, 'price', 'id');
+    }
+
+    public function programs()
+    {
+        return $this->belongsTo(Program::class, 'program', 'id');
+    }
+
+    public function class()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas', 'id');
+    }
+    
     public function units()
     {
         return $this->belongsTo(Unit::class, 'unit', 'id');
@@ -61,7 +78,16 @@ class Head extends Model
 
     public function getindukAttribute()
     {
-        return str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        $nunit = Head::where('unit', $this->units->id);
+        if($this->created_at)
+        {
+            $nunit = $nunit->where('created_at', '<=', $this->created_at);
+        }
+        $nunit = $nunit->count();
+        $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);
+        $global = str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
+        return $global.''.$unit.''.$munit.'/'.$this->programs->id;
     }
 
 }

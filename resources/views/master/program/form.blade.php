@@ -21,6 +21,16 @@
                             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                         @enderror
                     </div>
+                         <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Kode</label>
+                        <div class="relative">
+                            <input type="text" name="kode" value="{{ old('kode', $items->kode ?? '') }}"
+                                class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                        </div>
+                        @error('kode')
+                            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Level</label>
                         <input type="number" name="level" value="{{ old('level', $items->level ?? '') }}"

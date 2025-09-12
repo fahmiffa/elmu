@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('kode');
             $table->integer('level');
             $table->text('des');
             $table->timestamps();
