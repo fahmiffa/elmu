@@ -19,6 +19,7 @@
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                        <th class="px-4 py-2">Kode</th>
                         <th class="px-4 py-2">Deskripsi</th>
                         <th class="px-4 py-2">Level</th>
                         <th class="px-4 py-2">Harga</th>
@@ -30,6 +31,7 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
+                            <td class="px-4 py-2" x-text="row.kode"></td>
                             <td class="px-3 py-2 text-justify" x-text="row.des"></td>
                             <td class="px-4 py-2 text-center" x-text="row.level"></td>
                             <td class="px-4 py-2">

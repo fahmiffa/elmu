@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Price extends Model
 {
-    public function class ()
+    public function class()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }

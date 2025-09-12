@@ -43,7 +43,7 @@ class ApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -96,12 +96,13 @@ class ApiController extends Controller
     public function kelas()
     {
         $products = Kelas::select('id', 'name')
-            ->with('units:id,name,pic,hp', 'program:id,name')
+            ->with('units:id,name', 'program:id,name')
             ->get()
             ->each(function ($items) {
                 $items->units->each->makeHidden('pivot');
                 $items->program->each->makeHidden('pivot');
             });
+            
         $grades = Grade::select('id','name')->get();
         return response()->json(['items' => $products, 'grade' => $grades]);
     }
@@ -143,13 +144,13 @@ class ApiController extends Controller
                 'reg.product.program:id,name',
                 // 'reg.units:id,name',
                 'reg.bill:id,head,time,bulan,tahun,via,status,first',
-                // 'users:id,name,role,status'
-                'reg.jadwal:id,head,teach_id,status',
-                'reg.jadwal.guru:id,name,hp',
+                // 'users:id,name,role,status',
+                'reg.jadwal:id,head,status',
                 'reg.jadwal.meet:id,name,schedule_id',
                 'reg.jadwal.meet.waktu:id,schedule_meet_id,waktu,status'
             )
             ->first();
+        // dd($Student);
         return response()->json($Student);
     }
 
@@ -188,7 +189,7 @@ class ApiController extends Controller
     public function reg(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'grade_id'                 => 'required',
+            'grade_id'              => 'required',
             'kelas'                 => 'required',
             'gender'                => 'nullable|in:1,2',
             'place'                 => 'nullable|string',
@@ -235,7 +236,7 @@ class ApiController extends Controller
             $user->name     = $request->name;
             $user->email    = $request->email;
             $user->role     = 2;
-            $user->status   = 0;
+            $user->status   = 1;
             $user->password = bcrypt('murik@');
             $user->save();
 
@@ -243,7 +244,7 @@ class ApiController extends Controller
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
             $siswa->img                   = $path;
-            $siswa->grade_id              = $request->grade;
+            $siswa->grade_id              = $request->grade_id;
             $siswa->alamat                = $request->alamat;
             $siswa->place                 = $request->place;
             $siswa->birth                 = $request->birth;
@@ -268,13 +269,25 @@ class ApiController extends Controller
 
             $unit = Head::where('unit', $request->unit)->count() + 1;
 
+            $price = Price::where('kelas',$request->kelas)
+                ->where('product',$request->program)    
+                ->first();
+
             $head           = new Head;
             $head->number   = $unit;
             $head->students = $siswa->id;
             $head->unit     = $request->unit;
-            $head->price    = $request->program;
+            $head->price    = $price->id;
             $head->payment  = $request->kontrak;
+            $head->kelas    = $request->kelas;
             $head->save();
+
+            $paid   = new Paid;
+            $paid->head = $head->id;
+            $paid->bulan = date("m");
+            $paid->tahun = date("Y");
+            $paid->first = 1;
+            $paid->save();
 
             DB::commit();
 

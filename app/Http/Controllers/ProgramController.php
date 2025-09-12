@@ -34,6 +34,7 @@ class ProgramController extends Controller
     {
         $request->validate([
             'name'    => 'required',
+            'kode'    => 'required',
             'des'     => 'required',
             'level'   => 'required',
             'harga'   => 'required',
@@ -48,6 +49,7 @@ class ProgramController extends Controller
 
         $item        = new Program;
         $item->name  = $request->name;
+        $item->kode  = $request->kode;
         $item->des   = $request->des;
         $item->level = $request->level;
         $item->save();
@@ -77,14 +79,17 @@ class ProgramController extends Controller
     public function edit(Program $program)
     {
         $items = $program->load('price.class');
-        $data = $items->price->map(function ($kp) {
-            return [
-                'id'    => $kp->class->id,
-                'price' => $kp->id,
-                'name'  => $kp->class->name,
-                'value' => $kp->harga,
-            ];
-        });
+
+        $data  = $items->price
+            ->filter(fn($da) => $da->class !== null)
+            ->map(function ($da) {
+                return [
+                    'id'    => $da->class->id,
+                    'price' => $da->id,
+                    'name'  => $da->class->name,
+                    'value' => $da->harga,
+                ];
+            });
 
         $action = "Edit Program";
         $kelas  = Kelas::all();
@@ -98,6 +103,7 @@ class ProgramController extends Controller
     {
         $request->validate([
             'name'  => 'required',
+            'kode'  => 'required',
             'des'   => 'required',
             'level' => 'required',
             'price' => 'required',
@@ -106,12 +112,13 @@ class ProgramController extends Controller
             'required' => 'Field wajib diisi.',
         ]);
 
-        $kelas = $request->id;
-        $price = $request->price;
-        $harga = $request->harga;
+        $kelas = array_values($request->id);
+        $price = array_values($request->price);
+        $harga = array_values($request->harga);
 
         $item        = $program;
         $item->name  = $request->name;
+        $item->kode  = $request->kode;
         $item->des   = $request->des;
         $item->level = $request->level;
         $item->save();

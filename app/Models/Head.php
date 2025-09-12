@@ -26,6 +26,11 @@ class Head extends Model
         return $this->belongsTo(Program::class, 'program', 'id');
     }
 
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas', 'id');
+    }
+
     public function kontrak()
     {
         return $this->belongsTo(Payment::class, 'payment', 'id');
@@ -33,7 +38,7 @@ class Head extends Model
 
     public function product()
     {
-        return $this->belongsTo(Price::class, 'price', 'id');
+          return $this->belongsTo(Price::class, 'price', 'id');
     }
 
     public function units()
@@ -62,6 +67,17 @@ class Head extends Model
     public function getindukAttribute()
     {
         return str_pad($this->number, 4, '0', STR_PAD_LEFT);
+
+        $nunit = Head::where('unit', $this->units->id);
+        if($this->created_at)
+        {
+            $nunit = $nunit->where('created_at', '<=', $this->created_at);
+        }
+        $nunit = $nunit->count();
+        $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);
+        $global = str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
+        return $global.''.$unit.''.$munit.'/'.$this->product->program->kode;
     }
 
 }

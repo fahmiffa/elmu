@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use PDF;
+use Illuminate\Support\Facades\Log;
 
 class Home extends Controller
 {
@@ -163,7 +164,7 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid')->with('product.program', 'product.class')->with('kontrak')->with('units')->get();
+        $items = Head::with('murid','kelas')->with('product.program', 'product.class')->with('kontrak')->with('units')->get();
         return view('home.reg.index', compact('items'));
     }
 
@@ -308,21 +309,29 @@ class Home extends Controller
             $siswa->gender                = $request->gender;
             $siswa->save();
 
-            $unit = Head::where('unit', $request->unit)->count() + 1;
+
+            // $price = Price::where('kelas',$request->kelas)
+            //                 ->where('product',$request->program)    
+            //                 ->first();
 
             $head           = new Head;
-            $head->number   = $unit;
+            $head->number   = Head::count()+1;
             $head->students = $siswa->id;
             $head->unit     = $request->unit;
             $head->price    = $request->program;
+            $head->kelas    = $request->kelas;
             $head->payment  = $request->kontrak;
             $head->save();
+
+            $da[] = ['head' => $head->id, 'bulan' => date("m"), 'tahun' => date("Y"), 'first' => 1];
+            BulkInsertJob::dispatch($da);
 
             DB::commit();
 
             return redirect()->route('dashboard.reg');
 
         } catch (\Throwable $e) {
+            dd($e);
             DB::rollback();
 
             if (isset($path)) {

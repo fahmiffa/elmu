@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('status')->default(0);
             $table->integer('role')->default(0);
             $table->string('email_verified_at')->nullable();
+            $table->text('fcm')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
