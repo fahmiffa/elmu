@@ -24,4 +24,6 @@ Route::middleware('jwt')->group(function () {
     Route::get('/price/{kelas}/{product}', [ApiController::class, 'price']);
     Route::get('/jadwal', [ApiController::class, 'jadwal']);
     Route::post('/jadwal', [ApiController::class, 'UpJadwal']);
+    Route::post('/report', [ApiController::class, 'upReport']);
+    Route::get('/report', [ApiController::class, 'report']);
 });

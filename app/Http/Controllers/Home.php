@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use PDF;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class Home extends Controller
 {
@@ -140,7 +141,12 @@ class Home extends Controller
         $bulan = $request->input('bulan');
         $da    = [];
 
-        $head = Head::select('id')->get();
+        $head = Head::select('id')
+        // ->whereHas('kontrak',function($q){
+        //     $q->where('month',1);
+        // })
+        ->get();
+        
         foreach ($head as $val) {
             $first = Paid::where('head', $val->id)->exists();
             $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
@@ -154,7 +160,6 @@ class Home extends Controller
         }
 
         return back();
-        // return response()->json(['job_id' => $bulan]);
     }
 
     public function index()

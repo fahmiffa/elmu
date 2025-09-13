@@ -9,10 +9,12 @@ use App\Models\Price;
 use App\Models\Program;
 use App\Models\Schedule;
 use App\Models\Schedules_students;
+use App\Models\Schedules_date;
 use App\Models\Student;
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Report;
 use App\Rules\NumberWa;
 use DB;
 use Illuminate\Http\Request;
@@ -27,7 +29,50 @@ class ApiController extends Controller
 
     public function UpJadwal(Request $request)
     {
+        $id   = JWTAuth::user()->id;
 
+        $validator = Validator::make($request->all(), [
+            'jadwal'   => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        Schedules_date::where('id',$jadwal)->update(['status'=>1]);
+
+        return response()->json(['status' => true], 200);
+    }
+
+    public function report()
+    {
+        $id   = JWTAuth::user()->id;
+        $item = Report::where('user_id',$id)->latest()->get();
+        return response()->json($item);
+    }
+
+    public function Ureport(Request $request)
+    {
+        $id   = JWTAuth::user()->id;
+
+        $validator = Validator::make($request->all(), [
+            'reason'   => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $re = new Report;
+        $re->user_id = $id;
+        $re->reason  = $request->reason;
+        $re->save();
+
+        return response()->json(['status' => true], 200);
     }
 
     public function jadwal()
@@ -196,7 +241,7 @@ class ApiController extends Controller
         $id   = JWTAuth::user()->id;
         $role = JWTAuth::user()->role;
 
-        $res = Student::select('id', 'name', 'gender')
+        $res = Student::select('id', 'name', 'gender', 'user')
             ->with(
                 'reg:id,students,price,unit,number,program',
                 'reg.product:id,harga,product,kelas',
@@ -207,17 +252,57 @@ class ApiController extends Controller
 
         if ($role == 2) {
             $student = $res->where('user', $id)->first();
+            return response()->json($student);
         }
 
         if ($role == 3) {
             $guru    = Teach::where('user', $id)->first();
             $unit    = $guru->unit_id;
-            $student = $res->whereHas('reg.units', function ($q) use ($unit) {
+            $students = $res->whereHas('reg.units', function ($q) use ($unit) {
                 $q->where('unit', $unit);
             })
             ->get();
+
+            $grouped = [];
+
+            foreach ($students as $student) {
+                foreach ($student->reg as $reg) {
+                    $programName = $reg->programs->name ?? 'Unknown Program';
+                    $className   = $reg->units->kelas[0]->name ?? 'Unknown Class';
+
+                    $key = $programName . '|' . $className;
+
+                    if (! isset($grouped[$key])) {
+                        $grouped[$key] = [
+                            'program'  => $programName,
+                            'class'    => $className,
+                            'students' => [],
+                        ];
+                    }
+
+                    // Ambil semua tagihan dalam bentuk detail
+                    $bills = collect($reg->bill)->map(function ($bill) {
+                        return [
+                            'total'  => $bill->total,
+                            'status' => $bill->status,
+                            // Tambahan opsional
+                            'bulan' => $bill->bulan,
+                            'tahun' => $bill->tahun,
+                            // 'via' => $bill->via,
+                            // 'kit' => $bill->kit->name ?? null,
+                        ];
+                    })->toArray();
+
+                    $grouped[$key]['students'][] = [
+                        'name'  => $student->name,
+                        'bills' => $bills,
+                    ];
+                }
+            }
+
+            return response()->json(array_values($grouped));
+
         }
-        return response()->json($student);
     }
 
     public function tagihan()
@@ -404,7 +489,7 @@ class ApiController extends Controller
             $response = Http::post('http://192.168.18.22:3000/api/send', [
                 'number'  => env('NumberWa'),
                 'to'      => $to,
-                'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : Murik@",
+                'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : murik@",
             ]);
 
             DB::commit();

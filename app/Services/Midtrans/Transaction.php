@@ -50,6 +50,7 @@ class Transaction
         if ($data['transaction_status'] === 'pending') {
             if ($order) {
                 $order->status = 2;
+                $order->via    = json_encode($data['va_numbers']);
                 $order->save();
             }
         }

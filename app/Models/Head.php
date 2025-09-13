@@ -87,7 +87,7 @@ class Head extends Model
         $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);
         $global = str_pad($this->number, 4, '0', STR_PAD_LEFT);
         $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
-        return $global.''.$unit.''.$munit.'/'.$this->programs->id;
+        return $global.''.$unit.''.$munit.'/'.$this->programs->kode;
     }
 
 }
