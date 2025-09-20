@@ -25,7 +25,7 @@ class Paid extends Model
 
     public function getkitAttribute()
     {
-        return $this->first == 1 ? Addon::select('id', 'name')->with(['price:harga,product'])->first() : null;
+        return $this->first == 1 ? Addon::select('id', 'name','des')->with(['price:harga,product'])->first() : null;
     }
 
     public function gettotalAttribute()

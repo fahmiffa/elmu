@@ -63,7 +63,8 @@ class ScheduleController extends Controller
             'required' => 'Field wajib diisi.',
         ]);
 
-        $meet = $request->pertemuan;
+        $meet  = $request->pertemuan;
+        $murid = $request->murid;
 
         DB::beginTransaction();
         try {
@@ -73,9 +74,8 @@ class ScheduleController extends Controller
             $sch->program = $request->program;
             $sch->save();
 
-            $murid = $request->murid;
             for ($i = 0; $i < count($murid); $i++) {
-                $head = Head::where('id',$murid[$i])->first();
+                $head                  = Head::where('id', $murid[$i])->first();
                 $students              = new Schedules_students;
                 $students->head        = $head->id;
                 $students->student_id  = $head->students;
@@ -126,12 +126,11 @@ class ScheduleController extends Controller
         $action = "Edit Jadwal";
         $items  = $jadwal->load('class', 'units', 'programs', 'murid');
         foreach ($items->meet as $val) {
-
-            foreach ($val->waktu as $waktu) {
-                $tanggalList[] = [
-                    'tanggal' => \Carbon\Carbon::parse($waktu->tanggal)->format('Y-m-d\TH:i'),
+            $tanggalList = $val->waktu->pluck('waktu')->map(function ($waktu) {
+                return [
+                    'tanggal' => \Carbon\Carbon::parse($waktu)->format('Y-m-d\TH:i'),
                 ];
-            }
+            })->toArray();
 
             $da[] = [
                 'nama'        => $val->name,
@@ -198,8 +197,10 @@ class ScheduleController extends Controller
             Schedules_students::where('schedule_id', $jadwal->id)->delete();
             $murid = $request->murid;
             for ($i = 0; $i < count($murid); $i++) {
+                $head                  = Head::where('id', $murid[$i])->first();
                 $students              = new Schedules_students;
-                $students->student_id  = $murid[$i];
+                $students->head        = $head->id;
+                $students->student_id  = $head->students;
                 $students->schedule_id = $sch->id;
                 $students->save();
             }

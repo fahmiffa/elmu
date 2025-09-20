@@ -1,7 +1,7 @@
 @extends('base.layout')
 @section('title', 'Login')
 @section('content')
-    <div class="min-h-screen flex items-center justify-center">
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-600 w-full">
         <div class="bg-white shadow-md md:w-full max-w-md rounded-3xl md:mx-0 mx-5">
             <div class="p-8">
                 <img src="https://murikaceria.co.id/v2/wp-content/uploads/2024/01/LogoTypeOrange.svg"
@@ -69,12 +69,12 @@
                         </button>
                     </div>
                 </form>
-                <div class="text-xs flex-col mt-10">
+                {{-- <div class="text-xs flex-col mt-10">
                     <div class="font-semibold">PT MUMTAZ CERIA EDUKASI</div>
                     <div class="font-semibold">Jl. Saditan Baru, Saditan, Brebes, Kec. Brebes, Kabupaten Brebes, Jawa
                         Tengah 52212 (Gg. Flamboyan RT 06/RW 05, Kel. Brebes)
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>

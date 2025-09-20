@@ -12,7 +12,9 @@ import {
     salesChart,
     payChart,
     countUp,
-    schedule
+    schedule,
+    dataTableReg,
+    dataTablePay
 } from "./custom.js";
 
 window.Alpine = Alpine;
@@ -20,6 +22,8 @@ Alpine.data("dropdownSelect", dropdownSelect);
 Alpine.data("layout", layout);
 Alpine.data("editor", editor);
 Alpine.data("dataTable", dataTable);
+Alpine.data("dataTableReg", dataTableReg);
+Alpine.data("dataTablePay", dataTablePay);
 Alpine.data("generateBill", generateBill);
 Alpine.data("jadwal", jadwal);
 Alpine.data("reg", reg);

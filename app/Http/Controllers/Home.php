@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Models\Unit;
 use App\Models\UnitKelas;
 use App\Models\User;
+use App\Models\Level;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
 use Auth;
@@ -169,7 +170,7 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units')->get();
+        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units','level')->get();
         return view('home.reg.index', compact('items'));
     }
 
@@ -345,6 +346,10 @@ class Home extends Controller
                 $paid->tahun = date("Y");
                 $paid->first = 1;
                 $paid->save();
+
+                $level        = new Level;
+                $level->head  = $head->id;
+                $level->save();
 
             } else {
 

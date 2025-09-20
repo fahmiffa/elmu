@@ -1,7 +1,7 @@
 @extends('base.layout')
-@section('title', 'Dashboard Master Unit')
+@section('title', 'Dashboard Pendaftaran')
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
+    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-between items-center gap-2">
             <input type="text" x-model="search" placeholder="Cari Nama"
@@ -21,7 +21,7 @@
                         <th class="px-4 py-2 text-nowrap">Nomor Induk</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Kontrak</th>
-                        <th class="px-4 py-2">Program Belajar</th>
+                        <th class="px-4 py-2">Program</th>
                         <th class="px-4 py-2">Kelas</th>
                         <th class="px-4 py-2">Unit</th>
                         <th class="px-4 py-2">Tanggal</th>

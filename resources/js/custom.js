@@ -42,13 +42,12 @@ export const layout = () => {
 };
 
 export const dataTable = (data) => {
-    console.log(data);
     return {
         search: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
-        perPage: 50,
+        perPage: 10,
         rows: data,
         selectedRow: null,
         open: false,
@@ -64,11 +63,181 @@ export const dataTable = (data) => {
 
         filteredData() {
             let temp = this.rows.filter((row) =>
-                Object.values(row).some((val) =>
-                    String(val)
+                Object.values(row).some((val) => {
+                    return String(val)
                         .toLowerCase()
-                        .includes(this.search.toLowerCase())
-                )
+                        .includes(this.search.toLowerCase());
+                })
+            );
+
+            temp.sort((a, b) => {
+                let valA = a[this.sortColumn];
+                let valB = b[this.sortColumn];
+
+                if (typeof valA === "string") valA = valA.toLowerCase();
+                if (typeof valB === "string") valB = valB.toLowerCase();
+
+                if (valA < valB) return this.sortAsc ? -1 : 1;
+                if (valA > valB) return this.sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            return temp;
+        },
+
+        paginatedData() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredData().slice(start, start + this.perPage);
+        },
+
+        totalPages() {
+            return Math.ceil(this.filteredData().length / this.perPage);
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages()) this.currentPage++;
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) this.currentPage--;
+        },
+
+        deleteRow(e) {
+            if (confirm("Yakin ingin menghapus data?")) {
+                e.target.submit();
+            }
+        },
+        formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        formatWIB(datetimeStr) {
+            if (!datetimeStr) return "";
+            const date = new Date(datetimeStr);
+            return (
+                date.toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }) + " WIB"
+            );
+        },
+    };
+};
+
+export const dataTableReg = (data) => {
+    console.log(data);
+    return {
+        search: "",
+        sortColumn: "name",
+        sortAsc: true,
+        currentPage: 1,
+        perPage: 10,
+        rows: data,
+        selectedRow: null,
+        open: false,
+
+        sortBy(column) {
+            if (this.sortColumn === column) {
+                this.sortAsc = !this.sortAsc;
+            } else {
+                this.sortColumn = column;
+                this.sortAsc = true;
+            }
+        },
+
+        filteredData() {
+            let temp = this.rows.filter((row) =>
+                row.murid.name
+                    .toLowerCase()
+                    .includes(this.search.toLowerCase())
+            );
+
+            temp.sort((a, b) => {
+                let valA = a[this.sortColumn];
+                let valB = b[this.sortColumn];
+
+                if (typeof valA === "string") valA = valA.toLowerCase();
+                if (typeof valB === "string") valB = valB.toLowerCase();
+
+                if (valA < valB) return this.sortAsc ? -1 : 1;
+                if (valA > valB) return this.sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            return temp;
+        },
+
+        paginatedData() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredData().slice(start, start + this.perPage);
+        },
+
+        totalPages() {
+            return Math.ceil(this.filteredData().length / this.perPage);
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages()) this.currentPage++;
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) this.currentPage--;
+        },
+
+        deleteRow(e) {
+            if (confirm("Yakin ingin menghapus data?")) {
+                e.target.submit();
+            }
+        },
+        formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        formatWIB(datetimeStr) {
+            if (!datetimeStr) return "";
+            const date = new Date(datetimeStr);
+            return (
+                date.toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }) + " WIB"
+            );
+        },
+    };
+};
+
+export const dataTablePay = (data) => {
+    console.log(data);
+    return {
+        search: "",
+        sortColumn: "name",
+        sortAsc: true,
+        currentPage: 1,
+        perPage: 10,
+        rows: data,
+        selectedRow: null,
+        open: false,
+
+        sortBy(column) {
+            if (this.sortColumn === column) {
+                this.sortAsc = !this.sortAsc;
+            } else {
+                this.sortColumn = column;
+                this.sortAsc = true;
+            }
+        },
+
+        filteredData() {
+            let temp = this.rows.filter((row) =>
+                row.reg.murid.name
+                    .toLowerCase()
+                    .includes(this.search.toLowerCase())
             );
 
             temp.sort((a, b) => {
@@ -348,7 +517,6 @@ export function schedule(data, initial = {}) {
         selectedMurid: initial.murid || [],
         tom: null,
 
-
         get programs() {
             if (!this.selectedUnit || !this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];
@@ -453,6 +621,7 @@ export function schedule(data, initial = {}) {
 }
 
 export function jadwal(par) {
+    console.log(par)
     return {
         pertemuanList: par ?? [
             {

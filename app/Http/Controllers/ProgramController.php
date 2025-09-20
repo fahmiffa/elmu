@@ -122,19 +122,16 @@ class ProgramController extends Controller
         $item->level = $request->level;
         $item->save();
 
-        $pr     = Price::where('product', $item->id)->pluck('id')->toArray();
-        $remove = array_values(array_diff($pr, $price));
 
-        for ($i = 0; $i < count($remove); $i++) {
-            Price::where('id', $remove[$i])->delete();
-        }
+        $pr = Price::where('product', $item->id)->pluck('id')->toArray();
+        Price::whereIn('id', $pr)->delete();
 
-        for ($i = 0; $i < count($price); $i++) {
-            Price::where('id', $price[$i])->update([
-                'product' => $item->id,
-                'harga'   => $harga[$i],
-                'kelas'   => $kelas[$i],
-            ]);
+        for ($i = 0; $i < count($kelas); $i++) {
+            $price          = new Price;
+            $price->product = $item->id;
+            $price->kelas   = $kelas[$i];
+            $price->harga   = $harga[$i];
+            $price->save();
         }
 
         return redirect()->route('dashboard.master.program.index');

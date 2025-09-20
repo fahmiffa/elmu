@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
+use App\Models\Level;
 use App\Models\Paid;
+use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
+use App\Models\Report;
 use App\Models\Schedule;
 use App\Models\Schedules_students;
-use App\Models\Schedules_date;
+use App\Models\Schedule_date;
 use App\Models\Student;
+use App\Models\StudentPresent;
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Report;
 use App\Rules\NumberWa;
 use DB;
 use Illuminate\Http\Request;
@@ -27,12 +30,85 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class ApiController extends Controller
 {
 
+    public function Updata(Request $request, $par)
+    {
+        $id    = JWTAuth::user()->id;
+        $siswa = Student::where('user', $id)->first();
+
+        if ($par == "child") {
+            $validator = Validator::make($request->all(), [
+                'alamat'                => 'required',
+                'agama'                 => 'required',
+                'tempat_tanggal_lahir'  => 'required',
+                'tanggal_lahir'         => 'required',
+                'cita_cita'             => 'required',
+                'hp'                    => 'required',
+                'jenis_kelamin'         => 'required',
+                'peringkat'             => 'required',
+                'prestasi'              => 'required',
+                'pendidikan_non_formal' => 'required',
+                'sekolah_kelas'         => 'required',
+                'alamat_sekolah'        => 'required',
+                'sosmed'                => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $siswa->alamat                = $request->alamat;
+            $siswa->place                 = $request->tempat_tanggal_lahir;
+            $siswa->birth                 = \Carbon\Carbon::createFromFormat('d-m-Y', $request->tanggal_lahir);
+            $siswa->dream                 = $request->cita_cita;
+            $siswa->hp_siswa              = $request->hp;
+            $siswa->agama                 = $request->agama;
+            $siswa->gender                = $request->jenis_kelamin == "Laki-laki" ? 1 : 2;
+            $siswa->study                 = $request->sekolah_kelas;
+            $siswa->rank                  = $request->peringkat;
+            $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;
+            $siswa->prestasi              = $request->prestasi;
+            $siswa->alamat_sekolah        = $request->alamat_sekolah;
+            $siswa->sosmedChild           = $request->sosmed;
+            $siswa->save();
+        }
+
+        if ($par == "parent") {
+            $validator = Validator::make($request->all(), [
+                'nama_ayah'      => 'required',
+                'pekerjaan_ayah' => 'required',
+                'nama_ibu'       => 'required',
+                'pekerjaan_ibu'  => 'required',
+                'sosmed'         => 'required',
+                'hp'             => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            $siswa->dad         = $request->nama_ayah;
+            $siswa->dadJob      = $request->pekerjaan_ayah;
+            $siswa->mom         = $request->nama_ibu;
+            $siswa->momJob      = $request->pekerjaan_ibu;
+            $siswa->sosmedOther = $request->sosmed;
+            $siswa->hp_parent   = $request->hp;
+            $siswa->save();
+        }
+
+        return response()->json(['status' => true], 200);
+    }
+
     public function UpJadwal(Request $request)
     {
-        $id   = JWTAuth::user()->id;
+        $id = JWTAuth::user()->id;
 
         $validator = Validator::make($request->all(), [
-            'jadwal'   => 'required',
+            'jadwal' => 'required',
+            'user'   => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -41,7 +117,19 @@ class ApiController extends Controller
             ], 400);
         }
 
-        Schedules_date::where('id',$jadwal)->update(['status'=>1]);
+        $user = $request->user;
+        for ($i = 0; $i < count($user); $i++) {
+            $present                    = new StudentPresent;
+            $present->student_id        = $user[$i];
+            $present->schedule_dates_id = $request->jadwal;
+            $present->save();
+        }
+
+        $data = Schedule_date::find($request->jadwal);
+        if ($data) {
+            $data->status = 1;
+            $data->save();
+        }
 
         return response()->json(['status' => true], 200);
     }
@@ -49,16 +137,22 @@ class ApiController extends Controller
     public function report()
     {
         $id   = JWTAuth::user()->id;
-        $item = Report::where('user_id',$id)->latest()->get();
+        $item = Report::where('user_id', $id)->latest()->get();
+        return response()->json($item);
+    }
+
+    public function payment()
+    {
+        $item = Payment::latest()->get();
         return response()->json($item);
     }
 
     public function Ureport(Request $request)
     {
-        $id   = JWTAuth::user()->id;
+        $id = JWTAuth::user()->id;
 
         $validator = Validator::make($request->all(), [
-            'reason'   => 'required',
+            'reason' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -67,7 +161,7 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $re = new Report;
+        $re          = new Report;
         $re->user_id = $id;
         $re->reason  = $request->reason;
         $re->save();
@@ -256,12 +350,12 @@ class ApiController extends Controller
         }
 
         if ($role == 3) {
-            $guru    = Teach::where('user', $id)->first();
-            $unit    = $guru->unit_id;
+            $guru     = Teach::where('user', $id)->first();
+            $unit     = $guru->unit_id;
             $students = $res->whereHas('reg.units', function ($q) use ($unit) {
                 $q->where('unit', $unit);
             })
-            ->get();
+                ->get();
 
             $grouped = [];
 
@@ -286,8 +380,8 @@ class ApiController extends Controller
                             'total'  => $bill->total,
                             'status' => $bill->status,
                             // Tambahan opsional
-                            'bulan' => $bill->bulan,
-                            'tahun' => $bill->tahun,
+                            'bulan'  => $bill->bulan,
+                            'tahun'  => $bill->tahun,
                             // 'via' => $bill->via,
                             // 'kit' => $bill->kit->name ?? null,
                         ];
@@ -296,6 +390,79 @@ class ApiController extends Controller
                     $grouped[$key]['students'][] = [
                         'name'  => $student->name,
                         'bills' => $bills,
+                    ];
+                }
+            }
+
+            return response()->json(array_values($grouped));
+
+        }
+    }
+
+    public function level()
+    {
+        $id   = JWTAuth::user()->id;
+        $role = JWTAuth::user()->role;
+
+        $res = Student::select('id', 'name', 'gender', 'user')
+            ->with(
+                'reg:id,students,price,unit,number,program',
+                'reg.product:id,harga,product,kelas',
+                'reg.product.class:id,name',
+                'reg.product.program:id,name',
+                'reg.level',
+            );
+
+        if ($role == 2) {
+            $head = Head::whereHas('murid', function ($q) use ($id) {
+                $q->where('user', $id);
+            })
+                ->with('level', 'class')
+                ->first();
+
+            $da['head']     = $head->id;
+            $da['program']  = $head->programs->name;
+            $da['class']    = $head->class->name;
+            $da['students'] = $head->murid->name;
+            return response()->json($da);
+        }
+
+        if ($role == 3) {
+            $guru     = Teach::where('user', $id)->first();
+            $unit     = $guru->unit_id;
+            $students = $res->whereHas('reg.units', function ($q) use ($unit) {
+                $q->where('unit', $unit);
+            })->get();
+
+            $grouped = [];
+
+            foreach ($students as $student) {
+                foreach ($student->reg as $reg) {
+                    $programName = $reg->programs->name ?? 'Unknown Program';
+                    $className   = $reg->units->kelas[0]->name ?? 'Unknown Class';
+
+                    $key = $programName . '|' . $className;
+
+                    if (! isset($grouped[$key])) {
+                        $grouped[$key] = [
+                            'head'     => $reg->id,
+                            'program'  => $programName,
+                            'class'    => $className,
+                            'students' => [],
+                        ];
+                    }
+
+                    $levels = collect($reg->level)->map(function ($item) {
+                        return [
+                            'level' => $item->level,
+                            'note'  => $item->note,
+                        ];
+                    })->toArray();
+
+                    $grouped[$key]['students'][] = [
+                        'id'    => $student->id,
+                        'name'  => $student->name,
+                        'level' => $levels,
                     ];
                 }
             }
@@ -339,11 +506,26 @@ class ApiController extends Controller
 
     public function data()
     {
-        $id      = JWTAuth::user()->id;
-        $Student = User::select('id', 'name', 'email', 'status', 'role')
-            ->with('data')
-            ->where('id', $id)->first();
-        return response()->json($Student);
+        $id   = JWTAuth::user()->id;
+        $role = JWTAuth::user()->role;
+
+        if ($role == 2) {
+            $student = User::select('id', 'name', 'email', 'status', 'role')
+                ->with('data')
+                ->where('id', $id)->first();
+            $induk          = optional($student->data->reg->first())->induk;
+            $induk          = $induk ? substr($induk, 0, -3) : null;
+            $student->induk = $induk;
+            $student->data->makeHidden('reg');
+
+            return response()->json($student);
+        }
+
+        if ($role == 3) {
+            $student = User::select('id', 'name', 'email', 'status', 'role')->where('id', $id)->first();
+            return response()->json($student);
+        }
+
     }
 
     public function billStore(Request $request)
@@ -484,6 +666,10 @@ class ApiController extends Controller
             $paid->tahun = date("Y");
             $paid->first = 1;
             $paid->save();
+
+            $level       = new Level;
+            $level->head = $head->id;
+            $level->save();
 
             $to       = '62' . substr($user->nomor, 1);
             $response = Http::post('http://192.168.18.22:3000/api/send', [

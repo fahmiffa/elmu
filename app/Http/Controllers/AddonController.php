@@ -91,13 +91,23 @@ class AddonController extends Controller
         $item       = $layanan;
         $item->name = $request->name;
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images/layanan', 'public');
-            $item->img  = $path;
+            $path      = $request->file('image')->store('images/layanan', 'public');
+            $item->img = $path;
         }
-        $item->des  = $request->des;
+        $item->des = $request->des;
         $item->save();
 
-        Price::where('product',$item->id)->update(['harga'=>$request->price]);
+        $price = Price::where('product', $item->id);
+        if ($price->exists()) {
+            $price        = $price->first();
+            $price->harga = $request->price;
+        } else {
+            $price          = new Price;
+            $price->product = $item->id;
+            $price->kelas   = null;
+            $price->harga   = $request->price;
+            $price->save();
+        }
 
         return redirect()->route('dashboard.master.layanan.index');
     }

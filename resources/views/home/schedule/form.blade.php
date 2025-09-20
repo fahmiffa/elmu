@@ -1,5 +1,5 @@
 @extends('base.layout')
-@section('title', 'Dashboard')
+@section('title', 'Form Jadwal')
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
         <div class="font-semibold mb-3 text-xl">{{ $action }}</div>

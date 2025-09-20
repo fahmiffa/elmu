@@ -7,6 +7,11 @@ class Schedule extends Model
 {
 
     protected $hidden = ['created_at', 'updated_at'];
+
+    public function reg()
+    {
+        return $this->hasMany(Head::class, 'unit', 'unit');
+    }
     
     public function guru()
     {
@@ -38,7 +43,6 @@ class Schedule extends Model
     {
         return $this->hasMany(Schedules_students::class, 'schedule_id', 'id');
     }
-
 
     public function waktu()
     {

@@ -63,6 +63,12 @@ class Head extends Model
         return $this->hasMany(Paid::class, 'head', 'id');
     }
 
+    public function level()
+    {
+        return $this->hasMany(Level::class, 'head', 'id');
+    }
+
+
     public function getkodeAttribute()
     {
         $nom = str_pad($this->id, 4, '0', STR_PAD_LEFT);
