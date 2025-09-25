@@ -42,6 +42,7 @@ export const layout = () => {
 };
 
 export const dataTable = (data) => {
+    console.log(data);
     return {
         search: "",
         sortColumn: "name",
@@ -124,6 +125,12 @@ export const dataTable = (data) => {
                 }) + " WIB"
             );
         },
+        groupJadwalByDay(jadwalArray) {
+            return jadwalArray.reduce((groups, item) => {
+                (groups[item.parse] = groups[item.parse] || []).push(item);
+                return groups;
+            }, {});
+        },
     };
 };
 
@@ -150,9 +157,7 @@ export const dataTableReg = (data) => {
 
         filteredData() {
             let temp = this.rows.filter((row) =>
-                row.murid.name
-                    .toLowerCase()
-                    .includes(this.search.toLowerCase())
+                row.murid.name.toLowerCase().includes(this.search.toLowerCase())
             );
 
             temp.sort((a, b) => {
@@ -398,157 +403,36 @@ export function reg(kelas, program, unit) {
     };
 }
 
-// export function schedule(data) {
-//     console.log(data);
-//     return {
-//         selectedUnit: "",
-//         selectedPrgram: "",
-//         selectedKelas: "",
-//         tom: null,
-
-//         get programs() {
-//             let val = [];
-//             if (!this.selectedUnit)
-//                 return [{ value: "", label: "Pilih Program" }];
-//             val = data
-//                 .filter((p) => p.unit == Number(this.selectedUnit) && p.kelas == Number(this.selectedKelas))
-//                 .map((e) => ({
-//                     value: e.programs.id,
-//                     label: e.programs.name,
-//                 }))
-//                 .filter(
-//                     (item, index, self) =>
-//                         index === self.findIndex((t) => t.value === item.value)
-//                 );
-
-//             if (val.length < 1) return [{ value: "", label: "Pilih Program" }];
-
-//             return [
-//                 { value: "", label: "Pilih Program" },
-//                 ...Array.from(val.values()),
-//             ];
-//         },
-
-//         get kelas() {
-//             let val = [];
-//             if (!this.selectedUnit)
-//                 return [{ value: "", label: "Pilih Kelas" }];
-//             val = data
-//                 .filter((p) => p.unit == Number(this.selectedUnit))
-//                 .map((e) => ({
-//                     value: e.class.id,
-//                     label: e.class.name,
-//                 }))
-//                 .filter(
-//                     (item, index, self) =>
-//                         index === self.findIndex((t) => t.value === item.value)
-//                 );
-
-//             if (val.length < 1) return [{ value: "", label: "Pilih Kelas" }];
-
-//             return [
-//                 { value: "", label: "Pilih Kelas" },
-//                 ...Array.from(val.values()),
-//             ];
-//         },
-
-//         init() {
-//             this.$nextTick(() => {
-//                 this.initTomSelect();
-
-//                 this.$watch("selectedUnit", () => {
-//                     this.selectedPrgram = ""; // reset program
-//                     this.updateOptions();
-//                 });
-
-//                 this.$watch("selectedPrgram", () => {
-//                     this.updateOptions();
-//                 });
-//             });
-//         },
-
-//         initTomSelect() {
-//             const selectEl = this.$refs.selectMurid;
-
-//             if (selectEl.tomselect) {
-//                 this.tom = selectEl.tomselect;
-//                 return;
-//             }
-
-//             this.tom = new TomSelect(selectEl, {
-//                 plugins: ["remove_button"],
-//                 placeholder: "Pilih Murid",
-//                 options: this.getFilteredMurid(),
-//                 items: [],
-//             });
-//         },
-
-//         getFilteredMurid() {
-//             if (!this.selectedUnit || !this.selectedPrgram) return [];
-
-//             return data
-//                 .filter(
-//                     (p) =>
-//                         Number(p.unit) === Number(this.selectedUnit) &&
-//                         Number(p.program) === Number(this.selectedPrgram)
-//                 )
-//                 .map((e) => ({
-//                     value: e.murid.id,
-//                     text: e.murid.name,
-//                 }));
-//         },
-
-//         updateOptions() {
-//             if (!this.tom) return;
-//             this.tom.clear();
-//             const newOptions = this.getFilteredMurid();
-//             this.tom.clearOptions();
-//             this.tom.addOptions(newOptions);
-//             this.tom.refreshOptions(false);
-//         },
-//     };
-// }
-
 export function schedule(data, initial = {}) {
     return {
         selectedUnit: initial.unit || "",
-        selectedKelas: initial.kelas || "",
-        selectedProgram: initial.program || "",
+        selectedJadwal: initial.jadwal || "",
         selectedMurid: initial.murid || [],
         tom: null,
+        tomJadwal: null,
 
-        get programs() {
-            if (!this.selectedUnit || !this.selectedKelas)
-                return [{ value: "", label: "Pilih Program" }];
-
-            const filtered = data
-                .filter(
-                    (p) =>
-                        p.unit == this.selectedUnit &&
-                        p.kelas == this.selectedKelas
-                )
-                .map((p) => ({ value: p.programs.id, label: p.programs.name }));
-
-            const unique = Array.from(
-                new Map(filtered.map((i) => [i.value, i])).values()
-            );
-
-            return [{ value: "", label: "Pilih Program" }, ...unique];
-        },
-
-        get kelas() {
+        get jadwals() {
             if (!this.selectedUnit)
-                return [{ value: "", label: "Pilih Kelas" }];
+                return [{ value: "", label: "Pilih Jadwal" }];
 
-            const filtered = data
-                .filter((p) => p.unit == this.selectedUnit)
-                .map((p) => ({ value: p.class.id, label: p.class.name }));
-
-            const unique = Array.from(
-                new Map(filtered.map((i) => [i.value, i])).values()
+            const found = data.find(
+                (p) =>
+                    p.unit == this.selectedUnit
             );
 
-            return [{ value: "", label: "Pilih Kelas" }, ...unique];
+            if (!found || !found.units || !Array.isArray(found.units.jadwal)) {
+                return [{ value: "", label: "Pilih Jadwal" }];
+            }
+
+            const jadwalList = found.units.jadwal.map((j) => ({
+                value: j.id,
+                label: `${j.parse} - ${j.name} (${j.start.slice(
+                    0,
+                    5
+                )} - ${j.end.slice(0, 5)})`,
+            }));
+
+            return [{ value: "", label: "Pilih Jadwal" }, ...jadwalList];
         },
 
         init() {
@@ -556,45 +440,66 @@ export function schedule(data, initial = {}) {
                 this.initTomSelect();
 
                 this.$watch("selectedUnit", () => {
-                    this.selectedProgram = "";
-                    this.updateOptions();
-                });
-
-                this.$watch("selectedKelas", () => {
-                    this.selectedProgram = "";
-                    this.updateOptions();
-                });
-
-                this.$watch("selectedProgram", () => {
+                    this.selectedJadwal = initial.jadwal;
                     this.updateOptions();
                 });
             });
+        },
+
+        getFilteredJadwal() {
+            if (!this.selectedUnit) return [];
+
+            const found = data.find(
+                (p) =>
+                    p.unit == this.selectedUnit
+            );
+
+            if (!found || !found.units || !Array.isArray(found.units.jadwal))
+                return [];
+
+            return found.units.jadwal.map((j) => ({
+                value: j.id,
+                text: `${j.parse} - ${j.name} (${j.start.slice(
+                    0,
+                    5
+                )} - ${j.end.slice(0, 5)})`,
+            }));
         },
 
         initTomSelect() {
-            const el = this.$refs.selectMurid;
+            const muridEl = this.$refs.selectMurid;
+            const jadwalEl = this.$refs.selectJadwal;
 
-            if (el.tomselect) {
-                this.tom = el.tomselect;
-                return;
+            if (muridEl.tomselect) {
+                this.tom = muridEl.tomselect;
+            } else {
+                this.tom = new TomSelect(muridEl, {
+                    plugins: ["remove_button"],
+                    placeholder: "Pilih Murid",
+                    options: this.getFilteredMurid(),
+                    items: this.selectedMurid,
+                });
             }
 
-            this.tom = new TomSelect(el, {
-                plugins: ["remove_button"],
-                placeholder: "Pilih Murid",
-                options: this.getFilteredMurid(),
-                items: this.selectedMurid,
-            });
+            if (jadwalEl.tomselect) {
+                this.tomJadwal = jadwalEl.tomselect;
+            } else {
+                this.tomJadwal = new TomSelect(jadwalEl, {
+                    plugins: ["remove_button"],
+                    placeholder: "Pilih Jadwal",
+                    options: this.getFilteredJadwal(),
+                    items: this.selectedJadwal,
+                });
+            }
         },
 
         getFilteredMurid() {
-            if (!this.selectedUnit || !this.selectedProgram) return [];
+            if (!this.selectedUnit) return [];
 
             return data
                 .filter(
                     (p) =>
-                        p.unit == this.selectedUnit &&
-                        p.program == this.selectedProgram
+                        p.unit == this.selectedUnit
                 )
                 .map((p) => ({
                     value: p.id,
@@ -603,25 +508,35 @@ export function schedule(data, initial = {}) {
         },
 
         updateOptions() {
-            if (!this.tom) return;
+            if (this.tom) {
+                this.tom.clear();
+                const newMuridOptions = this.getFilteredMurid();
+                this.tom.clearOptions();
+                this.tom.addOptions(newMuridOptions);
 
-            this.tom.clear();
-            const newOptions = this.getFilteredMurid();
-
-            this.tom.clearOptions();
-            this.tom.addOptions(newOptions);
-
-            if (this.selectedMurid.length) {
-                this.tom.setValue(this.selectedMurid);
+                if (this.selectedMurid.length) {
+                    this.tom.setValue(this.selectedMurid);
+                }
+                this.tom.refreshOptions(false);
             }
 
-            this.tom.refreshOptions(false);
+            if (this.tomJadwal) {
+                this.tomJadwal.clear();
+                const newJadwalOptions = this.getFilteredJadwal();
+                this.tomJadwal.clearOptions();
+                this.tomJadwal.addOptions(newJadwalOptions);
+
+                if (this.selectedJadwal.length) {
+                    this.tomJadwal.setValue(this.selectedJadwal);
+                }
+                this.tomJadwal.refreshOptions(false);
+            }
         },
     };
 }
 
 export function jadwal(par) {
-    console.log(par)
+    console.log(par);
     return {
         pertemuanList: par ?? [
             {
@@ -883,6 +798,27 @@ export function countUp(target) {
 
         formatNumber(number) {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+    };
+}
+
+export function jadwalForm(initialJadwals = null) {
+    return {
+        jadwals: initialJadwals || [
+            { name: "", hari: "", start_time: "", end_time: "" },
+        ],
+
+        addJadwal() {
+            this.jadwals.push({
+                name: "",
+                hari: "",
+                start_time: "",
+                end_time: "",
+            });
+        },
+
+        removeJadwal(index) {
+            this.jadwals.splice(index, 1);
         },
     };
 }

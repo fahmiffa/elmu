@@ -14,7 +14,8 @@ import {
     countUp,
     schedule,
     dataTableReg,
-    dataTablePay
+    dataTablePay,
+    jadwalForm
 } from "./custom.js";
 
 window.Alpine = Alpine;
@@ -31,6 +32,7 @@ Alpine.data('salesChart', salesChart);
 Alpine.data('payChart', payChart);
 Alpine.data('countUp', countUp);
 Alpine.data('schedule', schedule);
+Alpine.data('jadwalForm', jadwalForm);
 Alpine.store("unit");
 
 Alpine.start();

@@ -1,26 +1,25 @@
 @extends('base.layout')
-@section('title', 'Dashboard Penjadwalan')
+@section('title', 'Master Jadwal Unit')
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
+    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-between items-center gap-2">
             <input type="text" x-model="search" placeholder="Cari Nama"
                 class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
-            <a href="{{ route('dashboard.jadwal.create') }}"
+
+            <a href="{{ route('dashboard.master.jadwal.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
             </a>
         </div>
-
 
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 text-sm">
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2">Siswa</th>
+                        <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Jadwal</th>
-                        <th class="px-4 py-2">Unit</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -28,22 +27,23 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.murid.name ?? '-'"></td>
+                            <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2">
-                                <div class="whitespace-nowrap">
-                                    <template x-for="(item, index) in row.jadwal" :key="index">
-                                        <dl>
-                                            <dt x-text="item.name" class="font-semibold capitalize"></dt>
-                                            <dt x-text="item.parse +', '+item.start.slice(0,5)+'-'+item.end.slice(0,5)"
-                                                class="text-xs text-red-800"></dt>
-                                        </dl>
-                                    </template>
-                                </div>
+                                <template x-for="(jadwalByDay, day) in groupJadwalByDay(row.jadwal)" :key="day">
+                                    <div class="mb-3">
+                                        <div class="font-semibold" x-text="day"></div>
+                                        <template x-for="jadwal in jadwalByDay" :key="jadwal.id">
+                                            <div class="text-xs text-red-800"
+                                                x-text="jadwal.name + ', ' + jadwal.start.slice(0,5) + ' - ' + jadwal.end.slice(0,5) + ' WIB'">
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                             </td>
-                            <td class="px-4 py-2" x-text="row.units.name ?? '-'"></td>
                             <td class="px-4 py-2">
-                                <div class="flex items-center gap-2">
-                                    <a :href="'/dashboard/jadwal/' + row.id + '/edit'"
+                                <div class="flex items-center gap-1">
+                                    <!-- Edit button -->
+                                    <a :href="'/dashboard/master/unit-jadwal/' + row.id + '/edit'"
                                         class="text-orange-600 hover:text-orange-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -54,15 +54,12 @@
                                             <path d="m15 5 4 4" />
                                         </svg>
                                     </a>
-                                    <form :action="'/dashboard/jadwal/' + row.id + '/hapus'" method="POST"
+                                    <!-- Delete form -->
+                                    <form :action="'/dashboard/master/unit-jadwal/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
-
-                                        <template x-for="(item, index) in row.jadwal" :key="index">
-                                            <input type="hidden" name="par[]" :value="item.id">
-                                        </template>
-
                                         @csrf
-                                        <button type="submit" class="text-red-500 cursor-pointer">
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-500">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" stroke-linejoin="round"
@@ -80,9 +77,11 @@
                         </tr>
                     </template>
                     <tr x-show="filteredData().length === 0">
-                        <td colspan="3" class="text-center px-4 py-2 text-gray-500">No results found.</td>
+                        <td colspan="4" class="text-center px-4 py-2 text-gray-500">No results found.</td>
                     </tr>
                 </tbody>
+
+
             </table>
         </div>
 

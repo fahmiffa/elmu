@@ -10,9 +10,6 @@ use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
 use App\Models\Report;
-use App\Models\Schedule;
-use App\Models\Schedules_students;
-use App\Models\Schedule_date;
 use App\Models\Student;
 use App\Models\StudentPresent;
 use App\Models\Teach;
@@ -109,6 +106,9 @@ class ApiController extends Controller
         $validator = Validator::make($request->all(), [
             'jadwal' => 'required',
             'user'   => 'required',
+        ], [
+            'jadwal.required' => 'Jadwal wajib diisi.',
+            'user.required'   => 'TIdak murid yang di pilih',
         ]);
 
         if ($validator->fails()) {
@@ -121,14 +121,8 @@ class ApiController extends Controller
         for ($i = 0; $i < count($user); $i++) {
             $present                    = new StudentPresent;
             $present->student_id        = $user[$i];
-            $present->schedule_dates_id = $request->jadwal;
+            $present->unit_schedules_id = $request->jadwal;
             $present->save();
-        }
-
-        $data = Schedule_date::find($request->jadwal);
-        if ($data) {
-            $data->status = 1;
-            $data->save();
         }
 
         return response()->json(['status' => true], 200);
@@ -174,48 +168,34 @@ class ApiController extends Controller
         $role = JWTAuth::user()->role;
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
-            $da    = Teach::where('user', $id)->first();
-            $items = Schedule::select('id', 'unit', 'kelas', 'program', 'status')
-                ->with(
-                    'meet:id,name,schedule_id,status',
-                    'meet.waktu:id,schedule_meet_id,waktu,status,ket',
-                    'murid:id,name',
-                    'units:id,name',
-                    'programs:id,kode,name',
-                    'class:id,name'
-                )
-                ->where('unit', $da->unit_id)
-                ->get()
-                ->each(function ($items) {
-                    $items->meet->each->makeHidden('schedule_id');
-                    $items->meet->each(function ($meet) {
-                        $meet->waktu->each(function ($waktu) {
-                            $waktu->makeHidden('schedule_meet_id');
-                        });
-                    });
-                    $items->murid->each->makeHidden('pivot');
-                    $items->units->makeHidden('kelasn', 'unit');
-                    $items->makeHidden('unit', 'id', 'kelas', 'status', 'program');
+            $da        = Teach::where('user', $id)->first();
+            $items     = Head::where('unit', $da->unit_id)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name','murid.present')->get();
+            $allJadwal = collect();
+            $allMurid  = collect();
+
+            foreach ($items as $head) {
+                $jadwalWithoutPivot = $head->jadwal->map(function ($j) {
+                    return $j->makeHidden('pivot');
                 });
+
+                $allJadwal = $allJadwal->merge($jadwalWithoutPivot);
+                $allMurid->push($head->murid);
+            }
+
+            return response()->json([
+                'jadwal' => $allJadwal->values()->unique('id')->all(),
+                'murid'  => $allMurid->values()->unique('id')->all(),
+            ]);
         } else {
             $da    = Student::where('user', $id)->first();
-            $items = Schedules_students::select('id', 'schedule_id')
-                ->where('student_id', $da->id)
-                ->with(
-                    'jadwal.programs:id,name,kode',
-                    'jadwal.class:id,name',
-                    'jadwal.meet:id,name,schedule_id,status',
-                    'jadwal.meet.waktu:id,waktu,ket,schedule_meet_id,status'
-                )
-                ->get()
-                ->map(function ($item) {
-                    $item->jadwal->makeHidden('unit', 'kelas', 'program');
-                    return $item->jadwal;
-                });
-
+            $items = Head::where('students', $da->id)->has('jadwal')->with('jadwal:id,name,day,parse,start,end','murid:id,name', 'murid.present')->first();
+            $items->jadwal->makeHidden('pivot');
+            return response()->json([
+                'jadwal' => $items->jadwal,
+                'murid'  => $items->murid,
+            ]);
         }
 
-        return response()->json($items);
     }
 
     public function refresh()

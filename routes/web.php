@@ -8,11 +8,11 @@ use App\Http\Controllers\KelasController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\SlideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ZoneController;
-use App\Http\Controllers\SlideController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear', function () {
@@ -46,6 +46,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/send/{id}', [Home::class, 'send'])->name('send');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
+    Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
     Route::resource('jadwal', ScheduleController::class);
     Route::resource('slide', SlideController::class);
 
@@ -72,5 +73,11 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::resource('program', ProgramController::class);
         Route::resource('layanan', AddonController::class);
         Route::resource('grade', GradeController::class);
+        Route::get('/unit-jadwal', [UnitController::class, 'jadwal'])->name('jadwal.index');
+        Route::get('/unit-jadwal/create', [UnitController::class, 'jadwalCreate'])->name('jadwal.create');
+        Route::get('/unit-jadwal/{id}/edit', [UnitController::class, 'jadwalEdit'])->name('jadwal.edit');
+        Route::put('/unit-jadwal/{jadwal}', [UnitController::class, 'jadwalUpdate'])->name('jadwal.update');
+        Route::post('/unit-jadwal', [UnitController::class, 'jadwalStore'])->name('jadwal.store');
+        Route::post('/unit-jadwal/{id}/hapus', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
     });
 });

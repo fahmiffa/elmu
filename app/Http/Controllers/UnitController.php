@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 use App\Models\Kelas;
 use App\Models\Unit;
 use App\Models\UnitKelas;
+use App\Models\UnitSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class UnitController extends Controller
 {
@@ -39,7 +41,7 @@ class UnitController extends Controller
             'pic.required'  => 'PIC wajib diisi.',
             'addr.required' => 'Alamat wajib diisi.',
             'hp.required'   => 'Nomor HP wajib diisi.',
-            'regex' => 'Tidak boleh memakai spasi'
+            'regex'         => 'Tidak boleh memakai spasi',
         ]);
 
         $item       = new Unit;
@@ -102,5 +104,173 @@ class UnitController extends Controller
     {
         $unit->delete();
         return redirect()->route('dashboard.master.unit.index');
+    }
+
+    public function jadwal()
+    {
+        $items = Unit::has('jadwal')->with('jadwal')->latest()->get();
+        return view('master.unit.jadwal.index', compact('items'));
+    }
+
+    public function jadwalCreate()
+    {
+        $action = "Tambah Jadwal Unit";
+        $kelas  = Kelas::latest()->get();
+        $unit   = Unit::latest()->get();
+        return view('master.unit.jadwal.form', compact('action', 'kelas', 'unit'));
+    }
+
+    public function jadwalEdit($id)
+    {
+        $action = "Edit Jadwal Unit";
+        $items  = Unit::with('jadwal')->findOrFail($id);
+
+        $jadwals = $items->jadwal->map(function ($jadwal) {
+            return [
+                'name'       => $jadwal->name,
+                'hari'       => $jadwal->day,
+                'start_time' => date('H:i', strtotime($jadwal->start)), // pastikan format HH:mm
+                'end_time'   => date('H:i', strtotime($jadwal->end)),   // pastikan format HH:mm
+            ];
+        });
+
+        $unit = Unit::has('jadwal')->with('jadwal')->latest()->get();
+        return view('master.unit.jadwal.form', compact('action', 'unit', 'items', 'jadwals'));
+    }
+
+    public function jadwalUpdate(Request $request, $id)
+    {
+        $validated = Validator::make($request->all(), [
+            'unit'                => ['required', 'exists:units,id'],
+            'jadwal'              => ['required', 'array', 'min:1'],
+            'jadwal.*.name'       => ['required'],
+            'jadwal.*.hari'       => ['required', 'in:1,2,3,4,5,6,7'],
+            'jadwal.*.start_time' => ['required', 'date_format:H:i'],
+            'jadwal.*.end_time'   => ['required', 'date_format:H:i'],
+        ])->after(function ($validator) use ($request) {
+            $byDay = [];
+
+            foreach ($request->jadwal as $index => $jadwal) {
+                $day   = $jadwal['hari'];
+                $start = strtotime($jadwal['start_time']);
+                $end   = strtotime($jadwal['end_time']);
+
+                if ($start >= $end) {
+                    $validator->errors()->add("jadwal.$index.end_time", 'Waktu selesai harus lebih dari waktu mulai.');
+                    continue;
+                }
+
+                if (! isset($byDay[$day])) {
+                    $byDay[$day] = [];
+                }
+
+                foreach ($byDay[$day] as $range) {
+                    if ($start < $range['end'] && $end > $range['start']) {
+                        $validator->errors()->add("jadwal.$index.start_time", "Waktu jadwal ini bentrok dengan jadwal lain di hari yang sama.");
+                        break;
+                    }
+                }
+
+                $byDay[$day][] = ['start' => $start, 'end' => $end];
+            }
+        })->validate();
+
+        // Hapus semua jadwal lama untuk unit ini
+        UnitSchedule::where('unit_id', $id)->delete();
+
+        // Simpan ulang semua jadwal baru
+        foreach ($request->jadwal as $jadwal) {
+            $sch          = new UnitSchedule;
+            $sch->unit_id = $request->unit;
+            $sch->name    = $jadwal['name'];
+            $sch->day     = $jadwal['hari'];
+            $sch->parse   = convertHari($jadwal['hari']);
+            $sch->start   = $jadwal['start_time'];
+            $sch->end     = $jadwal['end_time'];
+            $sch->save();
+        }
+
+        return redirect()->route('dashboard.master.jadwal.index')
+            ->with('success', 'Data Jadwal Unit berhasil diperbarui.');
+    }
+
+    public function jadwalStore(Request $request)
+    {
+
+        $validated = Validator::make($request->all(), [
+            'unit'                => ['required', 'exists:units,id'],
+            'jadwal'              => ['required', 'array', 'min:1'],
+            'jadwal.*.name'       => ['required'],
+            'jadwal.*.hari'       => ['required', 'in:1,2,3,4,5,6,7'],
+            'jadwal.*.start_time' => ['required', 'date_format:H:i'],
+            'jadwal.*.end_time'   => ['required', 'date_format:H:i'],
+        ], [
+            'unit.required'                   => 'Unit wajib diisi.',
+            'unit.exists'                     => 'Unit tidak ditemukan.',
+            'jadwal.required'                 => 'Jadwal wajib diisi.',
+            'jadwal.array'                    => 'Format jadwal harus berupa array.',
+            'jadwal.min'                      => 'Minimal ada satu jadwal.',
+            'jadwal.*.name.required'          => 'Nama jadwal wajib diisi.',
+            'jadwal.*.hari.required'          => 'Hari wajib diisi.',
+            'jadwal.*.hari.in'                => 'Hari harus antara 1 sampai 7.',
+            'jadwal.*.start_time.required'    => 'Waktu mulai wajib diisi.',
+            'jadwal.*.start_time.date_format' => 'Format waktu mulai harus HH:mm.',
+            'jadwal.*.end_time.required'      => 'Waktu selesai wajib diisi.',
+            'jadwal.*.end_time.date_format'   => 'Format waktu selesai harus HH:mm.',
+        ])->after(function ($validator) use ($request) {
+            $byDay = [];
+            if ($request->jadwal) {
+                foreach ($request->jadwal as $index => $jadwal) {
+                    $day   = $jadwal['hari'];
+                    $start = strtotime($jadwal['start_time']);
+                    $end   = strtotime($jadwal['end_time']);
+
+                    if ($start >= $end) {
+                        $validator->errors()->add("jadwal.$index.end_time", 'Waktu selesai harus lebih dari waktu mulai.');
+                        continue;
+                    }
+
+                    if (! isset($byDay[$day])) {
+                        $byDay[$day] = [];
+                    }
+
+                    foreach ($byDay[$day] as $i => $range) {
+                        $existingStart = $range['start'];
+                        $existingEnd   = $range['end'];
+
+                        $overlap = $start < $existingEnd && $end > $existingStart;
+                        if ($overlap) {
+                            $validator->errors()->add("jadwal.$index.start_time", "Waktu sesi ini bentrok dengan sesi lain di hari yang sama.");
+                            break;
+                        }
+                    }
+
+                    $byDay[$day][] = ['start' => $start, 'end' => $end];
+                }
+            }
+        })->validate();
+
+        foreach ($request->jadwal as $jadwal) {
+            $sch          = new UnitSchedule;
+            $sch->unit_id = $request->unit;
+            $sch->name    = $jadwal['name'];
+            $sch->day     = $jadwal['hari'];
+            $sch->parse   = convertHari($jadwal['hari']);
+            $sch->start   = $jadwal['start_time'];
+            $sch->end     = $jadwal['end_time'];
+            $sch->save();
+        }
+
+        return redirect()->route('dashboard.master.jadwal.index')
+            ->with('success', 'Data Jadwal Unit berhasil diinput.');
+
+    }
+
+    public function jadwalDestroy(Request $request, $id)
+    {
+        $sch = UnitSchedule::where('unit_id', $id)->delete();
+
+        return redirect()->route('dashboard.master.jadwal.index')
+            ->with('success', 'Data Jadwal Unit berhasil dihapus.');
     }
 }

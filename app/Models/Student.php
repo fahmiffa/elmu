@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    protected $appends = ['age', 'genders'];
-    protected $hidden = ['created_at','updated_at'];
+    protected $appends = ['age', 'absen'];
+    protected $hidden  = ['created_at', 'updated_at'];
 
     public function reg()
     {
@@ -21,18 +21,23 @@ class Student extends Model
     {
         return $this->hasOne(User::class, 'id', 'user');
     }
-    public function getgendersAttribute()
+    public function getabsenAttribute()
     {
-        if ($this->gender == 1) {
-            return "Laki-laki";
-        }
+        $today = Carbon::today();
+        $hasEnteredToday = \DB::table('student_presents')
+            ->where('student_id', $this->id)
+            ->whereDate('created_at', $today)
+            ->exists();
 
-        if ($this->gender == 2) {
-            return "Perempuan";
-        }
+        return $hasEnteredToday ? 1 : 0;
     }
     public function jadwal()
     {
         return $this->HasMany(Head::class, 'students', 'id');
+    }
+
+    public function present()
+    {
+        return $this->HasMany(StudentPresent::class, 'student_id', 'id');
     }
 }

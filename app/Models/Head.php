@@ -18,11 +18,6 @@ class Head extends Model
         return $this->belongsTo(Student::class, 'students', 'id');
     }
 
-    public function jadwal()
-    {
-        return $this->belongsTo(Schedules_students::class, 'id', 'head');
-    }
-
     public function paket()
     {
         return $this->belongsTo(Program::class, 'program', 'id');
@@ -48,11 +43,11 @@ class Head extends Model
         return $this->belongsTo(Program::class, 'program', 'id');
     }
 
-    public function class()
+    public function class ()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }
-    
+
     public function units()
     {
         return $this->belongsTo(Unit::class, 'unit', 'id');
@@ -67,7 +62,6 @@ class Head extends Model
     {
         return $this->hasMany(Level::class, 'head', 'id');
     }
-
 
     public function getkodeAttribute()
     {
@@ -85,15 +79,19 @@ class Head extends Model
     public function getindukAttribute()
     {
         $nunit = Head::where('unit', $this->units->id);
-        if($this->created_at)
-        {
+        if ($this->created_at) {
             $nunit = $nunit->where('created_at', '<=', $this->created_at);
         }
-        $nunit = $nunit->count();
+        $nunit  = $nunit->count();
         $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);
         $global = str_pad($this->number, 4, '0', STR_PAD_LEFT);
         $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
-        return $global.''.$unit.''.$munit.'/'.$this->programs->kode;
+        return $global . '' . $unit . '' . $munit . '/' . $this->programs->kode;
+    }
+
+    public function jadwal()
+    {
+        return $this->belongsToMany(UnitSchedule::class, 'schedules_students', 'head', 'unit_schedules_id');
     }
 
 }

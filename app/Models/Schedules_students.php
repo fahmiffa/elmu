@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,9 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 class Schedules_students extends Model
 {
     protected $hidden = ['created_at', 'updated_at'];
-    
-    public function jadwal()
+
+    public function reg()
     {
-        return $this->belongsTo(Schedule::class, 'schedule_id', 'id');
+        return $this->belongsTo(Head::class, 'head', 'id');
+    }
+
+    public function sch()
+    {
+        return $this->hasMany(UnitSchedule::class, 'id', 'unit_schedules_id');
     }
 }
