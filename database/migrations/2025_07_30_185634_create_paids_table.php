@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('head');
             $table->date('tanggal')->nullable();
-            $table->timestamp('time')->nullable(); // waktu khusus jika perlu
+            $table->timestamp('time')->nullable();
             $table->text('ket')->nullable();
             $table->text('via')->nullable();
             $table->integer('status')->default(0);
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->integer('first')->default(0);
             $table->string('tahun')->nullable();
             $table->string('mid')->nullable();
-            $table->timestamps(); // created_at dan updated_at
+            $table->timestamps(); 
         });
     }
 

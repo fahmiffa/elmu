@@ -41,7 +41,8 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
     Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
     Route::post('/pembayaran/{id}', [Home::class, 'payment'])->name('payment');
-    Route::get('/pembelajaran', [Home::class, 'study'])->name('study');
+    Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
+    Route::get('/level', [Home::class, 'level'])->name('level');
     Route::get('setting', [Home::class, 'setting'])->name('setting');
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');

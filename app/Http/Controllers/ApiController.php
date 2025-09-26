@@ -169,7 +169,7 @@ class ApiController extends Controller
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
             $da        = Teach::where('user', $id)->first();
-            $items     = Head::where('unit', $da->unit_id)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name','murid.present')->get();
+            $items     = Head::where('unit', $da->unit_id)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
             $allJadwal = collect();
             $allMurid  = collect();
 
@@ -188,7 +188,7 @@ class ApiController extends Controller
             ]);
         } else {
             $da    = Student::where('user', $id)->first();
-            $items = Head::where('students', $da->id)->has('jadwal')->with('jadwal:id,name,day,parse,start,end','murid:id,name', 'murid.present')->first();
+            $items = Head::where('students', $da->id)->has('jadwal')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->first();
             $items->jadwal->makeHidden('pivot');
             return response()->json([
                 'jadwal' => $items->jadwal,
@@ -354,16 +354,12 @@ class ApiController extends Controller
                         ];
                     }
 
-                    // Ambil semua tagihan dalam bentuk detail
                     $bills = collect($reg->bill)->map(function ($bill) {
                         return [
                             'total'  => $bill->total,
                             'status' => $bill->status,
-                            // Tambahan opsional
                             'bulan'  => $bill->bulan,
                             'tahun'  => $bill->tahun,
-                            // 'via' => $bill->via,
-                            // 'kit' => $bill->kit->name ?? null,
                         ];
                     })->toArray();
 
@@ -377,6 +373,35 @@ class ApiController extends Controller
             return response()->json(array_values($grouped));
 
         }
+    }
+
+    public function Uplevel(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user' => 'required',
+        ], [
+            'user.required' => 'TIdak murid yang di pilih',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $levels = Level::where('student_id', $request->user)->first();
+        if ($levels) {
+            $level = new Level;
+            $level->student_id = $levels->student_id;
+            $level->teach_user = JWTAuth::user()->id;
+            $level->level = $levels->level + 1;
+            $level->note   = $request->note;
+            $level->save();
+
+            return response()->json(["status" => true], 200);
+        }
+        return response()->json(['errors' => "user tidak valid", "status" => false], 400);
+
     }
 
     public function level()
@@ -434,8 +459,9 @@ class ApiController extends Controller
 
                     $levels = collect($reg->level)->map(function ($item) {
                         return [
-                            'level' => $item->level,
-                            'note'  => $item->note,
+                            'level'  => $item->level,
+                            'status' => $item->status,
+                            'note'   => $item->note,
                         ];
                     })->toArray();
 
@@ -647,8 +673,9 @@ class ApiController extends Controller
             $paid->first = 1;
             $paid->save();
 
-            $level       = new Level;
-            $level->head = $head->id;
+            $level             = new Level;
+            $level->student_id = $siswa->id;
+            $level->status     = 1;
             $level->save();
 
             $to       = '62' . substr($user->nomor, 1);

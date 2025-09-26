@@ -18,6 +18,16 @@ class Head extends Model
         return $this->belongsTo(Student::class, 'students', 'id');
     }
 
+    public function present()
+    {
+        return $this->hasMany(StudentPresent::class, 'student_id', 'students');
+    }
+
+    public function level()
+    {
+        return $this->hasMany(Level::class, 'student_id', 'students');
+    }
+
     public function paket()
     {
         return $this->belongsTo(Program::class, 'program', 'id');
@@ -56,11 +66,6 @@ class Head extends Model
     public function bill()
     {
         return $this->hasMany(Paid::class, 'head', 'id');
-    }
-
-    public function level()
-    {
-        return $this->hasMany(Level::class, 'head', 'id');
     }
 
     public function getkodeAttribute()

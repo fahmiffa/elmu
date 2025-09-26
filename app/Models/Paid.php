@@ -31,7 +31,7 @@ class Paid extends Model
     public function gettotalAttribute()
     {
         $price = (int) $this->reg->prices->harga;
-        $kit   = (int) Addon::select('id', 'name')->with(['price:harga,product'])->first()->price->harga;
+        $kit   = (int) Addon::select('id', 'name')->where('first',1)->with(['price:harga,product'])->first()->price->harga;
         return (int) $this->first == 1 ? $price + $kit : $price;
     }
 

@@ -385,20 +385,24 @@ export function reg(kelas, program, unit) {
         selectedKelas: "",
         optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
         selectedProgram: "",
-        selectedUnit: "",
+        selectedUnit: [{ value: "", label: "Pilih Unit" }],
         get filteredPrograms() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];
-            return program
+            const pro = program
                 .filter((p) => p.kelas == Number(this.selectedKelas))
                 .map((e) => ({ value: e.program.id, label: e.program.name }));
+                     return [{ value: "", label: "Pilih Program" }, ...pro];
         },
         get filteredUnits() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Unit" }];
-            return unit
+
+            const units = unit
                 .filter((p) => p.kelas_id == Number(this.selectedKelas))
                 .map((e) => ({ value: e.unit.id, label: e.unit.name }));
+
+            return [{ value: "", label: "Pilih Unit" }, ...units];
         },
     };
 }
@@ -415,10 +419,7 @@ export function schedule(data, initial = {}) {
             if (!this.selectedUnit)
                 return [{ value: "", label: "Pilih Jadwal" }];
 
-            const found = data.find(
-                (p) =>
-                    p.unit == this.selectedUnit
-            );
+            const found = data.find((p) => p.unit == this.selectedUnit);
 
             if (!found || !found.units || !Array.isArray(found.units.jadwal)) {
                 return [{ value: "", label: "Pilih Jadwal" }];
@@ -449,10 +450,7 @@ export function schedule(data, initial = {}) {
         getFilteredJadwal() {
             if (!this.selectedUnit) return [];
 
-            const found = data.find(
-                (p) =>
-                    p.unit == this.selectedUnit
-            );
+            const found = data.find((p) => p.unit == this.selectedUnit);
 
             if (!found || !found.units || !Array.isArray(found.units.jadwal))
                 return [];
@@ -497,10 +495,7 @@ export function schedule(data, initial = {}) {
             if (!this.selectedUnit) return [];
 
             return data
-                .filter(
-                    (p) =>
-                        p.unit == this.selectedUnit
-                )
+                .filter((p) => p.unit == this.selectedUnit)
                 .map((p) => ({
                     value: p.id,
                     text: p.murid.name,

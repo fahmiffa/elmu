@@ -6,6 +6,7 @@ use App\Models\App;
 use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
+use App\Models\Level;
 use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
@@ -14,23 +15,29 @@ use App\Models\Student;
 use App\Models\Unit;
 use App\Models\UnitKelas;
 use App\Models\User;
-use App\Models\Level;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use PDF;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use PDF;
 
 class Home extends Controller
 {
-    public function study()
+    public function absensi()
     {
-        return back();
+        $items = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present')->get();
+        return view('home.present.index', compact('items'));
+    }
+
+    public function level()
+    {
+        $items = Head::has('level')->with('murid:id,name','level.guru')->get();
+        return view('home.level.index', compact('items'));
     }
 
     public function send(Request $request, $id)
@@ -146,8 +153,8 @@ class Home extends Controller
         // ->whereHas('kontrak',function($q){
         //     $q->where('month',1);
         // })
-        ->get();
-        
+            ->get();
+
         foreach ($head as $val) {
             $first = Paid::where('head', $val->id)->exists();
             $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
@@ -170,7 +177,7 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units','level')->get();
+        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level')->get();
         return view('home.reg.index', compact('items'));
     }
 
@@ -228,6 +235,7 @@ class Home extends Controller
             ->with('program:id,name')
             ->latest()
             ->get();
+
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $unit    = UnitKelas::select('id', 'kelas_id', 'unit_id')
@@ -347,14 +355,14 @@ class Home extends Controller
                 $paid->first = 1;
                 $paid->save();
 
-                $level        = new Level;
-                $level->head  = $head->id;
+                $level             = new Level;
+                $level->student_id = $siswa->id;
+                $level->status = 1;
                 $level->save();
 
             } else {
 
                 $parent = Head::where('id', $request->murid)->firstOrFail();
-
                 $price = Price::where('kelas', $request->kelas)
                     ->where('product', $request->program)
                     ->first();
@@ -376,6 +384,11 @@ class Home extends Controller
                 $paid->tahun = date("Y");
                 $paid->first = 1;
                 $paid->save();
+
+                $level             = new Level;
+                $level->student_id = $parent->students;
+                $level->status = 1;
+                $level->save();
             }
 
             DB::commit();
