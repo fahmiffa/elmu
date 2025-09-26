@@ -11,6 +11,11 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    public function video()
+    {
+        return view('auth.video');
+    }
+
     public function login(Request $request)
     {
         $request->validate([
