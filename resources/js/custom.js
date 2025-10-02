@@ -135,7 +135,6 @@ export const dataTable = (data) => {
 };
 
 export const dataTableReg = (data) => {
-    console.log(data);
     return {
         search: "",
         sortColumn: "name",
@@ -145,6 +144,19 @@ export const dataTableReg = (data) => {
         rows: data,
         selectedRow: null,
         open: false,
+        modalOpen: false,
+        selectedItem: null,
+
+        openModal(item) {
+            if (item.status === 0) {
+                this.selectedItem = item;
+                this.modalOpen = true;
+            }
+        },
+        closeModal() {
+            this.modalOpen = false;
+            this.selectedItem = null;
+        },
 
         sortBy(column) {
             if (this.sortColumn === column) {
@@ -218,7 +230,6 @@ export const dataTableReg = (data) => {
 };
 
 export const dataTablePay = (data) => {
-    console.log(data);
     return {
         search: "",
         sortColumn: "name",
@@ -392,7 +403,7 @@ export function reg(kelas, program, unit) {
             const pro = program
                 .filter((p) => p.kelas == Number(this.selectedKelas))
                 .map((e) => ({ value: e.program.id, label: e.program.name }));
-                     return [{ value: "", label: "Pilih Program" }, ...pro];
+            return [{ value: "", label: "Pilih Program" }, ...pro];
         },
         get filteredUnits() {
             if (!this.selectedKelas)

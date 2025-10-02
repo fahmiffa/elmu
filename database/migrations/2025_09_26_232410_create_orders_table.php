@@ -16,6 +16,7 @@ return new class extends Migration
             $table->bigInteger('student');
             $table->bigInteger('head');
             $table->bigInteger('price');
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }

@@ -2,11 +2,13 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\BulkInsertJob;
+use App\Models\Addon;
 use App\Models\App;
 use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Level;
+use App\Models\Order;
 use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
@@ -23,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use PDF;
 
@@ -36,8 +39,9 @@ class Home extends Controller
 
     public function level()
     {
-        $items = Head::has('level')->with('murid:id,name','level.guru')->get();
-        return view('home.level.index', compact('items'));
+        $items = Head::has('level')->with('murid:id,name', 'level.guru')->get();
+        $lay   = Addon::where('first', 0)->with('price')->latest()->get();
+        return view('home.level.index', compact('items', 'lay'));
     }
 
     public function send(Request $request, $id)
@@ -73,32 +77,68 @@ class Home extends Controller
     public function midtransPay(Request $request)
     {
 
-        $request->validate([
-            'id' => 'required|integer',
+        $validator = Validator::make($request->all(), [
+            'id'   => 'required',
+            'tipe' => 'required',
+        ], [
+            'required' => ':attribute wajib diisi.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
 
         try {
 
-            $kode  = date("YmdHis");
-            $order = Paid::where('id', $request->id)->first();
+            $kode = date("YmdHis");
+            if ($request->tipe == 0) {
+                $order      = Paid::where('id', $request->id)->first();
+                $kit        = $order->kit ? $order->kit->price->harga : 0;
+                $order->mid = $kode;
+                $order->save();
+                $total  = $order->reg->product->harga + $kit;
+                $name   = $order->reg->murid->name;
+                $email  = $order->reg->murid->users->email;
+                $hp     = $order->reg->murid->users->hp;
+                $parent = $order->reg->murid->dad . '' . $order->reg->murid->mom;
+                $mid    = $order->mid;
+                $des    = "Tagihan Bulan " . $order->bulan;
+            } else {
+                $lay      = Order::where('id', $request->id)->firstOrFail();
+                $lay->mid = $kode;
+                $lay->save();
+                $name   = $lay->reg->murid->name;
+                $email  = $lay->reg->murid->users->email;
+                $hp     = $lay->reg->murid->users->hp;
+                $parent = $lay->reg->murid->dad . '' . $lay->reg->murid->mom;
+                $total  = $lay->product->harga;
+                $mid    = $lay->mid;
+                $des    = $lay->product->item->name;
+            }
 
-            $kit = $order->kit ? $order->kit->price->harga : 0;
-
-            $order->mid = $kode;
-            $order->save();
             $params = [
                 'transaction_details' => [
-                    'order_id'     => $order->mid,
-                    'gross_amount' => $order->reg->product->harga + $kit,
+                    'order_id'     => $mid,
+                    'gross_amount' => $total,
+                ],
+                'item_details'        => [
+                    [
+                        'id'       => 'item01',
+                        'price'    => $total,
+                        'quantity' => 1,
+                        'name'     => $des,
+                    ],
                 ],
                 'credit_card'         => [
                     'secure' => true,
                 ],
                 'customer_details'    => [
-                    'first_name' => $order->reg->murid->name,
-                    'last_name'  => $order->reg->murid->dad . '' . $order->reg->murid->mom,
-                    'email'      => $order->reg->murid->users->email,
-                    'phone'      => $order->reg->murid->users->hp,
+                    'first_name' => $name,
+                    'last_name'  => $parent,
+                    'email'      => $email,
+                    'phone'      => $hp,
                 ],
             ];
 
@@ -141,6 +181,35 @@ class Home extends Controller
         } else {
             return back();
         }
+    }
+
+    public function layanan(Request $request, $id)
+    {
+        $head           = Head::where(DB::raw('md5(students)'), $id)->firstOrFail();
+        $order          = new Order;
+        $order->head    = $head->id;
+        $order->student = $head->students;
+        $order->price   = $request->book;
+        $order->save();
+
+        Level::where('id', $request->level)->update(['status' => 1]);
+        $fcm =  $head->murid->users->fcm;
+
+        if($fcm)
+        {
+            $message = [
+                "message" => [
+                    "token"        => $fcm,
+                    "notification" => [
+                        "title" => "Tagihan",
+                        "body"  => "Anda punya Tagihan " . $order->product->item->name,
+                    ],
+                ],
+            ];    
+            FirebaseMessage::sendFCMMessage($message);
+        }
+
+        return back()->with('status', 'Ugrade Level berhasil');
     }
 
     public function bill(Request $request)
@@ -191,41 +260,72 @@ class Home extends Controller
         return $pdf->stream('invoice.pdf');
     }
 
-    public function payment(Request $request, $id)
+    public function payment(Request $request, $id, $par)
     {
-        $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-        if ($paid->status == 0) {
-            $user = $paid->reg->murid->users;
-            if ($user->status == 0) {
-                $user->status = 1;
-                $user->save();
+        if ($par == "bul") {
+            $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
+            if ($paid->status == 0) {
+                $user = $paid->reg->murid->users;
+                if ($user->status == 0) {
+                    $user->status = 1;
+                    $user->save();
+                }
+                $paid->status = 1;
+                $paid->time   = date("Y-m-d H:i:s");
+                $paid->ket    = $request->ket;
+                $paid->via    = $request->via;
+                $paid->save();
             }
-            $paid->status = 1;
-            $paid->time   = date("Y-m-d H:i:s");
-            $paid->ket    = $request->ket;
-            $paid->via    = $request->via;
-            $paid->save();
-        }
 
-        $fcm   = $paid->reg->murid->users->fcm;
-        $kit   = $paid->kit ? $paid->kit->price->harga : 0;
-        $harga = $paid->reg->product->harga + $kit;
+            $fcm   = $paid->reg->murid->users->fcm;
+            $kit   = $paid->kit ? $paid->kit->price->harga : 0;
+            $harga = $paid->reg->product->harga + $kit;
 
-        if ($fcm) {
-            $message = [
-                "message" => [
-                    "token"        => $fcm,
-                    "notification" => [
-                        "title" => "Tagihan",
-                        "body"  => "Pembayaran Tagihan bulan " . $paid->bulan . " Berhasil",
+            if ($fcm) {
+                $message = [
+                    "message" => [
+                        "token"        => $fcm,
+                        "notification" => [
+                            "title" => "Tagihan",
+                            "body"  => "Pembayaran Tagihan bulan " . $paid->bulan . " Berhasil",
+                        ],
                     ],
-                ],
-            ];
-            FirebaseMessage::sendFCMMessage($message);
+                ];
+                FirebaseMessage::sendFCMMessage($message);
 
+            }
+
+            return back()->with('status', 'Pembayaran berhasil');
         }
 
-        return back()->with('status', 'Pembayaran berhasil');
+        if ($par == "lay") {
+            $order = Order::where(DB::raw('md5(id)'), $id)->firstOrFail();
+
+            if ($order->status == 0) {
+                $order->status = 1;
+                $order->time   = date("Y-m-d H:i:s");
+                $order->ket    = $request->ket;
+                $order->via    = $request->via;
+                $order->save();
+            }
+
+            $fcm = $order->reg->murid->users->fcm;
+            if ($fcm) {
+                $message = [
+                    "message" => [
+                        "token"        => $fcm,
+                        "notification" => [
+                            "title" => "Tagihan",
+                            "body"  => "Pembayaran Tagihan " . $order->product->item->name . " Berhasil",
+                        ],
+                    ],
+                ];
+                FirebaseMessage::sendFCMMessage($message);
+
+            }
+            return back()->with('status', 'Pembayaran berhasil');
+        }
+        return back()->with('err', 'Pembayaran gagal');
     }
 
     public function AddReg()
@@ -357,13 +457,14 @@ class Home extends Controller
 
                 $level             = new Level;
                 $level->student_id = $siswa->id;
-                $level->status = 1;
+                $level->head       = $head->id;
+                $level->status     = 1;
                 $level->save();
 
             } else {
 
                 $parent = Head::where('id', $request->murid)->firstOrFail();
-                $price = Price::where('kelas', $request->kelas)
+                $price  = Price::where('kelas', $request->kelas)
                     ->where('product', $request->program)
                     ->first();
 
@@ -387,7 +488,8 @@ class Home extends Controller
 
                 $level             = new Level;
                 $level->student_id = $parent->students;
-                $level->status = 1;
+                $level->head       = $head->id;
+                $level->status     = 1;
                 $level->save();
             }
 
@@ -414,8 +516,9 @@ class Home extends Controller
 
     public function pay()
     {
-        $items = Paid::has('reg')->with('reg.murid', 'reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
-        return view('home.pay.index', compact('items'));
+        $items = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
+        $lay   = Order::has('product')->with('reg.murid.users', 'product.item')->get();
+        return view('home.pay.index', compact('items', 'lay'));
     }
 
     public function master()

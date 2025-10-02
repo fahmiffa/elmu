@@ -16,4 +16,16 @@ class Price extends Model
     {
         return $this->belongsTo(Program::class, 'product', 'id');
     }
+
+    public function item()
+    {
+        if($this->kelas)
+        {
+            return $this->belongsTo(Program::class, 'product', 'id');
+        }
+        else
+        {
+            return $this->belongsTo(Addon::class, 'product', 'id');
+        }
+    }
 }

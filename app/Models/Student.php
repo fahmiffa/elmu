@@ -13,14 +13,17 @@ class Student extends Model
     {
         return $this->HasMany(Head::class, 'students', 'id');
     }
+
     public function getageAttribute()
     {
         return Carbon::parse($this->birth)->age . ' Tahun';
     }
+    
     public function users()
     {
         return $this->hasOne(User::class, 'id', 'user');
     }
+    
     public function getabsenAttribute()
     {
         $today = Carbon::today();
@@ -30,7 +33,9 @@ class Student extends Model
             ->exists();
 
         return $hasEnteredToday ? 1 : 0;
+        // return 0;
     }
+
     public function jadwal()
     {
         return $this->HasMany(Head::class, 'students', 'id');

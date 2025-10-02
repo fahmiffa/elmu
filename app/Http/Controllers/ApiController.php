@@ -189,11 +189,19 @@ class ApiController extends Controller
         } else {
             $da    = Student::where('user', $id)->first();
             $items = Head::where('students', $da->id)->has('jadwal')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->first();
-            $items->jadwal->makeHidden('pivot');
-            return response()->json([
-                'jadwal' => $items->jadwal,
-                'murid'  => $items->murid,
-            ]);
+            if ($items) {
+                $items->jadwal->makeHidden('pivot');
+                return response()->json([
+                    'jadwal' => $items->jadwal,
+                    'murid'  => $items->murid,
+                ]);
+            } else {
+                return response()->json([
+                    'jadwal' => [],
+                    'murid'  => [],
+                ]);
+            }
+
         }
 
     }
@@ -322,11 +330,50 @@ class ApiController extends Controller
                 'reg.product.class:id,name',
                 'reg.product.program:id,name',
                 'reg.bill:id,head,time,bulan,tahun,via,status,first',
+                'reg.lay.product.item'
             );
 
         if ($role == 2) {
             $student = $res->where('user', $id)->first();
-            return response()->json($student);
+            foreach ($student->reg as $val) {
+
+                $bill = $val->bill->map(function ($a) use ($val) {
+                    return [
+                        "tipe"       => 0,
+                        "id"         => $a->id,
+                        'price'      => (int) $val->product->harga,
+                        'total'      => $a->total,
+                        "keterangan" => "Tagihan Bulan " . $a->bulan,
+                        "kit"        => $a->kit,
+                        "status"     => $a->status,
+                    ];
+                })->toArray();
+
+                $lay = $val->lay->map(function ($a) {
+                    return [
+                        "id"         => $a->id,
+                        "tipe"       => 1,
+                        'price'      => (int) $a->product->harga,
+                        'total'      => (int) $a->product->harga,
+                        "keterangan" => $a->product->item->name,
+                        "kit"        => null,
+                        "status"     => $a->status,
+                    ];
+                })->toArray();
+
+                $item[] = [
+                    "program" => $val->product->program->name,
+                    "kelas"   => $val->product->class->name,
+                    "bill"    => array_merge($bill, $lay),
+                ];
+
+            }
+
+            $result = [
+                'name' => $student->name,
+                "data" => $item,
+            ];
+            return response()->json($result);
         }
 
         if ($role == 3) {
@@ -334,11 +381,9 @@ class ApiController extends Controller
             $unit     = $guru->unit_id;
             $students = $res->whereHas('reg.units', function ($q) use ($unit) {
                 $q->where('unit', $unit);
-            })
-                ->get();
+            })->get();
 
             $grouped = [];
-
             foreach ($students as $student) {
                 foreach ($student->reg as $reg) {
                     $programName = $reg->programs->name ?? 'Unknown Program';
@@ -354,22 +399,32 @@ class ApiController extends Controller
                         ];
                     }
 
-                    $bills = collect($reg->bill)->map(function ($bill) {
+                    $bills = collect($reg->bill)->map(function ($bill) use ($reg) {
                         return [
-                            'total'  => $bill->total,
-                            'status' => $bill->status,
-                            'bulan'  => $bill->bulan,
-                            'tahun'  => $bill->tahun,
+                            'total'      => $bill->total,
+                            'price'      => (int) $reg->product->harga,
+                            'status'     => $bill->status,
+                            "keterangan" => "Tagihan Bulan " . $bill->bulan,
+                            "kit"        => $bill->kit,
+                        ];
+                    })->toArray();
+
+                    $lay = collect($reg->lay)->map(function ($a) {
+                        return [
+                            'price'      => (int) $a->product->harga,
+                            'total'      => (int) $a->product->harga,
+                            "keterangan" => $a->product->item->name,
+                            "kit"        => null,
+                            "status"     => $a->status,
                         ];
                     })->toArray();
 
                     $grouped[$key]['students'][] = [
                         'name'  => $student->name,
-                        'bills' => $bills,
+                        'bills' => array_merge($bills, $lay),
                     ];
                 }
             }
-
             return response()->json(array_values($grouped));
 
         }
@@ -389,18 +444,22 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $levels = Level::where('student_id', $request->user)->first();
+        $levels = Level::where('student_id', $request->user)
+            ->where('head', $request->head)
+            ->first();
         if ($levels) {
-            $level = new Level;
+            $level             = new Level;
             $level->student_id = $levels->student_id;
             $level->teach_user = JWTAuth::user()->id;
-            $level->level = $levels->level + 1;
-            $level->note   = $request->note;
+            $level->level      = $levels->level + 1;
+            $level->head       = $request->head;
+            $level->note       = $request->note;
             $level->save();
 
             return response()->json(["status" => true], 200);
+        } else {
+            return response()->json(['errors' => "user tidak valid", "status" => false], 400);
         }
-        return response()->json(['errors' => "user tidak valid", "status" => false], 400);
 
     }
 
@@ -423,12 +482,17 @@ class ApiController extends Controller
                 $q->where('user', $id);
             })
                 ->with('level', 'class')
-                ->first();
+                ->get();
 
-            $da['head']     = $head->id;
-            $da['program']  = $head->programs->name;
-            $da['class']    = $head->class->name;
-            $da['students'] = $head->murid->name;
+
+            foreach($head as $val)
+            {
+                $da[] = [
+                        "program"=>$val->programs->name,
+                        "kelas"=>$val->class->name,
+                        "level"=>$val->level->select('id',"level","status","note")->toArray()
+                ];
+            }
             return response()->json($da);
         }
 
@@ -675,6 +739,7 @@ class ApiController extends Controller
 
             $level             = new Level;
             $level->student_id = $siswa->id;
+            $level->head       = $head->id;
             $level->status     = 1;
             $level->save();
 

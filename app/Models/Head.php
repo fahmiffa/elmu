@@ -25,7 +25,7 @@ class Head extends Model
 
     public function level()
     {
-        return $this->hasMany(Level::class, 'student_id', 'students');
+        return $this->hasMany(Level::class, 'head', 'id');
     }
 
     public function paket()
@@ -53,7 +53,7 @@ class Head extends Model
         return $this->belongsTo(Program::class, 'program', 'id');
     }
 
-    public function class ()
+    public function class()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }
@@ -66,6 +66,11 @@ class Head extends Model
     public function bill()
     {
         return $this->hasMany(Paid::class, 'head', 'id');
+    }
+
+    public function lay()
+    {
+        return $this->hasMany(Order::class, 'head', 'id');
     }
 
     public function getkodeAttribute()
@@ -84,8 +89,10 @@ class Head extends Model
     public function getindukAttribute()
     {
         $nunit = Head::where('unit', $this->units->id);
+                    // ->where('program',$this->programs->id);
         if ($this->created_at) {
-            $nunit = $nunit->where('created_at', '<=', $this->created_at);
+            $nunit = $nunit
+                ->where('created_at', '<=', $this->created_at);
         }
         $nunit  = $nunit->count();
         $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);

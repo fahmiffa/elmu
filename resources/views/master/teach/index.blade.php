@@ -33,7 +33,7 @@
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2 items-center">
-                                <div class="w-14 h-14 overflow-hidden">
+                                <div x-show="row.img !== null" class="w-14 h-14 overflow-hidden">
                                     <img :src="'/storage/' + row.img" :alt="row.name" class="w-full object-cover" />
                                 </div>
                             </td>

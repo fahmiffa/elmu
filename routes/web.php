@@ -7,8 +7,8 @@ use App\Http\Controllers\Home;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\SlideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
 use App\Http\Controllers\UnitController;
@@ -40,17 +40,18 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
     Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
     Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
-    Route::post('/pembayaran/{id}', [Home::class, 'payment'])->name('payment');
+    Route::post('/pembayaran/{id}/{par}', [Home::class, 'payment'])->name('payment');
+    Route::post('/send/{id}/{par}', [Home::class, 'send'])->name('send');
     Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
     Route::get('/level', [Home::class, 'level'])->name('level');
     Route::get('setting', [Home::class, 'setting'])->name('setting');
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
-    Route::post('/send/{id}', [Home::class, 'send'])->name('send');
+    Route::post('/layanan/{id}', [Home::class, 'layanan'])->name('layanan');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
     Route::resource('jadwal', ScheduleController::class);
-    Route::resource('slide', SlideController::class);
+    Route::resource('report', ReportController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         // $total = DB::table('head')->where('bulan', $jobId)->count();

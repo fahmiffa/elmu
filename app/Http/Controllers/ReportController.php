@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Report;
@@ -12,7 +11,9 @@ class ReportController extends Controller
      */
     public function index()
     {
-        //
+        $items = Report::get();
+        $lay = [];
+        return view('home.report.index', compact('items','lay'));
     }
 
     /**
