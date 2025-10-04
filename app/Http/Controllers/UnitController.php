@@ -127,6 +127,7 @@ class UnitController extends Controller
 
         $jadwals = $items->jadwal->map(function ($jadwal) {
             return [
+                'id'         => $jadwal->id,
                 'name'       => $jadwal->name,
                 'hari'       => $jadwal->day,
                 'start_time' => date('H:i', strtotime($jadwal->start)), // pastikan format HH:mm
@@ -184,7 +185,7 @@ class UnitController extends Controller
             $sch->unit_id = $request->unit;
             $sch->name    = $jadwal['name'];
             $sch->day     = $jadwal['hari'];
-            $sch->parse   = convertHari($jadwal['hari']);
+            $sch->parse   = $this->convertHari($jadwal['hari']);
             $sch->start   = $jadwal['start_time'];
             $sch->end     = $jadwal['end_time'];
             $sch->save();
@@ -255,7 +256,7 @@ class UnitController extends Controller
             $sch->unit_id = $request->unit;
             $sch->name    = $jadwal['name'];
             $sch->day     = $jadwal['hari'];
-            $sch->parse   = convertHari($jadwal['hari']);
+            $sch->parse   = $this->convertHari($jadwal['hari']);
             $sch->start   = $jadwal['start_time'];
             $sch->end     = $jadwal['end_time'];
             $sch->save();
@@ -265,6 +266,26 @@ class UnitController extends Controller
             ->with('success', 'Data Jadwal Unit berhasil diinput.');
 
     }
+
+    private function convertHari($number)
+    {
+        $hari = [
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+            7 => 'Minggu',
+        ];
+
+        // Cast ke int untuk jaga-jaga
+        $num = (int) $number;
+
+        return $hari[$num] ?? null;
+    }
+
+
 
     public function jadwalDestroy(Request $request, $id)
     {

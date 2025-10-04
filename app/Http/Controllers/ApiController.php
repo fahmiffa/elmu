@@ -346,6 +346,7 @@ class ApiController extends Controller
                         "keterangan" => "Tagihan Bulan " . $a->bulan,
                         "kit"        => $a->kit,
                         "status"     => $a->status,
+                        "via"        => $a->via,   
                     ];
                 })->toArray();
 
@@ -358,6 +359,7 @@ class ApiController extends Controller
                         "keterangan" => $a->product->item->name,
                         "kit"        => null,
                         "status"     => $a->status,
+                        "via"        => $a->via,  
                     ];
                 })->toArray();
 
@@ -432,6 +434,7 @@ class ApiController extends Controller
 
     public function Uplevel(Request $request)
     {
+        // return response()->json($request->head);
         $validator = Validator::make($request->all(), [
             'user' => 'required',
         ], [
@@ -547,27 +550,40 @@ class ApiController extends Controller
         $id = JWTAuth::user()->id;
 
         $student = Student::where('user', $id)
-            ->with('reg.bill', 'reg.prices')
+            ->with('reg.bill','reg.lay.product.item')
             ->first();
 
         $bill          = [];
         $hasStatusZero = false;
+
+
         foreach ($student->reg as $val) {
-            foreach ($val->bill as $b) {
-                if ($b->status == 0) {
+
+
+            foreach ($val->bill as $a) {
+                if ($a->status != 1 ) {
                     $hasStatusZero = true;
                     $bill[]        = [
-                        'id'     => $b->id,
-                        'status' => $b->status,
-                        'ket'    => $b->ket,
-                        'via'    => $b->via,
-                        'time'   => $b->time,
-                        'bulan'  => $b->bulan,
-                        'total'  => $b->total,
+                        'total'      => (int) $a->total,
+                        "keterangan" => "Anda punya tagihan bulan " . $a->bulan,
+                        "status"     => $a->status,
                     ];
                 }
             }
+
+            foreach ($val->lay as $a) {
+                if ($a->status != 1 ) {
+                    $hasStatusZero = true;
+                    $bill[]        = [
+                        'total'      => (int) $a->product->harga,
+                        "keterangan" => "Anda punya tagihan ".$a->product->item->name,
+                        "status"     => $a->status,
+                    ];
+                }
+            }
+
         }
+
         if (! $hasStatusZero) {
             $bill = [];
         }

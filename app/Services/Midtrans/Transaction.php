@@ -2,6 +2,7 @@
 namespace App\Services\Midtrans;
 
 use App\Models\Paid;
+use App\Models\Order;
 use Midtrans\Config;
 use Midtrans\Snap;
 use App\Services\Firebase\FirebaseMessage;
@@ -47,6 +48,11 @@ class Transaction
         }
         
         $order = Paid::where('mid', $data['order_id'])->first();
+        if(!$order)
+        {
+            $order = Order::where('mid', $data['order_id'])->first();
+        }
+
         if ($data['transaction_status'] === 'pending') {
             if ($order) {
                 $order->status = 2;

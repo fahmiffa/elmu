@@ -809,9 +809,10 @@ export function countUp(target) {
 }
 
 export function jadwalForm(initialJadwals = null) {
+    console.log(initialJadwals)
     return {
         jadwals: initialJadwals || [
-            { name: "", hari: "", start_time: "", end_time: "" },
+            { id: "", name: "", hari: "", start_time: "", end_time: "" },
         ],
 
         addJadwal() {

@@ -44,27 +44,33 @@ class Home extends Controller
         return view('home.level.index', compact('items', 'lay'));
     }
 
-    public function send(Request $request, $id)
+    public function send(Request $request, $id, $par)
     {
-
         try {
 
-            $order = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
-            $kit   = $order->kit ? $order->kit->price->harga : 0;
-            $harga = $order->reg->product->harga + $kit;
-            $fcm   = $order->reg->murid->users->fcm;
+            if($par == "bul")
+            {
+                $order = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
+                $kit   = $order->kit ? $order->kit->price->harga : 0;
+                $harga = $order->reg->product->harga + $kit;
+                $fcm   = $order->reg->murid->users->fcm;
+                $billname = "bulan ".$order->bulan;
+            }
+
+            if($par == "lay")
+            {
+                $order = Order::where(DB::raw('md5(id)'), $id)->firstOrFail();
+                $fcm   = $order->reg->murid->users->fcm;
+                $billname = $order->product->item->name;
+            }
 
             $message = [
                 "message" => [
                     "token"        => $fcm,
                     "notification" => [
                         "title" => "Tagihan",
-                        // "body"  => "Anda punya Tagihan bulan ".$order->bulan.", ".number_format($harga, 0, '', '.'),
-                        "body"  => "Anda punya Tagihan bulan " . $order->bulan,
+                        "body"  => "Anda punya tagihan " . $billname,
                     ],
-                    // "data"         => [
-                    //     "customData" => "12345",
-                    // ],
                 ],
             ];
             FirebaseMessage::sendFCMMessage($message);
@@ -92,8 +98,8 @@ class Home extends Controller
 
         try {
 
-            $kode = date("YmdHis");
             if ($request->tipe == 0) {
+                $kode = 'm'.date("YmdHis");
                 $order      = Paid::where('id', $request->id)->first();
                 $kit        = $order->kit ? $order->kit->price->harga : 0;
                 $order->mid = $kode;
@@ -106,6 +112,7 @@ class Home extends Controller
                 $mid    = $order->mid;
                 $des    = "Tagihan Bulan " . $order->bulan;
             } else {
+                $kode = 'o'.date("YmdHis");
                 $lay      = Order::where('id', $request->id)->firstOrFail();
                 $lay->mid = $kode;
                 $lay->save();
@@ -202,7 +209,7 @@ class Home extends Controller
                     "token"        => $fcm,
                     "notification" => [
                         "title" => "Tagihan",
-                        "body"  => "Anda punya Tagihan " . $order->product->item->name,
+                        "body"  => "Anda punya tagihan " . $order->product->item->name,
                     ],
                 ],
             ];    

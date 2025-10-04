@@ -31,7 +31,7 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('kelas')
+                    @error('unit')
                         <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                     @enderror
                 </div>
@@ -39,6 +39,7 @@
                     <div class="flex-row border border-gray-300 p-5 rounded-2xl mb-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div class="mb-4">
+                                <span x-text="jadwal.id"></span>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
                                 <div class="relative">
                                     <input type="text" :name="`jadwal[${index}][name]`" x-model="jadwal.name"

@@ -124,7 +124,11 @@
                                         <td class="px-4 py-2" x-text="row.reg?.class?.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="row.reg?.units?.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
-                                        <td class="px-4 py-2" x-text="row.status == 0 ? 'Tagihan' : 'Lunas' "></td>
+                                        <td class="px-4 py-2" x-text="
+                                        row.status == 0 ? 'Tagihan' : 
+                                        (row.status == 2 ? 'Menunggu Pembayaran' : 
+                                        (row.status == 1 ? 'Lunas' : 'Unknown'))
+                                        "></td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
 
@@ -255,7 +259,11 @@
                                         <td class="px-4 py-2 text-nowrap" x-text="row.reg?.murid?.name ?? '-'"></td>
                                         <td class="px-4 py-2 text-nowrap" x-text="row.product?.item.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="formatNumber(row.product.harga)"></td>
-                                        <td class="px-4 py-2" x-text="row.status == 0 ? 'Tagihan' : 'Lunas' "></td>
+                                      <td class="px-4 py-2" x-text="
+                                        row.status == 0 ? 'Tagihan' : 
+                                        (row.status == 2 ? 'Menunggu Pembayaran' : 
+                                        (row.status == 1 ? 'Lunas' : 'Unknown'))
+                                        "></td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
                                                 <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null"
