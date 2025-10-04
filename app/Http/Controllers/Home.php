@@ -99,7 +99,7 @@ class Home extends Controller
         try {
 
             if ($request->tipe == 0) {
-                $kode = 'm'.date("YmdHis");
+                $kode = 'trx-m'.date("YmdHis");
                 $order      = Paid::where('id', $request->id)->first();
                 $kit        = $order->kit ? $order->kit->price->harga : 0;
                 $order->mid = $kode;
@@ -112,7 +112,7 @@ class Home extends Controller
                 $mid    = $order->mid;
                 $des    = "Tagihan Bulan " . $order->bulan;
             } else {
-                $kode = 'o'.date("YmdHis");
+                $kode = 'trx-o'.date("YmdHis");
                 $lay      = Order::where('id', $request->id)->firstOrFail();
                 $lay->mid = $kode;
                 $lay->save();

@@ -66,19 +66,37 @@ class Transaction
                 $order->status = 1;
                 $order->save();
 
-                $kit   = $order->kit ? $order->kit->price->harga : 0;
-                $harga = $order->reg->product->harga + $kit;
                 $fcm   = $order->reg->murid->users->fcm;
-
-                $message = [
-                    "message" => [
-                        "token"        => $fcm,
-                        "notification" => [
-                            "title" => "Tagihan",
-                            "body"  => "Tagihan Anda bulan " . $order->bulan." sudah terbayar",
+                if($order->bulan)
+                {
+                    $kit   = $order->kit ? $order->kit->price->harga : 0;
+                    $harga = $order->reg->product->harga + $kit;
+    
+                    $message = [
+                        "message" => [
+                            "token"        => $fcm,
+                            "notification" => [
+                                "title" => "Tagihan",
+                                "body"  => "Tagihan Anda bulan " . $order->bulan." sudah terbayar",
+                            ],
                         ],
-                    ],
-                ];
+                    ];
+                }
+                else
+                {
+                     $billname = $order->product->item->name;
+                    $message = [
+                        "message" => [
+                            "token"        => $fcm,
+                            "notification" => [
+                                "title" => "Tagihan",
+                                "body"  => "Tagihan Anda  " . $billname." sudah terbayar",
+                            ],
+                        ],
+                    ];
+
+                }
+                
                 FirebaseMessage::sendFCMMessage($message);
             }
         }

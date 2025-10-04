@@ -30,7 +30,7 @@ class ScheduleController extends Controller
                     ->where('status', 1);
             })
             ->whereHas('units.jadwal')
-            ->DoesntHave('jadwal')
+            // ->DoesntHave('jadwal')
             ->get();
 
         $unit = $murid->pluck('units')
