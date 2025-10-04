@@ -53,7 +53,7 @@ class Head extends Model
         return $this->belongsTo(Program::class, 'program', 'id');
     }
 
-    public function class()
+    public function class ()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }
@@ -89,7 +89,7 @@ class Head extends Model
     public function getindukAttribute()
     {
         $nunit = Head::where('unit', $this->units->id);
-                    // ->where('program',$this->programs->id);
+        // ->where('program',$this->programs->id);
         if ($this->created_at) {
             $nunit = $nunit
                 ->where('created_at', '<=', $this->created_at);

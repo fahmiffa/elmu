@@ -419,6 +419,7 @@ export function reg(kelas, program, unit) {
 }
 
 export function schedule(data, initial = {}) {
+    console.log(initial);
     return {
         selectedUnit: initial.unit || "",
         selectedJadwal: initial.jadwal || "",
@@ -509,7 +510,7 @@ export function schedule(data, initial = {}) {
                 .filter((p) => p.unit == this.selectedUnit)
                 .map((p) => ({
                     value: p.id,
-                    text: p.murid.name,
+                    text: `${p.murid.name} (${p.programs.name})`,
                 }));
         },
 
@@ -532,7 +533,7 @@ export function schedule(data, initial = {}) {
                 this.tomJadwal.clearOptions();
                 this.tomJadwal.addOptions(newJadwalOptions);
 
-                if (this.selectedJadwal.length) {
+                if (this.selectedJadwal && this.selectedJadwal.length) {
                     this.tomJadwal.setValue(this.selectedJadwal);
                 }
                 this.tomJadwal.refreshOptions(false);
@@ -809,7 +810,7 @@ export function countUp(target) {
 }
 
 export function jadwalForm(initialJadwals = null) {
-    console.log(initialJadwals)
+    console.log(initialJadwals);
     return {
         jadwals: initialJadwals || [
             { id: "", name: "", hari: "", start_time: "", end_time: "" },
@@ -817,7 +818,7 @@ export function jadwalForm(initialJadwals = null) {
 
         addJadwal() {
             this.jadwals.push({
-                id : null,
+                id: null,
                 name: "",
                 hari: "",
                 start_time: "",

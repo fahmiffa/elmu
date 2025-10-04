@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Head;
 use App\Models\Schedules_students;
+use App\Services\Firebase\FirebaseMessage;
 use DB;
 use Illuminate\Http\Request;
 
@@ -30,7 +31,7 @@ class ScheduleController extends Controller
                     ->where('status', 1);
             })
             ->whereHas('units.jadwal')
-            // ->DoesntHave('jadwal')
+            ->DoesntHave('jadwal')
             ->get();
 
         $unit = $murid->pluck('units')
@@ -76,6 +77,8 @@ class ScheduleController extends Controller
                     $students->student_id        = $head->students;
                     $students->unit_schedules_id = $jadwal[$x];
                     $students->save();
+
+                    $this->send($students, "Jadwal Anda telah terbit");
                 }
             }
 
@@ -86,6 +89,22 @@ class ScheduleController extends Controller
             return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
 
+    }
+
+    private function send($students, $msg)
+    {
+        $fcm     = $students->reg->murid->users->fcm;
+        $message = [
+            "message" => [
+                "token"        => $fcm,
+                "notification" => [
+                    "title" => "Jadwal",
+                    "body"  => $msg,
+                ],
+            ],
+        ];
+
+        FirebaseMessage::sendFCMMessage($message);
     }
 
     /**
@@ -148,22 +167,23 @@ class ScheduleController extends Controller
             'required' => ':attribute wajib diisi.',
         ]);
 
-        $items = Head::where('id', $id)->with('jadwal', 'murid')->first();
+        $items  = Head::where('id', $id)->with('jadwal', 'murid')->first();
         $jadwal = $request->jadwal;
         $murid  = $request->murid;
 
         DB::beginTransaction();
         try {
-            
+
             for ($i = 0; $i < count($murid); $i++) {
                 $head = Head::where('id', $murid[$i])->first();
-                Schedules_students::where('head',$head->id)->where('student_id',$head->students)->delete();
+                Schedules_students::where('head', $head->id)->where('student_id', $head->students)->delete();
                 for ($x = 0; $x < count($jadwal); $x++) {
                     $students                    = new Schedules_students;
                     $students->head              = $head->id;
                     $students->student_id        = $head->students;
                     $students->unit_schedules_id = $jadwal[$x];
                     $students->save();
+                    $this->send($students, "Jadwal Anda telah diupdate");
                 }
             }
 
@@ -181,8 +201,8 @@ class ScheduleController extends Controller
      */
     public function hapus(Request $request, $id)
     {
-        Schedules_students::where('head',$id)->whereIn('unit_schedules_id',$request->par)->delete();
-         return redirect()->route('dashboard.jadwal.index')->with('status', 'Hapus Jadwal berhasil');
+        Schedules_students::where('head', $id)->whereIn('unit_schedules_id', $request->par)->delete();
+        return redirect()->route('dashboard.jadwal.index')->with('status', 'Hapus Jadwal berhasil');
     }
-    
+
 }
