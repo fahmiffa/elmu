@@ -21,15 +21,19 @@
             <div class="flex-row mb-4" x-data="jadwalForm({{ isset($jadwals) ? $jadwals->toJson() : '' }})">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Unit</label>
-                    <select name="unit" required x-data="dropdownSelect()">
-                        <option value="">Pilih Unit</option>
-                        @php
+                    <select name="unit" required
+                        class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                        @isset($items)
+                                <option value="{{ $items->id }}">{{ $items->name }}
+                                </option>
+                        @else
+                            <option value="">Pilih Unit</option>
+                            @foreach ($unit as $row)
+                                <option value="{{ $row->id }}">{{ $row->name }}
+                                </option>
+                            @endforeach
+                        @endisset
 
-                        @endphp
-                        @foreach ($unit as $row)
-                            <option value="{{ $row->id }}" @selected(in_array($row->id, isset($items) ? $items->kelas->pluck('id')->toArray() : []))>{{ $row->name }}
-                            </option>
-                        @endforeach
                     </select>
                     @error('unit')
                         <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
@@ -39,7 +43,10 @@
                     <div class="flex-row border border-gray-300 p-5 rounded-2xl mb-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div class="mb-4">
-                                <span x-text="jadwal.id"></span>
+                                @isset($items)
+                                    <input type="hidden" :value="jadwal.id" x-model="jadwal.id" :name="`jadwal[${index}][id]`">
+                                @endisset
+
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
                                 <div class="relative">
                                     <input type="text" :name="`jadwal[${index}][name]`" x-model="jadwal.name"

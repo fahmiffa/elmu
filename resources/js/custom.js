@@ -817,6 +817,7 @@ export function jadwalForm(initialJadwals = null) {
 
         addJadwal() {
             this.jadwals.push({
+                id : null,
                 name: "",
                 hari: "",
                 start_time: "",

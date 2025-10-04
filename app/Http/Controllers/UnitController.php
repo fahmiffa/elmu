@@ -176,12 +176,27 @@ class UnitController extends Controller
             }
         })->validate();
 
-        // Hapus semua jadwal lama untuk unit ini
-        UnitSchedule::where('unit_id', $id)->delete();
+        $jadwalId = UnitSchedule::where('unit_id', $id)->pluck('id')->toArray();
+
+        $new  = $ids  = array_column($request->jadwal, 'id');
+        $diff = array_diff($jadwalId, $new);
+
+        if (count($diff) > 0) {
+            $be = UnitSchedule::whereIn('id', $diff)->has('set')->exists();
+            if($be)
+            {
+                return back()->with('err', 'Jadwal sudah di pakai, tidak bisa di hapus');
+            }
+            else
+            {
+                UnitSchedule::whereIn('id', $diff)->delete();
+            }
+        }
 
         // Simpan ulang semua jadwal baru
         foreach ($request->jadwal as $jadwal) {
-            $sch          = new UnitSchedule;
+            $be  = UnitSchedule::where('id', $jadwal['id']);
+            $sch          = $be->exists() ? $be->first() : new UnitSchedule;
             $sch->unit_id = $request->unit;
             $sch->name    = $jadwal['name'];
             $sch->day     = $jadwal['hari'];
@@ -189,6 +204,7 @@ class UnitController extends Controller
             $sch->start   = $jadwal['start_time'];
             $sch->end     = $jadwal['end_time'];
             $sch->save();
+
         }
 
         return redirect()->route('dashboard.master.jadwal.index')
@@ -284,8 +300,6 @@ class UnitController extends Controller
 
         return $hari[$num] ?? null;
     }
-
-
 
     public function jadwalDestroy(Request $request, $id)
     {

@@ -12,6 +12,12 @@ class UnitSchedule extends Model
         return \Carbon\Carbon::parse($this->start)->format('H:i');
     }
 
+    public function set()
+    {
+        return $this->belongsTo(Schedules_students::class, 'id', 'unit_schedules_id');
+    }
+
+
     public function getEndTimeAttribute()
     {
         return \Carbon\Carbon::parse($this->end)->format('H:i');
