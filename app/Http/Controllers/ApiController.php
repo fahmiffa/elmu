@@ -296,7 +296,7 @@ class ApiController extends Controller
     public function program()
     {
         $id       = JWTAuth::user()->id;
-        $products = Program::select('id', 'name')->get();
+        $products = Program::select('id', 'name','des','level')->get();
         return response()->json(['items' => $products]);
     }
 
@@ -346,7 +346,7 @@ class ApiController extends Controller
                         "keterangan" => "Tagihan Bulan " . $a->bulan,
                         "kit"        => $a->kit,
                         "status"     => $a->status,
-                        "via"        => $a->via,   
+                        "via"        => $a->via,
                     ];
                 })->toArray();
 
@@ -359,7 +359,7 @@ class ApiController extends Controller
                         "keterangan" => $a->product->item->name,
                         "kit"        => null,
                         "status"     => $a->status,
-                        "via"        => $a->via,  
+                        "via"        => $a->via,
                     ];
                 })->toArray();
 
@@ -434,11 +434,15 @@ class ApiController extends Controller
 
     public function Uplevel(Request $request)
     {
-        // return response()->json($request->head);
         $validator = Validator::make($request->all(), [
-            'user' => 'required',
+            'user'  => 'required',
+            'head'  => 'required',
+            'level' => 'required|integer',
         ], [
-            'user.required' => 'TIdak murid yang di pilih',
+            'user.required'  => 'Tidak murid yang dipilih',
+            'head.required'  => 'Head diperlukan',
+            'level.required' => 'Level diperlukan',
+            'level.integer'  => 'Level harus berupa angka',
         ]);
 
         if ($validator->fails()) {
@@ -447,23 +451,41 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $levels = Level::where('student_id', $request->user)
-            ->where('head', $request->head)
-            ->first();
-        if ($levels) {
-            $level             = new Level;
-            $level->student_id = $levels->student_id;
-            $level->teach_user = JWTAuth::user()->id;
-            $level->level      = $levels->level + 1;
-            $level->head       = $request->head;
-            $level->note       = $request->note;
-            $level->save();
+        $levelsQuery = Level::where('student_id', $request->user)
+            ->where('head', $request->head);
 
-            return response()->json(["status" => true], 200);
-        } else {
-            return response()->json(['errors' => "user tidak valid", "status" => false], 400);
+        if (! $levelsQuery->exists()) {
+            return response()->json(['errors' => ['message' => 'Murid tidak valid']], 400);
         }
 
+        $upgradeInProcess = Level::where('student_id', $request->user)
+            ->where('head', $request->head)
+            ->where('status', 0)
+            ->exists();
+
+        if ($upgradeInProcess) {
+            return response()->json(['errors' => ['message' => 'Murid dalam proses Upgrade']], 400);
+        }
+
+        $currentLevel = $levelsQuery->latest()->first();
+        if (! $currentLevel) {
+            return response()->json(['errors' => ['message' => 'Murid tidak valid', 'data' => $levelsQuery->first()]], 400);
+        }
+
+        if ($currentLevel->level >= $request->level) {
+            return response()->json(['errors' => ['message' => 'Level Tidak Valid']], 400);
+        }
+
+        // Buat level baru untuk upgrade
+        $newLevel             = new Level();
+        $newLevel->student_id = $currentLevel->student_id;
+        $newLevel->teach_user = JWTAuth::user()->id;
+        $newLevel->level      = $request->level;
+        $newLevel->head       = $request->head;
+        $newLevel->note       = $request->note ?? null;
+        $newLevel->save();
+
+        return response()->json(['status' => true], 200);
     }
 
     public function level()
@@ -487,13 +509,11 @@ class ApiController extends Controller
                 ->with('level', 'class')
                 ->get();
 
-
-            foreach($head as $val)
-            {
+            foreach ($head as $val) {
                 $da[] = [
-                        "program"=>$val->programs->name,
-                        "kelas"=>$val->class->name,
-                        "level"=>$val->level->select('id',"level","status","note")->toArray()
+                    "program" => $val->programs->name,
+                    "kelas"   => $val->class->name,
+                    "level"   => $val->level->select('id', "level", "status", "note")->toArray(),
                 ];
             }
             return response()->json($da);
@@ -517,7 +537,6 @@ class ApiController extends Controller
 
                     if (! isset($grouped[$key])) {
                         $grouped[$key] = [
-                            'head'     => $reg->id,
                             'program'  => $programName,
                             'class'    => $className,
                             'students' => [],
@@ -533,7 +552,9 @@ class ApiController extends Controller
                     })->toArray();
 
                     $grouped[$key]['students'][] = [
+                        'head'  => $reg->id,
                         'id'    => $student->id,
+                        'name'  => $student->name,
                         'name'  => $student->name,
                         'level' => $levels,
                     ];
@@ -541,6 +562,7 @@ class ApiController extends Controller
             }
 
             return response()->json(array_values($grouped));
+            return response()->json($students);
 
         }
     }
@@ -550,18 +572,16 @@ class ApiController extends Controller
         $id = JWTAuth::user()->id;
 
         $student = Student::where('user', $id)
-            ->with('reg.bill','reg.lay.product.item')
+            ->with('reg.bill', 'reg.lay.product.item')
             ->first();
 
         $bill          = [];
         $hasStatusZero = false;
 
-
         foreach ($student->reg as $val) {
 
-
             foreach ($val->bill as $a) {
-                if ($a->status != 1 ) {
+                if ($a->status != 1) {
                     $hasStatusZero = true;
                     $bill[]        = [
                         'total'      => (int) $a->total,
@@ -572,11 +592,11 @@ class ApiController extends Controller
             }
 
             foreach ($val->lay as $a) {
-                if ($a->status != 1 ) {
+                if ($a->status != 1) {
                     $hasStatusZero = true;
                     $bill[]        = [
                         'total'      => (int) $a->product->harga,
-                        "keterangan" => "Anda punya tagihan ".$a->product->item->name,
+                        "keterangan" => "Anda punya tagihan " . $a->product->item->name,
                         "status"     => $a->status,
                     ];
                 }
@@ -655,7 +675,6 @@ class ApiController extends Controller
             'kontrak'               => 'required',
             'program'               => 'required',
             'unit'                  => 'required',
-            // 'hp'                    => 'required|unique:users,nomor',
             'hp'                    => ['required', 'unique:users,nomor', new NumberWa()],
             'email'                 => 'required|email|unique:users,email',
 

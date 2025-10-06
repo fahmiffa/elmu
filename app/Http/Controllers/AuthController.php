@@ -27,9 +27,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
-            // Cek status user
-            if ($user->status != 0) {
+            if ($user->status != 1) {
                 Auth::logout();
 
                 // Hapus session dan CSRF token
@@ -40,7 +38,6 @@ class AuthController extends Controller
                     'email' => 'Akun Anda tidak aktif.',
                 ]);
             }
-
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
