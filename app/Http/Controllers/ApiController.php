@@ -15,6 +15,7 @@ use App\Models\StudentPresent;
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Vidoes;
 use App\Rules\NumberWa;
 use DB;
 use Illuminate\Http\Request;
@@ -206,6 +207,22 @@ class ApiController extends Controller
 
     }
 
+    public function videos()
+    {
+        $role = JWTAuth::user()->role;
+        $id   = JWTAuth::user()->id;
+        if ($role == 3) {
+            $items = Vidoes::where('to', 3)->get();
+        } else {
+            $items = Vidoes::where('user', $id)->get();
+        }
+
+        $da = $items->map(function ($q) {
+            return ['name' => $q->name, 'url' => asset('storage/' . $q->pile)];
+        });
+        return response()->json($da);
+    }
+
     public function refresh()
     {
         try {
@@ -266,6 +283,7 @@ class ApiController extends Controller
             'token'      => $token,
             'expires_in' => auth('api')->factory()->getTTL() * 1,
             'role'       => $user->role,
+            "uid"        => md5($user->id),
         ]);
     }
 
@@ -296,7 +314,7 @@ class ApiController extends Controller
     public function program()
     {
         $id       = JWTAuth::user()->id;
-        $products = Program::select('id', 'name','des','level')->get();
+        $products = Program::select('id', 'name', 'des', 'level')->get();
         return response()->json(['items' => $products]);
     }
 

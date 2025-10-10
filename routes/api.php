@@ -21,6 +21,7 @@ Route::middleware('jwt')->group(function () {
     Route::get('/program', [ApiController::class, 'program']);
     Route::get('/unit', [ApiController::class, 'unit']);
     Route::get('/bill', [ApiController::class, 'bill']);
+     Route::get('/video', [ApiController::class, 'videos']);
     Route::get('/level', [ApiController::class, 'level']);
     Route::post('/level', [ApiController::class, 'Uplevel']);
     Route::get('/tagihan', [ApiController::class, 'tagihan']);

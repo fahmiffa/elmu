@@ -1,11 +1,11 @@
 @extends('base.layout')
-@section('title', 'Dashboard Master Unit')
+@section('title', 'Dashboard Video')
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-end items-center gap-2">
 
-            <a href="{{ route('dashboard.slide.create') }}"
+            <a href="{{ route('dashboard.video.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
             </a>
@@ -16,7 +16,8 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2">Gambar</th>
+                        <th class="px-4 py-2">Name</th>
+                        <th class="px-4 py-2">Video</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -24,26 +25,20 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2 items-center">
                                 <div class="w-50 h-24 overflow-hidden">
-                                    <img :src="'/storage/' + row.img" :alt="row.name" class="w-full object-cover" />
+                                    <div class="aspect-w-16 aspect-h-9 w-full rounded-lg shadow-lg overflow-hidden">
+                                        <video class="w-full h-full object-cover" controls @play="playing = true"
+                                            @pause="playing = false" :src="'{{ asset('storage') }}/' + row.pile"
+                                            type="video/mp4"></video>
+                                    </div>
+
                                 </div>
                             </td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
-                                    <a :href="'/dashboard/slide/' + row.id + '/edit'"
-                                        class="text-orange-600 hover:text-orange-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-pencil-icon lucide-pencil">
-                                            <path
-                                                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-                                            <path d="m15 5 4 4" />
-                                        </svg>
-                                    </a>
-    
-                                    <form :action="'/dashboard/slide/' + row.id" method="POST"
+                                    <form :action="'/dashboard/video/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf
                                         @method('DELETE')

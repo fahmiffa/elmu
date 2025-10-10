@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use App\Models\Vidoes;
 use Illuminate\Http\Request;
 
@@ -12,7 +12,8 @@ class VidoesController extends Controller
      */
     public function index()
     {
-        //
+        $items = Vidoes::all();
+        return view('home.video.index', compact('items'));
     }
 
     /**
@@ -20,7 +21,9 @@ class VidoesController extends Controller
      */
     public function create()
     {
-        //
+        $student = Student::latest()->get();
+        $action  = "Tambah Video";
+        return view('home.video.form', compact('action', 'student'));
     }
 
     /**
@@ -28,7 +31,31 @@ class VidoesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name'  => 'required',
+            'role'  => 'required|in:3,2',
+            'video' => 'required|mimes:mp4|max:20480',
+            'murid' => 'required_if:role,murid|exists:students,user',
+        ], ['required' => 'Feild Wajib diisi',
+            'in'           => 'FIeld invalid',
+        ]);
+
+        if ($request->hasFile('video')) {
+            $path = $request->file('video')->store('videos', 'public');
+        }
+
+        $item       = new Vidoes;
+        $item->pile = $path;
+        $item->name = $request->name;
+        $item->to   = $request->role;
+        if($request->to == 3)
+        {
+            $item->user = $request->murid;
+        }
+        $item->save();
+
+        return redirect()->route('dashboard.video.index');
+
     }
 
     /**
@@ -58,8 +85,9 @@ class VidoesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Vidoes $vidoes)
+    public function destroy(Vidoes $video)
     {
-        //
+        $video->delete();
+        return back();
     }
 }

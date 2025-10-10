@@ -81,12 +81,41 @@
         </span> Level
     </li>
 </a>
+<a href="{{ route('dashboard.video.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.video.*') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-tv-minimal-play-icon lucide-tv-minimal-play">
+                <path
+                    d="M15.033 9.44a.647.647 0 0 1 0 1.12l-4.065 2.352a.645.645 0 0 1-.968-.56V7.648a.645.645 0 0 1 .967-.56z" />
+                <path d="M7 21h10" />
+                <rect width="20" height="14" x="2" y="3" rx="2" />
+            </svg>
+        </span> Video
+    </li>
+</a>
+<a href="{{ route('dashboard.level') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.level') ? 'bg-gray-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-album-icon lucide-album">
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                <polyline points="11 3 11 11 14 8 17 11 17 3" />
+            </svg>
+        </span> Raport
+    </li>
+</a>
 <a href="{{ route('dashboard.report.index') }}">
     <li
         class="flex items-center px-4 py-3 border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.report.*') ? 'bg-gray-100' : null }}">
         <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round"
                 class="lucide lucide-message-square-warning-icon lucide-message-square-warning">
                 <path
                     d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />

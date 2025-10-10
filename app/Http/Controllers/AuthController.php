@@ -1,6 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Vidoes;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,9 +14,16 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function video()
+    public function video($id)
     {
-        return view('auth.video');
+        $user = User::where(DB::raw('md5(id)'), $id)->first();
+        if ($user->role == 3) {
+            $items = Vidoes::where('to', 3)->get();
+        } else {
+            $items = Vidoes::where('user', $id)->get();
+        }
+
+        return view('auth.video',compact('items'));
     }
 
     public function login(Request $request)

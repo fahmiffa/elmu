@@ -6,7 +6,7 @@
         </ul>
     </aside>
 @else
-    <aside class="bg-white rounded-lg shadow-md overflow-hidden hidden md:block h-100">
+    <aside class="bg-white rounded-lg shadow-md overflow-hidden hidden md:block">
         <div class="bg-orange-600 text-white px-4 py-2 font-bold">MENU</div>
         <ul>
             @include('base.home');
