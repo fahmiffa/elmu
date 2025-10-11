@@ -16,7 +16,7 @@ class NumberWa implements ValidationRule
     {
         if (substr($value, 0, 1) === '0') {
             $to = '62' . substr($value, 1);
-            $response = Http::post('http://192.168.18.22:3000/api/number', [
+            $response = Http::post('https://node.extra.my.id/api/number', [
                 'number'  => env('NumberWa'),
                 'to' => $to,
             ]);

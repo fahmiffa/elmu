@@ -1,6 +1,6 @@
 <a href="{{ route('dashboard.master.kelas.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.kelas.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.kelas.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
 
 
@@ -20,7 +20,7 @@
 </a>
 <a href="{{ route('dashboard.master.unit.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.unit.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.unit.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" class="lucide lucide-layout-grid-icon lucide-layout-grid">
@@ -34,7 +34,7 @@
 </a>
 <a href="{{ route('dashboard.master.jadwal.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.jadwal.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.jadwal.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -58,7 +58,7 @@
 </a>
 <a href="{{ route('dashboard.master.zone.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 {{ Route::is('dashboard.master.zone.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.zone.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -74,7 +74,7 @@
 </a>
 <a href="{{ route('dashboard.master.student.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -89,7 +89,7 @@
 </a>
 <a href="{{ route('dashboard.master.teach.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.teach.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.teach.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -105,7 +105,7 @@
 </a>
 <a href="{{ route('dashboard.master.payment.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer  {{ Route::is('dashboard.master.payment.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer  {{ Route::is('dashboard.master.payment.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -118,7 +118,7 @@
 </a>
 <a href="{{ route('dashboard.master.program.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.program.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.program.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -133,7 +133,7 @@
 </a>
 <a href="{{ route('dashboard.master.user') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.user') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.user') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -148,7 +148,7 @@
 </a>
 <a href="{{ route('dashboard.master.layanan.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.layanan.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.layanan.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -163,7 +163,7 @@
 </a>
 <a href="{{ route('dashboard.master.grade.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-gray-100 cursor-pointer {{ Route::is('dashboard.master.grade.*') ? 'bg-gray-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.grade.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

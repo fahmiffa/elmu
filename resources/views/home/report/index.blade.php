@@ -13,17 +13,19 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Program</th>
-                        <th class="px-4 py-2">Level</th>
+                        <th class="cursor-pointer px-4 py-2">User</th>
+                        <th class="px-4 py-2">As</th>
+                        <th class="px-4 py-2">Laporan</th>
+                        <th class="px-4 py-2">Jawaban</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.murid.name"></td>
-                            <td class="px-4 py-2" x-text="row.programs.name"></td>
+                            <td class="px-4 py-2" x-text="row.users.name"></td>
+                            <td class="px-4 py-2" x-text="row.users.role"></td>
+                            <td class="px-4 py-2" x-text="row.reason"></td>
                             <td class="px-4 py-2">
                                 <template x-for="(item, index) in row.level" :key="index">
                                     <div class="flex gap-3 justify-between items-center">
@@ -59,9 +61,6 @@
                             <select name="book" required
                                 class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                                 <option value="">Pilih Buku</option>
-                                @foreach ($lay as $val)
-                                    <option value="{{ $val->id }}">{{ $val->name }}</option>
-                                @endforeach
                             </select>
                         </div>
                         <button

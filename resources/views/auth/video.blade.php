@@ -3,9 +3,10 @@
 @section('content')
     <div class="min-h-screen flex flex-col items-center justify-center w-full bg-gray-100 p-4">
         @foreach ($items as $row)
-            <div class="relative w-full h-0 pb-[56.25%] mb-5 max-w-md rounded-3xl overflow-hidden shadow-lg bg-white">
-                <video class="w-full h-full object-cover" controls :src="'{{ asset('storage') }}/' + row.pile"
-                    type="video/mp4"></video>
+            <div class="flex-row">
+                <div class="font-semibold">{{ $row->name }}</div>
+                <video class="w-100 h-50 object-cover my-3" @play="playing = true" @pause="playing = false" controls
+                    src="{{ asset('storage/' . $row->pile) }}" type="video/mp4"></video>
             </div>
         @endforeach
     </div>

@@ -20,6 +20,7 @@ use App\Rules\NumberWa;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -142,7 +143,7 @@ class ApiController extends Controller
         return response()->json($item);
     }
 
-    public function Ureport(Request $request)
+    public function ureport(Request $request)
     {
         $id = JWTAuth::user()->id;
 
@@ -156,9 +157,9 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $re          = new Report;
-        $re->user_id = $id;
-        $re->reason  = $request->reason;
+        $re         = new Report;
+        $re->user   = $id;
+        $re->reason = $request->reason;
         $re->save();
 
         return response()->json(['status' => true], 200);
@@ -246,7 +247,7 @@ class ApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'password' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -450,17 +451,48 @@ class ApiController extends Controller
         }
     }
 
+    public function upass(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'old' => 'required',
+            'new' => 'required',
+        ], [
+            'old.required' => 'Password lama Wajib diisi',
+            'new.required' => 'Password baru Wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $id   = JWTAuth::user()->id;
+        $data = User::where('id', $id)->first();
+
+        if (! $data) {
+            return response()->json(['errors' => ['message' => 'User tidak valid']], 400);
+        }
+
+        if (! Hash::check($request->old, $data->password)) {
+            return response()->json(['errors' => ['message' => 'Password lama tidak valid']], 400);
+        }
+
+        $data->password = Hash::make($request->new);
+        $data->save();
+
+        return response()->json(['status' => true, "data" => $request->new], 200);
+    }
     public function Uplevel(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'user'  => 'required',
             'head'  => 'required',
-            'level' => 'required|integer',
+            'level' => 'required',
         ], [
             'user.required'  => 'Tidak murid yang dipilih',
             'head.required'  => 'Head diperlukan',
             'level.required' => 'Level diperlukan',
-            'level.integer'  => 'Level harus berupa angka',
         ]);
 
         if ($validator->fails()) {
@@ -713,8 +745,8 @@ class ApiController extends Controller
             'prestasi'              => 'nullable|string',
         ],
             [
-                'hp.required'    => 'Nomor HP wajib diisi.',
-                'hp.unique'      => 'Nomor HP sudah terdaftar.',
+                'hp.required'    => 'Nomor wajib diisi.',
+                'hp.unique'      => 'Nomor sudah terdaftar.',
                 'email.required' => 'Email wajib diisi.',
                 'email.email'    => 'Email tidak valid.',
                 'email.unique'   => 'Email sudah terdaftar.',
@@ -797,7 +829,7 @@ class ApiController extends Controller
             $level->save();
 
             $to       = '62' . substr($user->nomor, 1);
-            $response = Http::post('http://192.168.18.22:3000/api/send', [
+            $response = Http::post('https://node.extra.my.id/api/send', [
                 'number'  => env('NumberWa'),
                 'to'      => $to,
                 'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : murik@",

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\Vidoes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage; 
 
 class VidoesController extends Controller
 {
@@ -48,8 +49,7 @@ class VidoesController extends Controller
         $item->pile = $path;
         $item->name = $request->name;
         $item->to   = $request->role;
-        if($request->to == 3)
-        {
+        if ($request->to == 3) {
             $item->user = $request->murid;
         }
         $item->save();
@@ -87,6 +87,9 @@ class VidoesController extends Controller
      */
     public function destroy(Vidoes $video)
     {
+        if (isset($video->pile)) {
+            Storage::disk('public')->delete($video->pile);
+        }
         $video->delete();
         return back();
     }

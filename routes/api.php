@@ -21,14 +21,15 @@ Route::middleware('jwt')->group(function () {
     Route::get('/program', [ApiController::class, 'program']);
     Route::get('/unit', [ApiController::class, 'unit']);
     Route::get('/bill', [ApiController::class, 'bill']);
-     Route::get('/video', [ApiController::class, 'videos']);
+    Route::get('/video', [ApiController::class, 'videos']);
     Route::get('/level', [ApiController::class, 'level']);
     Route::post('/level', [ApiController::class, 'Uplevel']);
+    Route::post('/pass', [ApiController::class, 'upass']);
     Route::get('/tagihan', [ApiController::class, 'tagihan']);
     Route::post('/bill', [ApiController::class, 'billStore']);
     Route::get('/price/{kelas}/{product}', [ApiController::class, 'price']);
     Route::get('/jadwal', [ApiController::class, 'jadwal']);
     Route::post('/jadwal', [ApiController::class, 'UpJadwal']);
-    Route::post('/report', [ApiController::class, 'upReport']);
+    Route::post('/report', [ApiController::class, 'ureport']);
     Route::get('/report', [ApiController::class, 'report']);
 });

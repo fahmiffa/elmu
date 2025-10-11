@@ -11,9 +11,8 @@ class ReportController extends Controller
      */
     public function index()
     {
-        $items = Report::get();
-        $lay = [];
-        return view('home.report.index', compact('items','lay'));
+        $items = Report::with('users')->get();
+        return view('home.report.index', compact('items'));
     }
 
     /**

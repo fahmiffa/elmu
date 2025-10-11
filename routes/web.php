@@ -12,8 +12,8 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
 use App\Http\Controllers\UnitController;
-use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\VidoesController;
+use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear', function () {
@@ -53,7 +53,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
     Route::resource('jadwal', ScheduleController::class);
     Route::resource('report', ReportController::class);
-     Route::resource('video', VidoesController::class);
+    Route::resource('video', VidoesController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         // $total = DB::table('head')->where('bulan', $jobId)->count();
