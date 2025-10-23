@@ -1,13 +1,12 @@
 <?php
 namespace App\Models;
 
-use App\Models\Addon;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Paid extends Model
 {
-    protected $appends = ['tempo', 'kit','total'];
+    protected $appends = ['tempo', 'kit', 'total'];
 
     public function reg()
     {
@@ -16,22 +15,40 @@ class Paid extends Model
 
     public function gettempoAttribute()
     {
-        $date = Carbon::parse($this->created_at)
-            ->addMonthNoOverflow()
-            ->day(10)
-            ->locale('id');
-        return $formatted = $date->translatedFormat('l, d F Y');
+        if ($this->first == 1) {
+            // Billing pertama → created_at + 10 hari
+            $date = Carbon::parse($this->created_at)
+                ->addDays(10)
+                ->locale('id');
+            return $date->translatedFormat('l, d F Y');
+        } else {
+            // Billing normal → tanggal 2 bulan berjalan
+            $date = Carbon::parse($this->created_at)
+                // ->addMonthNoOverflow() // bulan berikutnya
+                ->day(2)
+                ->locale('id');
+            return $date->translatedFormat('l, d F Y');
+        }
     }
 
     public function getkitAttribute()
     {
-        return $this->first == 1 ? Addon::select('id', 'name','des')->with(['price:harga,product'])->first() : null;
+        return $this->first == 1 ? [
+            "id"    => $this->reg->programs->id,
+            "name"  => "Stater KIT " . $this->reg->programs->name,
+            "des"   => $this->reg->programs->kit_des,
+            "price" => [
+                "product" => $this->reg->programs->id,
+                "harga"   => $this->reg->programs->kit,
+            ],
+
+        ] : null;
     }
 
     public function gettotalAttribute()
     {
         $price = (int) $this->reg->prices->harga;
-        $kit   = (int) Addon::select('id', 'name')->where('first',1)->with(['price:harga,product'])->first()->price->harga;
+        $kit   = (int) $this->reg->programs->kit;
         return (int) $this->first == 1 ? $price + $kit : $price;
     }
 

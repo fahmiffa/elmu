@@ -1,12 +1,11 @@
 @extends('base.layout')
-@section('title', 'Dashboard Master Layanan')
+@section('title', 'Dashboard Video')
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($lay) }})">
-        <div class="mb-4 flex justify-between items-center gap-2">
-            <input type="text" x-model="search" placeholder="Cari Nama"
-                class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
-            <a href="{{ route('dashboard.master.layanan.create') }}"
+        <div class="mb-4 flex justify-end items-center gap-2">
+
+            <a href="{{ route('dashboard.raport.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
             </a>
@@ -17,9 +16,8 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
-                        <th class="cursor-pointer px-4 py-2">Deskripsi</th>
-                        <th class="cursor-pointer px-4 py-2">Harga</th>
+                        <th class="px-4 py-2">Name</th>
+                        <th class="px-4 py-2">Raport</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -28,23 +26,24 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
-                            <td class="px-4 py-2" x-text="row.des"></td>
-                            <td class="px-4 py-2" x-text="formatNumber(row.price.harga)"></td>
+                            <td class="px-4 py-2 items-center">
+                                <a :href="'/storage/' + row.file + ''"
+                                    class="text-orange-600 hover:text-orange-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-scroll-text-icon lucide-scroll-text">
+                                        <path d="M15 12h-5" />
+                                        <path d="M15 8h-5" />
+                                        <path d="M19 17V5a2 2 0 0 0-2-2H4" />
+                                        <path
+                                            d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" />
+                                    </svg>
+                                </a>
+                            </td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
-                                    <a :href="'/dashboard/master/layanan/' + row.id + '/edit'"
-                                        class="text-orange-600 hover:text-orange-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-pencil-icon lucide-pencil">
-                                            <path
-                                                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-                                            <path d="m15 5 4 4" />
-                                        </svg>
-                                    </a>
-
-                                    <form :action="'/dashboard/master/layanan/' + row.id" method="POST"
+                                    <form :action="'/dashboard/raport/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf
                                         @method('DELETE')

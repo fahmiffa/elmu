@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Kelas extends Model
 {
     protected $hidden = ['created_at', 'updated_at'];
+    
     public function kelas_unit()
     {
         return $this->hasMany(UnitKelas::class, 'kelas_id', 'id');

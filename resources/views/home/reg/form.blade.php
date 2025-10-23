@@ -15,13 +15,10 @@
         @endif --}}
         <form method="POST" action="{{ route('dashboard.reg.store') }}"
             class="flex flex-col" enctype="multipart/form-data">
-            @isset($items)
-                @method('PUT')
-            @endisset
             @csrf
             <div x-data="{ jenis: '{{ old('option', 1) }}' }">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2"
-                    x-data=reg(@json($kelas),@json($paket),@json($unit))>
+                    x-data=reg(kelasData)>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Jenjang</label>
                         <select name="grade" required
@@ -355,3 +352,9 @@
         </form>
     </div>
 @endsection
+
+@push('script')
+<script>
+    window.kelasData = @json($kelas);
+</script>
+@endpush

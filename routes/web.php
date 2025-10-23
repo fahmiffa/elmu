@@ -7,6 +7,7 @@ use App\Http\Controllers\Home;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\RaportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
@@ -17,9 +18,7 @@ use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear', function () {
-    // Artisan::call('db:wipe');
-    // Artisan::call('migrate');
-    // Artisan::call('db:seed');
+    Artisan::call('db:seed');
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';
@@ -53,6 +52,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
     Route::resource('jadwal', ScheduleController::class);
     Route::resource('report', ReportController::class);
+    Route::resource('raport', RaportController::class);
     Route::resource('video', VidoesController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
@@ -77,6 +77,9 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::resource('student', StudentController::class);
         Route::resource('program', ProgramController::class);
         Route::resource('layanan', AddonController::class);
+        Route::get('stater-kit', [AddonController::class, 'kit'])->name('kit.index');
+        Route::get('stater-kit/create', [AddonController::class, 'kit'])->name('kit.create');
+        Route::post('stater-kit', [AddonController::class, 'kit'])->name('kit.store');
         Route::resource('grade', GradeController::class);
         Route::get('/unit-jadwal', [UnitController::class, 'jadwal'])->name('jadwal.index');
         Route::get('/unit-jadwal/create', [UnitController::class, 'jadwalCreate'])->name('jadwal.create');

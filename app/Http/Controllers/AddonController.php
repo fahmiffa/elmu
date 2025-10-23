@@ -2,7 +2,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Addon;
+use App\Models\Kelas;
 use App\Models\Price;
+use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,8 +15,8 @@ class AddonController extends Controller
      */
     public function index()
     {
-        $items = Addon::with('price')->latest()->get();
-        return view('master.layanan.index', compact('items'));
+        $lay = Addon::with('price')->latest()->get();
+        return view('master.layanan.index', compact('lay'));
     }
 
     /**
@@ -26,27 +28,30 @@ class AddonController extends Controller
         return view('master.layanan.form', compact('action'));
     }
 
+    public function kit()
+    {
+        $kelas  = Kelas::with('program:id,name', 'units:id,name')->get();
+        $action = "Tambah Stater Kit";
+        return view('master.kit.index', compact('action', 'kelas'));
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required|string',
-            'des'   => 'nullable|string',
-            'price' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'name'    => 'required|string',
+            'des'     => 'nullable|string',
+            'price'   => 'required',
+        ], [
+            'required' => "Field Wajib disi",
+            'unique'   => "Data Program sudah ada",
         ]);
 
-        $path = null;
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images/layanan', 'public');
-        }
-
-        $item       = new Addon;
-        $item->name = $request->name;
-        $item->img  = $path;
-        $item->des  = $request->des;
+        $item          = new Addon;
+        $item->name    = $request->name;
+        $item->des     = $request->des;
         $item->save();
 
         $price          = new Price;
@@ -71,8 +76,10 @@ class AddonController extends Controller
      */
     public function edit(Addon $layanan)
     {
-        $items  = $layanan;
+
+        $items  = $layanan->load('price');
         $action = "Edit Layanan";
+
         return view('master.layanan.form', compact('action', 'items'));
     }
 
@@ -82,33 +89,19 @@ class AddonController extends Controller
     public function update(Request $request, Addon $layanan)
     {
         $request->validate([
-            'name'  => 'required|string',
-            'des'   => 'nullable|string',
-            'price' => 'required|numeric',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'name'    => 'required|string',
+            'des'     => 'nullable|string',
+            'price'   => 'required|numeric',
         ]);
 
         $item       = $layanan;
         $item->name = $request->name;
-        if ($request->hasFile('image')) {
-            $path      = $request->file('image')->store('images/layanan', 'public');
-            $item->img = $path;
-        }
-        $item->des = $request->des;
+        $item->des  = $request->des;
         $item->save();
 
-        $price = Price::where('product', $item->id);
-        if ($price->exists()) {
-            $price        = $price->first();
-            $price->harga = $request->price;
-        } else {
-            $price          = new Price;
-            $price->product = $item->id;
-            $price->kelas   = null;
-            $price->harga   = $request->price;
-            $price->save();
-        }
-
+        $price        = $layanan->price;
+        $price->harga = $request->price;
+        $price->save();
         return redirect()->route('dashboard.master.layanan.index');
     }
 
@@ -118,6 +111,7 @@ class AddonController extends Controller
     public function destroy(Addon $layanan)
     {
         $layanan->delete();
+        $layanan->price->delete();
         return back();
     }
 }

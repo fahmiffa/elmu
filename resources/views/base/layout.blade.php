@@ -13,21 +13,23 @@
 </head>
 
 <body class="bg-gray-100" x-data="layout()" x-init="init()">
-    <div x-data="{ show: false, message: '' }" x-init="@if (session('status')) message = '{{ session('status') }}';
-            show = true;
-            setTimeout(() => show = false, 3000); @endif" class="fixed top-4 right-10 z-[100]">
-        <div x-show="show" x-transition class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            <span x-text="message"></span>
+    @if (session('status'))
+        <div x-data="{ show: false, message: '' }" x-init="@if (session('status')) message = '{{ session('status') }}';
+                show = true;
+                setTimeout(() => show = false, 3000); @endif" class="fixed top-4 right-10 z-[100]">
+            <div x-show="show" x-transition class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
+                <span x-text="message"></span>
+            </div>
         </div>
-    </div>
 
-    <div x-data="{ show: false, message: '' }" x-init="@if (session('err')) message = '{{ session('err') }}';
-            show = true;
-            setTimeout(() => show = false, 3000); @endif" class="fixed top-50 right-4 z-[100]">
-        <div x-show="show" x-transition class="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            <span x-text="message"></span>
+        <div x-data="{ show: false, message: '' }" x-init="@if (session('err')) message = '{{ session('err') }}';
+                show = true;
+                setTimeout(() => show = false, 3000); @endif" class="fixed top-50 right-4 z-[100]">
+            <div x-show="show" x-transition class="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
+                <span x-text="message"></span>
+            </div>
         </div>
-    </div>
+    @endif
 
     @if (Route::is('dashboard.*'))
         <!-- HEADER -->

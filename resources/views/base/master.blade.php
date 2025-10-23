@@ -74,7 +74,7 @@
 </a>
 <a href="{{ route('dashboard.master.student.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.murid.*') ? 'bg-orange-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.student.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -159,6 +159,21 @@
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
             </svg></span>
         Layanan
+    </li>
+</a>
+<a href="{{ route('dashboard.master.kit.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.master.kit.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-copy-plus-icon lucide-copy-plus">
+                <line x1="15" x2="15" y1="12" y2="18" />
+                <line x1="12" x2="18" y1="15" y2="15" />
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg></span>
+        Stater Kit
     </li>
 </a>
 <a href="{{ route('dashboard.master.grade.index') }}">

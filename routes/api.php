@@ -32,4 +32,5 @@ Route::middleware('jwt')->group(function () {
     Route::post('/jadwal', [ApiController::class, 'UpJadwal']);
     Route::post('/report', [ApiController::class, 'ureport']);
     Route::get('/report', [ApiController::class, 'report']);
+    Route::get('/raport', [ApiController::class, 'raport']);
 });

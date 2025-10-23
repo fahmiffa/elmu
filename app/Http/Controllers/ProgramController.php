@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Kelas;
 use App\Models\Price;
 use App\Models\Program;
+use DB;
 use Illuminate\Http\Request;
 
 class ProgramController extends Controller
@@ -34,6 +35,7 @@ class ProgramController extends Controller
     {
         $request->validate([
             'name'    => 'required',
+            'kit'    => 'required',
             'kode'    => 'required',
             'des'     => 'required',
             'level'   => 'required',
@@ -47,18 +49,20 @@ class ProgramController extends Controller
         $kelas = $request->id;
         $harga = $request->harga;
 
-        $item        = new Program;
-        $item->name  = $request->name;
-        $item->kode  = $request->kode;
-        $item->des   = $request->des;
-        $item->level = $request->level;
+        $item          = new Program;
+        $item->name    = $request->name;
+        $item->kode    = $request->kode;
+        $item->des     = $request->des;
+        $item->level   = $request->level;
+        $item->kit     = $request->nominal;
+        $item->kit_des = $request->kit_des;
         $item->save();
 
         for ($i = 0; $i < count($kelas); $i++) {
             $price          = new Price;
             $price->product = $item->id;
             $price->kelas   = $kelas[$i];
-            $price->harga   = $harga[$i];
+            $price->harga   = str_replace(".", null, $harga[$i]);
             $price->save();
         }
 
@@ -86,7 +90,7 @@ class ProgramController extends Controller
                     'id'    => $da->class->id,
                     'price' => $da->id,
                     'name'  => $da->class->name,
-                    'value' => $da->harga,
+                    'value' => number_format($da->harga, 0, '.', '.'),
                 ];
             });
 
@@ -110,31 +114,49 @@ class ProgramController extends Controller
         ], [
             'required' => 'Field wajib diisi.',
         ]);
+        DB::beginTransaction();
+        try {
+            $kelas   = $request->id;
+            $idPrice = $request->price;
+            $harga   = $request->harga;
 
-        $kelas = $request->id;
-        $price = $request->price;
-        $harga = $request->harga;
+            $item          = $program;
+            $item->name    = $request->name;
+            $item->kode    = $request->kode;
+            $item->des     = $request->des;
+            $item->level   = $request->level;
+            $item->kit     = $request->nominal;
+            $item->kit_des = $request->kit_des;
+            $item->save();
 
-        $item        = $program;
-        $item->name  = $request->name;
-        $item->kode  = $request->kode;
-        $item->des   = $request->des;
-        $item->level = $request->level;
-        $item->save();
+            $existingIds = Price::where('product', $item->id)->pluck('id')->toArray();
+            $incomingIds = array_map('intval', $idPrice);
+            $toDelete    = array_diff($existingIds, $incomingIds);
+            if (! empty($toDelete)) {
+                Price::whereIn('id', $toDelete)->delete();
+            }
 
+            for ($i = 0; $i < count($kelas); $i++) {
+                $par = Price::where('id', $idPrice[$i])->first();
+                if ($par) {
+                    $par->harga = str_replace(".", null, $harga[$i]);
+                    $par->save();
+                } else {
+                    $price          = new Price;
+                    $price->product = $item->id;
+                    $price->kelas   = $kelas[$i];
+                    $price->harga   = str_replace(".", null, $harga[$i]);
+                    $price->save();
+                }
+            }
 
-        $pr = Price::where('product', $item->id)->pluck('id')->toArray();
-        Price::whereIn('id', $pr)->delete();
-
-        for ($i = 0; $i < count($kelas); $i++) {
-            $price          = new Price;
-            $price->product = $item->id;
-            $price->kelas   = $kelas[$i];
-            $price->harga   = $harga[$i];
-            $price->save();
+            DB::commit();
+            return redirect()->route('dashboard.master.program.index');
+        } catch (\Exception $e) {
+            DB::rollback();
+            dd($e);
+            return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
-
-        return redirect()->route('dashboard.master.program.index');
     }
 
     /**

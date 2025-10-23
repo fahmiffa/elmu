@@ -37,7 +37,7 @@
                             <td class="px-4 py-2">
                                 <table class="w-full">
                                     <template x-for="(col, index) in row.kelas" :key="index">
-                                        <tr>
+                                        <tr x-show="row.price[index].harga !== ''">
                                             <td class="p-1 text-sm text-gray-700 text-right">
                                                 <span x-text="col.name ?? 'Tanpa Kelas'"></span>
                                                 <span x-text="formatNumber(row.price[index].harga)"></span>

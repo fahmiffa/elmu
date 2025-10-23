@@ -81,22 +81,15 @@ class Head extends Model
 
     public function getwaktuAttribute()
     {
-        $date             = Carbon::parse($this->created_at)->locale('id');
-        return $formatted = $date->translatedFormat('l, d F Y H:i');
+        $date             = Carbon::parse($this->crated_at)->locale('id');
+        return $formatted = $date->translatedFormat('l, d F Y');
 
     }
 
     public function getindukAttribute()
     {
-        $nunit = Head::where('unit', $this->units->id);
-        // ->where('program',$this->programs->id);
-        if ($this->created_at) {
-            $nunit = $nunit
-                ->where('created_at', '<=', $this->created_at);
-        }
-        $nunit  = $nunit->count();
-        $munit  = str_pad($nunit, 3, '0', STR_PAD_LEFT);
-        $global = str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        $munit  = str_pad($this->number, 3, '0', STR_PAD_LEFT);
+        $global = str_pad($this->global, 4, '0', STR_PAD_LEFT);
         $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
         return $global . '' . $unit . '' . $munit . '/' . $this->programs->kode;
     }

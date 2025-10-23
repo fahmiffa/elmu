@@ -26,12 +26,6 @@ class ScheduleController extends Controller
         $action = "Tambah Jadwal";
         $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students')
             ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name')
-            ->whereHas('bill', function ($q) {
-                $q->where('first', 1)
-                    ->where('status', 1);
-            })
-            ->whereHas('units.jadwal')
-            ->DoesntHave('jadwal')
             ->get();
 
         $unit = $murid->pluck('units')

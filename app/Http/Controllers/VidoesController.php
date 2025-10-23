@@ -58,33 +58,6 @@ class VidoesController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Vidoes $vidoes)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Vidoes $vidoes)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Vidoes $vidoes)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Vidoes $video)
     {
         if (isset($video->pile)) {

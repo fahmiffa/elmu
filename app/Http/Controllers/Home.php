@@ -169,7 +169,7 @@ class Home extends Controller
 
     public function user()
     {
-        $items = User::all();
+        $items = User::with('data')->get();
         return view('master.user.index', compact('items'));
     }
 
@@ -225,19 +225,19 @@ class Home extends Controller
         $bulan = $request->input('bulan');
         $da    = [];
 
-        $head = Head::select('id')
+        $head = Head::select('id','old')
         // ->whereHas('kontrak',function($q){
         //     $q->where('month',1);
         // })
             ->get();
 
         foreach ($head as $val) {
-            $first = Paid::where('head', $val->id)->exists();
             $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
             if ($paid == false) {
-                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => ! $first ? 1 : 0];
+                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0];
             }
         }
+
 
         if (count($da) > 0) {
             BulkInsertJob::dispatch($da);
@@ -281,12 +281,11 @@ class Home extends Controller
                 $paid->time   = date("Y-m-d H:i:s");
                 $paid->ket    = $request->ket;
                 $paid->via    = $request->via;
+                $paid->grand  = $paid->total;
                 $paid->save();
             }
 
             $fcm   = $paid->reg->murid->users->fcm;
-            $kit   = $paid->kit ? $paid->kit->price->harga : 0;
-            $harga = $paid->reg->product->harga + $kit;
 
             if ($fcm) {
                 $message = [
@@ -337,20 +336,12 @@ class Home extends Controller
 
     public function AddReg()
     {
-        $kelas = Kelas::with('kelas_unit')->get();
-        $paket = Price::select('id', 'harga', 'product', 'kelas')
-            ->with('program:id,name')
-            ->latest()
-            ->get();
-
+        $kelas = Kelas::with('program:id,name','units:id,name')->get();
         $kontrak = Payment::all();
         $grade   = Grade::all();
-        $unit    = UnitKelas::select('id', 'kelas_id', 'unit_id')
-            ->with('unit:id,name')
-            ->get();
         $action = "Form Pendaftaran";
         $head   = Head::get();
-        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'paket', 'unit', 'grade', 'head'));
+        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 
     public function regStore(Request $request)
@@ -406,8 +397,9 @@ class Home extends Controller
                     $path = $request->file('image')->store('images', 'public');
                 }
 
+
                 $user           = new User;
-                $user->name     = $request->name;
+                $user->name     = UserName($request->name);
                 $user->email    = $request->email;
                 $user->role     = 2;
                 $user->status   = 0;
@@ -446,8 +438,10 @@ class Home extends Controller
                     ->first();
 
                 $head           = new Head;
-                $head->number   = Head::count() + 1;
+                $head->number   = Head::where('unit', $request->unit)->count() + 1;
+                $head->global   = Head::count() + 1;
                 $head->students = $siswa->id;
+                $head->tanggal  = date("Y-m-d");
                 $head->unit     = $request->unit;
                 $head->kelas    = $request->kelas;
                 $head->price    = $price->id;
@@ -504,7 +498,7 @@ class Home extends Controller
 
             return redirect()->route('dashboard.reg');
 
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             DB::rollback();
 
             if (isset($path)) {

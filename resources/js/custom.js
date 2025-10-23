@@ -52,6 +52,17 @@ export const dataTable = (data) => {
         rows: data,
         selectedRow: null,
         open: false,
+        modalOpen: false,
+        selectedItem: null,
+
+        openModal(item) {
+            this.selectedItem = item;
+            this.modalOpen = true;
+        },
+        closeModal() {
+            this.modalOpen = false;
+            this.selectedItem = null;
+        },
 
         sortBy(column) {
             if (this.sortColumn === column) {
@@ -390,7 +401,70 @@ export function generateBill() {
     };
 }
 
-export function reg(kelas, program, unit) {
+export function paket(data = []) {
+    return {
+        kelas: "",
+        selectedId: "",
+        fields: data,
+        addField() {
+            if (!this.selectedId) return;
+            if (this.fields.find(f => f.id == this.selectedId)) {
+                return;
+            }
+            this.fields.push({
+                id: this.selectedId,
+                value: "",
+                name: this.getSelectedText(),
+            });
+        },
+        removeField(index) {
+            this.fields.splice(index, 1);
+        },
+        getSelectedText() {
+            const select = this.$refs.kelasSelect;
+            return select.options[select.selectedIndex].text;
+        },
+        formatCurrency(value) {
+            const numberString = value.replace(/[^,\d]/g, '');
+            const split = numberString.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                const separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        },
+        formatFieldValue(index) {
+            this.fields[index].value = this.formatCurrency(this.fields[index].value);
+        }
+    };
+}
+
+export function currencyInput(initialValue = "") {
+    const cleanValue = (initialValue || "").toString().replace(/\D/g, "");
+    return {
+        display: formatNumber(cleanValue),
+        raw: cleanValue,
+
+        formatInput() {
+            const number = this.display.replace(/\D/g, "");
+            this.raw = number;
+            this.display = formatNumber(number);
+        },
+    };
+
+    function formatNumber(value) {
+        if (!value) return "";
+        return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+}
+
+export function reg(kelas, initial = {}) {
     const val = kelas.map((e) => ({ value: e.id, label: e.name }));
     return {
         selectedKelas: "",
@@ -400,18 +474,42 @@ export function reg(kelas, program, unit) {
         get filteredPrograms() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];
-            const pro = program
-                .filter((p) => p.kelas == Number(this.selectedKelas))
-                .map((e) => ({ value: e.program.id, label: e.program.name }));
-            return [{ value: "", label: "Pilih Program" }, ...pro];
+
+            var program = kelas
+                .filter(
+                    function (p) {
+                        return p.id == Number(this.selectedKelas);
+                    }.bind(this)
+                )
+                .flatMap(function (e) {
+                    return e.program.map(function (unit) {
+                        return {
+                            value: unit.id,
+                            label: unit.name,
+                        };
+                    });
+                });
+
+            return [{ value: "", label: "Pilih Program" }, ...program];
         },
         get filteredUnits() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Unit" }];
 
-            const units = unit
-                .filter((p) => p.kelas_id == Number(this.selectedKelas))
-                .map((e) => ({ value: e.unit.id, label: e.unit.name }));
+            var units = kelas
+                .filter(
+                    function (p) {
+                        return p.id == Number(this.selectedKelas);
+                    }.bind(this)
+                )
+                .flatMap(function (e) {
+                    return e.units.map(function (unit) {
+                        return {
+                            value: unit.id,
+                            label: unit.name,
+                        };
+                    });
+                });
 
             return [{ value: "", label: "Pilih Unit" }, ...units];
         },
@@ -419,7 +517,6 @@ export function reg(kelas, program, unit) {
 }
 
 export function schedule(data, initial = {}) {
-    console.log(initial);
     return {
         selectedUnit: initial.unit || "",
         selectedJadwal: initial.jadwal || "",

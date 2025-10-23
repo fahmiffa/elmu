@@ -96,9 +96,9 @@
         </span> Video
     </li>
 </a>
-<a href="{{ route('dashboard.level') }}">
+<a href="{{ route('dashboard.raport.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.level') ? 'bg-orange-100' : null }}">
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.raport.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"

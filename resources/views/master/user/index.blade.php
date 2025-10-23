@@ -7,10 +7,10 @@
             <input type="text" x-model="search" placeholder="Cari Nama"
                 class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
-            <a href="{{ route('dashboard.master.unit.create') }}"
+            {{-- <a href="{{ route('dashboard.master.unit.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
-            </a>
+            </a> --}}
         </div>
 
         <div class="overflow-x-auto">
@@ -18,6 +18,7 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
+                        <th class="cursor-pointer px-4 py-2">Username</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Email</th>
                         <th class="px-4 py-2">HP</th>
@@ -30,6 +31,7 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="px-4 py-2" x-text="row.data.name"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2" x-text="row.email"></td>
                             <td class="px-4 py-2" x-text="row.nomor"></td>

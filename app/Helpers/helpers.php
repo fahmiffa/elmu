@@ -1,4 +1,5 @@
 <?php
+use Illuminate\Support\Str;
 
 if (! function_exists('convertHari')) {
     /**
@@ -24,4 +25,19 @@ if (! function_exists('convertHari')) {
 
         return $hari[$num] ?? null;
     }
+}
+
+function userName($name)
+{
+    $name = strtolower(str_replace(" ", "", $name));
+
+    // Ambil 5 karakter pertama jika panjangnya lebih dari 5
+    if (strlen($name) > 5) {
+        $name = substr($name, 0, 5);
+    }
+
+    // Tambahkan angka acak 5 digit
+    $randomNumber = str_pad(strval(random_int(0, 999)), 3, '0', STR_PAD_LEFT);
+
+    return $name . $randomNumber;
 }

@@ -1,7 +1,15 @@
 @extends('base.layout')
 @section('title', 'Dashboard Level')
+
+@push('styles')
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+@endpush
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
+    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-between items-center gap-2">
             <input type="text" x-model="search" placeholder="Cari Nama"
@@ -16,7 +24,7 @@
                         <th class="cursor-pointer px-4 py-2">User</th>
                         <th class="px-4 py-2">As</th>
                         <th class="px-4 py-2">Laporan</th>
-                        <th class="px-4 py-2">Jawaban</th>
+                        <th class="px-4 py-2">Respon</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -24,19 +32,15 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.users.name"></td>
-                            <td class="px-4 py-2" x-text="row.users.role"></td>
+                            <td class="px-4 py-2" x-text="row.users.role === 2 ? 'Murid' : 'Maska/Miska' "></td>
                             <td class="px-4 py-2" x-text="row.reason"></td>
                             <td class="px-4 py-2">
-                                <template x-for="(item, index) in row.level" :key="index">
-                                    <div class="flex gap-3 justify-between items-center">
-                                        <div x-text="item.level" class="font-semibold capitalize"></div>
-                                        <div x-show="item.status === 0">
-                                            <button @click="openModal(item)"
-                                                class="bg-orange-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-orange-600"
-                                                type="button">Verifikasi</button>
-                                        </div>
-                                    </div>
-                                </template>
+                                <div x-show="row.reply !== null" x-text="row.reply"></div>
+                                <div x-show="row.reply === null">
+                                    <button @click="openModal(row)"
+                                        class="bg-orange-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-orange-600"
+                                        type="button">Respon</button>
+                                </div>
                             </td>
                         </tr>
                     </template>
@@ -46,26 +50,29 @@
                 </tbody>
             </table>
 
-            <div x-show="modalOpen" style="background-color: rgba(0,0,0,0.5);"
+            <div x-show="modalOpen" x-cloak style="background-color: rgba(0,0,0,0.5);"
                 class="fixed inset-0 flex items-center justify-center z-50"
                 x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                 <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative" @click.away="closeModal()">
-                    <h2 class="text-sm font-bold mb-4">Upgrade Level</h2>
-                    <form method="POST" :action="'/dashboard/layanan/' + md5Component(selectedItem?.student_id) + ''">
+                    <h2 class="text-sm font-bold mb-4">Respon Laporan</h2>
+                    <form method="POST" :action="'/dashboard/report/' + selectedItem?.id + ''">
+                        @method('PUT')
                         @csrf
-                        <p class="text-sm mb-4">Note: <span x-text="selectedItem?.note"></span></p>
-                        <input type="hidden" name="level" :value="selectedItem?.id">
+                        <p class="text-sm mb-4">Note: <span x-text="selectedItem?.reason"></span></p>
+                        <input type="hidden" name="id" :value="selectedItem?.id">
                         <div class="mb-4">
-                            <select name="book" required
-                                class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                                <option value="">Pilih Buku</option>
-                            </select>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Respon</label>
+                            <textarea name="re" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
+                                required>{{ old('re') }}</textarea>
+                            @error('re')
+                                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                            @enderror
                         </div>
                         <button
                             class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
-                            Upgrade
+                            Simpan
                         </button>
                     </form>
                     <button

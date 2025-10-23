@@ -58,7 +58,7 @@ class TeachController extends Controller
         }
 
         $user           = new User;
-        $user->name     = $request->name;
+        $user->name     = UserName($request->name);
         $user->email    = $request->email;
         $user->nomor    = $request->hp;
         $user->status   = 3;

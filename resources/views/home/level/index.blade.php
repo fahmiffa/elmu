@@ -1,5 +1,13 @@
 @extends('base.layout')
 @section('title', 'Dashboard Level')
+
+@push('styles')
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+@endpush
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
 
@@ -44,7 +52,7 @@
                 </tbody>
             </table>
 
-            <div x-show="modalOpen" style="background-color: rgba(0,0,0,0.5);"
+            <div x-show="modalOpen" x-cloak style="background-color: rgba(0,0,0,0.5);"
                 class="fixed inset-0 flex items-center justify-center z-50"
                 x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"

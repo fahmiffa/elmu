@@ -2,9 +2,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
+use App\Models\Head;
+use App\Models\Kelas;
+use App\Models\Level;
+use App\Models\Payment;
+use App\Models\Price;
 use App\Models\Student;
+use App\Models\User;
 use DB;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -13,8 +20,11 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $items = Student::all();
-        return view('master.students.index', compact('items'));
+        $items   = Student::with('users')->get();
+        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
+        $kontrak = Payment::all();
+        $grade   = Grade::all();
+        return view('master.students.index', compact('items', 'kelas', 'grade', 'kontrak'));
     }
 
     /**
@@ -30,7 +40,60 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'file' => 'required|mimes:xlsx|max:2048',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $data = Excel::toArray([], $request->file('file'));
+            $val  = $data[0];
+            array_shift($val);
+
+            foreach ($val as $row) {
+                $user           = new User;
+                $user->name     = UserName($row[1]);
+                $user->role     = 2;
+                $user->status   = 1;
+                $user->password = bcrypt('murik@');
+                $user->save();
+
+                $siswa           = new Student;
+                $siswa->user     = $user->id;
+                $siswa->name     = $row[1];
+                $siswa->grade_id = $request->grade;
+                $siswa->save();
+
+                $price = Price::where('kelas', $request->kelas)
+                    ->where('product', $request->program)
+                    ->first();
+
+                $head           = new Head;
+                $head->number   = Head::where('unit', $request->unit)->count() + 1;
+                $head->global   = Head::count() + 1;
+                $head->students = $siswa->id;
+                $head->unit     = $request->unit;
+                $head->kelas    = $request->kelas;
+                $head->price    = $price->id;
+                $head->old      = 1;
+                $head->program  = $request->program;
+                $head->payment  = $request->kontrak;
+                $head->save();
+
+                $level             = new Level;
+                $level->student_id = $siswa->id;
+                $level->head       = $head->id;
+                $level->status     = 1;
+                $level->save();
+            }
+
+            DB::commit();
+            return back();
+        } catch (\Exception $e) {
+            DB::rollback();
+            dd($e);
+            return back()->withErrors('Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -48,7 +111,7 @@ class StudentController extends Controller
     {
         $action = "Edit Murid " . $student->name;
         $grade  = Grade::all();
-        return view('master.students.form', compact('student', 'action','grade'));
+        return view('master.students.form', compact('student', 'action', 'grade'));
     }
 
     /**

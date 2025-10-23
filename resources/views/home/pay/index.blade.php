@@ -1,5 +1,5 @@
 @extends('base.layout')
-@section('title', 'Dashboard Master Unit')
+@section('title', 'Dashboard Pembayaran')
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
 
@@ -107,10 +107,9 @@
                                 <tr class="bg-orange-500 text-left text-white">
                                     <th class="px-4 py-2">No</th>
                                     <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
-                                    <th class="px-4 py-2">Program</th>
-                                    <th class="px-4 py-2">Kelas</th>
-                                    <th class="px-4 py-2">Unit</th>
+                                    <th class="px-4 py-2">Jatuh Tempo</th>
                                     <th class="px-4 py-2">Waktu</th>
+                                    <th class="px-4 py-2">Total</th>
                                     <th class="px-4 py-2">Status</th>
                                     <th class="px-4 py-2">Action</th>
                                 </tr>
@@ -120,20 +119,22 @@
                                     <tr class="border-t border-gray-300">
                                         <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                                         <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.name ?? '-'"></td>
-                                        <td class="px-4 py-2" x-text="row.reg?.programs.name ?? '-'"></td>
-                                        <td class="px-4 py-2" x-text="row.reg?.class?.name ?? '-'"></td>
-                                        <td class="px-4 py-2" x-text="row.reg?.units?.name ?? '-'"></td>
+                                        <td class="px-4 py-2" x-text="row.tempo ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
-                                        <td class="px-4 py-2" x-text="
+                                        <td class="px-4 py-2" x-text="formatNumber(row.total)"></td>
+                                        <td class="px-4 py-2"
+                                            x-text="
                                         row.status == 0 ? 'Tagihan' : 
                                         (row.status == 2 ? 'Menunggu Pembayaran' : 
                                         (row.status == 1 ? 'Lunas' : 'Unknown'))
-                                        "></td>
+                                        ">
+                                        </td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
 
                                                 <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null"
-                                                    method="post" :action="'/dashboard/send/' + md5Component(row.id) + '/bul'">
+                                                    method="post"
+                                                    :action="'/dashboard/send/' + md5Component(row.id) + '/bul'">
                                                     @csrf
                                                     <button type="submit"
                                                         class="text-orange-600 hover:text-orange-700 cursor-pointer">
@@ -164,7 +165,8 @@
                                                 <div x-show="modal.activeModal === row.id" x-transition
                                                     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
                                                     style="display: none;">
-                                                    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+                                                    <div @click.away="modal.closeModal()"
+                                                        class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
                                                         x-transition:enter="transition ease-out duration-300"
                                                         x-transition:enter-start="opacity-0 scale-90"
                                                         x-transition:enter-end="opacity-100 scale-100"
@@ -259,11 +261,13 @@
                                         <td class="px-4 py-2 text-nowrap" x-text="row.reg?.murid?.name ?? '-'"></td>
                                         <td class="px-4 py-2 text-nowrap" x-text="row.product?.item.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="formatNumber(row.product.harga)"></td>
-                                      <td class="px-4 py-2" x-text="
+                                        <td class="px-4 py-2"
+                                            x-text="
                                         row.status == 0 ? 'Tagihan' : 
                                         (row.status == 2 ? 'Menunggu Pembayaran' : 
                                         (row.status == 1 ? 'Lunas' : 'Unknown'))
-                                        "></td>
+                                        ">
+                                        </td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
                                                 <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null"

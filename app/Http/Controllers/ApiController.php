@@ -9,6 +9,7 @@ use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
+use App\Models\Raport;
 use App\Models\Report;
 use App\Models\Student;
 use App\Models\StudentPresent;
@@ -56,6 +57,10 @@ class ApiController extends Controller
                     'errors' => $validator->errors(),
                 ], 400);
             }
+
+            $user        = $siswa->users;
+            $user->email = $request->email;
+            $user->save();
 
             $siswa->alamat                = $request->alamat;
             $siswa->place                 = $request->tempat_tanggal_lahir;
@@ -133,7 +138,17 @@ class ApiController extends Controller
     public function report()
     {
         $id   = JWTAuth::user()->id;
-        $item = Report::where('user_id', $id)->latest()->get();
+        $item = Report::select('reason', 'reply')->where('user', $id)->latest()->get();
+        return response()->json($item);
+    }
+
+    public function raport()
+    {
+        $id   = JWTAuth::user()->id;
+        $item = Raport::select('name', 'file')->where('student_id', $id)->latest()->get()
+            ->map(function ($q) {
+                return ['name' => $q->name, "url" => asset('storage/' . $q->file)];
+            });
         return response()->json($item);
     }
 
@@ -157,6 +172,11 @@ class ApiController extends Controller
             ], 400);
         }
 
+        $check = Report::where('user', $id)->whereNull('reply');
+
+        if ($check->exists()) {
+            return response()->json(['errors' => ['message' => 'Laporan masih dalam proses']], 400);
+        }
         $re         = new Report;
         $re->user   = $id;
         $re->reason = $request->reason;
@@ -246,7 +266,7 @@ class ApiController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'    => 'required|email',
+            'login'    => 'required', // bisa email atau name
             'password' => 'required',
         ]);
 
@@ -256,17 +276,24 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $credentials = $request->only('email', 'password');
+        $login    = $request->input('login');
+        $password = $request->input('password');
 
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
+        // Cari user berdasarkan email atau name
+        $user = \App\Models\User::where('email', $login)
+            ->orWhere('name', $login)
+            ->first();
 
         if (! $user) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // if ($user->status == 0) {
-        //     return response()->json(['error' => 'Akun tidak aktif'], 403); // 403 Forbidden
-        // }
+        if ($user->status == 0) {
+            return response()->json(['error' => 'Akun tidak aktif'], 403);
+        }
+
+        // Set credentials dengan email yang ditemukan
+        $credentials = ['name' => $user->name, 'password' => $password];
 
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
@@ -276,15 +303,17 @@ class ApiController extends Controller
             return response()->json(['error' => 'Could not create token'], 500);
         }
 
+        // Simpan FCM jika ada
         if ($request->fcm) {
             $user->fcm = $request->fcm;
             $user->save();
         }
+
         return response()->json([
             'token'      => $token,
             'expires_in' => auth('api')->factory()->getTTL() * 1,
             'role'       => $user->role,
-            "uid"        => md5($user->id),
+            'uid'        => md5($user->id),
         ]);
     }
 
@@ -764,7 +793,7 @@ class ApiController extends Controller
             }
 
             $user           = new User;
-            $user->name     = $request->name;
+            $user->name     = UserName($request->name);
             $user->email    = $request->email;
             $user->nomor    = $request->hp;
             $user->role     = 2;
@@ -807,6 +836,8 @@ class ApiController extends Controller
 
             $head           = new Head;
             $head->number   = $unit;
+            $head->number   = Head::where('unit', $request->unit)->count() + 1;
+            $head->global   = Head::count() + 1;
             $head->students = $siswa->id;
             $head->unit     = $request->unit;
             $head->kelas    = $request->kelas;
