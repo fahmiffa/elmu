@@ -4,15 +4,6 @@
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
         <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
 
-        {{-- @if ($errors->any())
-            <div class="text-red-500">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif --}}
         <form method="POST" action="{{ route('dashboard.reg.store') }}"
             class="flex flex-col" enctype="multipart/form-data">
             @csrf

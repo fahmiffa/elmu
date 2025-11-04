@@ -12,6 +12,8 @@ Route::prefix('fire')->group(function () {
     Route::post('/logout', [ApiController::class, 'logout']);
     Route::get('/kelas', [ApiController::class, 'kelas']);
     Route::get('/payment', [ApiController::class, 'payment']);
+    Route::post('/forget', [ApiController::class, 'forget']);
+    Route::post('/fcm', [ApiController::class, 'fcm']);
 });
 
 Route::middleware('jwt')->group(function () {

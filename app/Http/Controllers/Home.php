@@ -51,8 +51,6 @@ class Home extends Controller
             if($par == "bul")
             {
                 $order = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
-                $kit   = $order->kit ? $order->kit->price->harga : 0;
-                $harga = $order->reg->product->harga + $kit;
                 $fcm   = $order->reg->murid->users->fcm;
                 $billname = "bulan ".$order->bulan;
             }
@@ -101,10 +99,9 @@ class Home extends Controller
             if ($request->tipe == 0) {
                 $kode = 'trx-m'.date("YmdHis");
                 $order      = Paid::where('id', $request->id)->first();
-                $kit        = $order->kit ? $order->kit->price->harga : 0;
                 $order->mid = $kode;
                 $order->save();
-                $total  = $order->reg->product->harga + $kit;
+                $total  = $order->total;
                 $name   = $order->reg->murid->name;
                 $email  = $order->reg->murid->users->email;
                 $hp     = $order->reg->murid->users->hp;
@@ -340,7 +337,7 @@ class Home extends Controller
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $action = "Form Pendaftaran";
-        $head   = Head::get();
+        $head   = Head::has('murid')->get();
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 

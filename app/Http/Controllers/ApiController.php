@@ -18,17 +18,51 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\Vidoes;
 use App\Rules\NumberWa;
+use App\Services\Firebase\FirebaseMessage;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ApiController extends Controller
 {
+
+    public function fcm(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title'   => 'required',
+            'content' => 'required',
+        ], [
+            'required' => 'Field :attribute wajib diisi.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $message = [
+            "message" => [
+                "to"           => "topics/news",
+                "notification" => [
+                    "title" => $request->title,
+                    "body"  => $request->content,
+                ],
+            ],
+        ];
+
+        return FirebaseMessage::sendTopicBroadcast(
+            'all_users',
+            $request->title,
+            $request->content
+        );
+    }
 
     public function Updata(Request $request, $par)
     {
@@ -797,7 +831,7 @@ class ApiController extends Controller
             $user->email    = $request->email;
             $user->nomor    = $request->hp;
             $user->role     = 2;
-            $user->status   = 0;
+            $user->status   = 1;
             $user->password = bcrypt('murik@');
             $user->save();
 
@@ -864,6 +898,56 @@ class ApiController extends Controller
                 'number'  => env('NumberWa'),
                 'to'      => $to,
                 'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : murik@",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollback();
+            if (isset($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            return response()->json(['error' => $e], 500);
+        }
+    }
+
+    public function forget(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'hp' => ['required', new NumberWa()],
+        ],
+            [
+                'hp.required' => 'Nomor wajib diisi.',
+                'hp.unique'   => 'Nomor sudah terdaftar.',
+            ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+        DB::beginTransaction();
+        try {
+            $user = User::where('nomor', $request->hp)->first();
+            if (! $user) {
+                return response()->json([
+                    'errors' => ['hp' => 'Nomor tidak valid'],
+                ], 400);
+            }
+
+            $pass           = Str::random(5);
+            $user->password = bcrypt($pass);
+            $user->save();
+
+            $to       = '62' . substr($user->nomor, 1);
+            $response = Http::post('https://node.extra.my.id/api/send', [
+                'number'  => env('NumberWa'),
+                'to'      => $to,
+                'message' => "Anda reset Berhasil Password\nPassword akun anda : " . $pass,
             ]);
 
             DB::commit();
