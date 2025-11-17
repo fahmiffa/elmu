@@ -1,5 +1,5 @@
 @extends('base.layout')
-@section('title', 'Dashboard Level')
+@section('title', 'Dashboard Laporan')
 
 @push('styles')
     <style>

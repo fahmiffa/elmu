@@ -22,7 +22,7 @@
                     <h2 class="text-xl font-bold mb-4">Import Data</h2>
                     <div class="p-4">
                         <form method="POST" action="{{ route('dashboard.master.student.store') }}"
-                            enctype="multipart/form-data" x-data="{ isSubmitting: false }"
+                            enctype="multipart/form-data" x-data="{ isSubmitting: false, fileName: '' }"
                             @submit.prevent="isSubmitting = true; $el.submit()">
 
                             @csrf

@@ -31,8 +31,8 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.data.name"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
+                            <td class="px-4 py-2" x-text="row.data.name"></td>
                             <td class="px-4 py-2" x-text="row.email"></td>
                             <td class="px-4 py-2" x-text="row.nomor"></td>
                             <td class="px-4 py-2" x-text="row.roles"></td>
