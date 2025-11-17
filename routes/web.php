@@ -17,6 +17,12 @@ use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
+
+Route::get('/kebijakan-privasi', function () {
+    return view('policy');
+});
+
+
 Route::get('/clear', function () {
     Artisan::call('db:seed');
     Artisan::call('optimize:clear');

@@ -958,9 +958,6 @@ class ApiController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollback();
-            if (isset($path)) {
-                Storage::disk('public')->delete($path);
-            }
             return response()->json(['error' => $e], 500);
         }
     }

@@ -103,7 +103,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div class="mb-4" x-data="currencyInput('{{ old('nominal')}}')">
+                <div class="mb-4" x-data="currencyInput('{{ old('nominal',isset($items) ? $items->kit : 0)}}')">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Nominal</label>
                     <div class="relative">
                         <input type="text" x-model="display" @input="formatInput"
