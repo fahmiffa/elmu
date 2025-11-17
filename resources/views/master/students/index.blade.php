@@ -3,6 +3,10 @@
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
+        @error('import')
+            <div class="text-red-500 my-10">{{ $message }}</div>
+        @enderror
+
         <div class="mb-4 flex justify-between items-center gap-2">
             <input type="text" x-model="search" placeholder="Cari Nama"
                 class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />

@@ -10,6 +10,7 @@ use App\Models\Price;
 use App\Models\Student;
 use App\Models\User;
 use DB;
+use Exception;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -50,11 +51,25 @@ class StudentController extends Controller
             $val  = $data[0];
             array_shift($val);
 
+            dd($val);
             foreach ($val as $row) {
+
+                if (! $row[1] || ! $row[2]) {
+                    throw new Exception('Format nama tidak valid');
+                }
+
+                if (! preg_match('/^08\d+$/', $row[18])) {
+                    throw new Exception('Format nomor hp tidak valid');
+                }
+                
+                $format = 'd/m/Y';
+                $d = DateTime::createFromFormat($format, $date);
+
                 $user           = new User;
-                $user->name     = UserName($row[1]);
+                $user->name     = $row[2] ? UserName($row[2]) : null;
                 $user->role     = 2;
                 $user->status   = 1;
+                $user->nomor    = $row[18] ?? null;
                 $user->password = bcrypt('murik@');
                 $user->save();
 
@@ -91,8 +106,7 @@ class StudentController extends Controller
             return back();
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
-            return back()->withErrors('Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+            return back()->withErrors(['import' => $e->getMessage()]);
         }
     }
 

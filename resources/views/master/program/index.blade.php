@@ -1,6 +1,7 @@
 @extends('base.layout')
 @section('title', 'Program Belajar')
 @section('content')
+
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-between items-center gap-2">
@@ -19,8 +20,8 @@
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
-                        <th class="px-4 py-2">Kode</th>
                         <th class="px-4 py-2">Deskripsi</th>
+                        <th class="px-4 py-2">Staterkit</th>
                         <th class="px-4 py-2">Level</th>
                         <th class="px-4 py-2">Harga</th>
                         <th class="px-4 py-2">Action</th>
@@ -30,17 +31,20 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.name"></td>
-                            <td class="px-4 py-2" x-text="row.kode"></td>
+                            <td class="px-4 py-2 text-nowarp" x-text="`${row.name} (${row.kode})`"></td>
                             <td class="px-3 py-2 text-justify" x-text="row.des"></td>
+                            <td class="px-3 py-2 text-nowarp">
+                                <div x-text="formatNumber(row.kit)"></div>
+                                <div x-text="row.kit_des"></div>
+                            </td>
                             <td class="px-4 py-2 text-center" x-text="row.level"></td>
                             <td class="px-4 py-2">
                                 <table class="w-full">
-                                    <template x-for="(col, index) in row.kelas" :key="index">
-                                        <tr x-show="row.price[index].harga !== ''">
+                                    <template x-for="(col, index) in row.price" :key="index">
+                                        <tr>
                                             <td class="p-1 text-sm text-gray-700 text-right">
-                                                <span x-text="col.name ?? 'Tanpa Kelas'"></span>
-                                                <span x-text="formatNumber(row.price[index].harga)"></span>
+                                                <span x-text="col.class.name ?? 'Tanpa Kelas'"></span>
+                                                <span x-text="formatNumber(col.harga)"></span>
                                             </td>
                                         </tr>
                                     </template>
@@ -59,7 +63,7 @@
                                             <path d="m15 5 4 4" />
                                         </svg>
                                     </a>
-    
+
                                     <form :action="'/dashboard/master/program/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf
@@ -77,7 +81,7 @@
                                             </svg>
                                         </button>
                                     </form>
-                               </div>
+                                </div>
                             </td>
                         </tr>
                     </template>

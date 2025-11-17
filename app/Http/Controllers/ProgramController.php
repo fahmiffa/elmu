@@ -14,7 +14,7 @@ class ProgramController extends Controller
      */
     public function index()
     {
-        $items = Program::with(['kelas', 'price'])->latest()->get();
+        $items = Program::with(['price.class'])->latest()->get();
         return view('master.program.index', compact('items'));
     }
 
@@ -35,7 +35,7 @@ class ProgramController extends Controller
     {
         $request->validate([
             'name'    => 'required',
-            'kit'    => 'required',
+            'nominal' => 'required',
             'kode'    => 'required',
             'des'     => 'required',
             'level'   => 'required',
@@ -110,7 +110,7 @@ class ProgramController extends Controller
             'des'   => 'required',
             'level' => 'required',
             'price' => 'required',
-
+            'nominal' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);

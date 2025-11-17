@@ -69,9 +69,6 @@ class Transaction
                 $fcm   = $order->reg->murid->users->fcm;
                 if($order->bulan)
                 {
-                    $kit   = $order->kit ? $order->kit->price->harga : 0;
-                    $harga = $order->reg->product->harga + $kit;
-    
                     $message = [
                         "message" => [
                             "token"        => $fcm,
@@ -84,7 +81,7 @@ class Transaction
                 }
                 else
                 {
-                     $billname = $order->product->item->name;
+                    $billname = $order->product->item->name;
                     $message = [
                         "message" => [
                             "token"        => $fcm,
