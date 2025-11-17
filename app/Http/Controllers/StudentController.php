@@ -51,61 +51,83 @@ class StudentController extends Controller
             $val  = $data[0];
             array_shift($val);
 
-            dd($val);
             foreach ($val as $row) {
+                if (! empty($row[1]) || ! empty($row[2])) {
 
-                if (! $row[1] || ! $row[2]) {
-                    throw new Exception('Format nama tidak valid');
+                    if (! empty($row[15]) && ! preg_match('/^08\d+$/', $row[15])) {
+                        throw new Exception('Format nomor hp tidak valid');
+                    }
+
+                    $birth = null;
+                    if (! empty($row[4])) {
+                        $d = \DateTime::createFromFormat('d/m/Y', $row[4]);
+                        if ($d && $d->format('d/m/Y') === $row[4]) {
+                            $birth = $d->format('Y-m-d');
+                        }
+                    }
+
+                    $user           = new User;
+                    $user->name     = ! empty($row[2]) ? UserName($row[2]) : null;
+                    $user->role     = 2;
+                    $user->status   = 1;
+                    $user->nomor    = ! empty($row[15]) ? $row[15] : null;
+                    $user->password = bcrypt('murik@');
+                    $user->save();
+
+                    $siswa                        = new Student;
+                    $siswa->user                  = $user->id;
+                    $siswa->place                 = $row[3] ?? null;
+                    $siswa->birth                 = $birth;
+                    $siswa->agama                 = $row[5] ?? null;
+                    $siswa->sekolah_kelas         = $row[6] ?? null;
+                    $siswa->alamat                = $row[8] ?? null;
+                    $siswa->mom                   = $row[10] ?? null;
+                    $siswa->momJob                = $row[13] ?? null;
+                    $siswa->dad                   = $row[11] ?? null;
+                    $siswa->dadJob                = $row[12] ?? null;
+                    $siswa->sosmedChild           = $row[14] ?? null;
+                    $siswa->name                  = $row[2] ?? null;
+                    $siswa->hp_parent             = $row[15] ?? null;
+                    $siswa->gender                = $row[17] ?? null;
+                    $siswa->alamat_sekolah        = $row[18] ?? null;
+                    $siswa->sosmedOther           = $row[19] ?? null;
+                    $siswa->rank                  = $row[20] ?? null;
+                    $siswa->pendidikan_non_formal = $row[21] ?? null;
+                    $siswa->prestasi              = $row[22] ?? null;
+                    $siswa->grade_id              = $request->grade;
+                    $siswa->save();
+
+                    $price = Price::where('kelas', $request->kelas)
+                        ->where('product', $request->program)
+                        ->first();
+
+                    $head           = new Head;
+                    $head->number   = Head::where('unit', $request->unit)->count() + 1;
+                    $head->global   = Head::count() + 1;
+                    $head->students = $siswa->id;
+                    $head->unit     = $request->unit;
+                    $head->kelas    = $request->kelas;
+                    $head->price    = $price->id ?? null;
+                    $head->old      = 1;
+                    $head->program  = $request->program;
+                    $head->payment  = $request->kontrak;
+                    $head->save();
+
+                    $level             = new Level;
+                    $level->student_id = $siswa->id;
+                    $level->head       = $head->id;
+                    $level->level      = $row[16] ?? null; // perbaikan
+                    $level->status     = 1;
+                    $level->save();
+
                 }
-
-                if (! preg_match('/^08\d+$/', $row[18])) {
-                    throw new Exception('Format nomor hp tidak valid');
-                }
-                
-                $format = 'd/m/Y';
-                $d = DateTime::createFromFormat($format, $date);
-
-                $user           = new User;
-                $user->name     = $row[2] ? UserName($row[2]) : null;
-                $user->role     = 2;
-                $user->status   = 1;
-                $user->nomor    = $row[18] ?? null;
-                $user->password = bcrypt('murik@');
-                $user->save();
-
-                $siswa           = new Student;
-                $siswa->user     = $user->id;
-                $siswa->name     = $row[1];
-                $siswa->grade_id = $request->grade;
-                $siswa->save();
-
-                $price = Price::where('kelas', $request->kelas)
-                    ->where('product', $request->program)
-                    ->first();
-
-                $head           = new Head;
-                $head->number   = Head::where('unit', $request->unit)->count() + 1;
-                $head->global   = Head::count() + 1;
-                $head->students = $siswa->id;
-                $head->unit     = $request->unit;
-                $head->kelas    = $request->kelas;
-                $head->price    = $price->id;
-                $head->old      = 1;
-                $head->program  = $request->program;
-                $head->payment  = $request->kontrak;
-                $head->save();
-
-                $level             = new Level;
-                $level->student_id = $siswa->id;
-                $level->head       = $head->id;
-                $level->status     = 1;
-                $level->save();
             }
 
             DB::commit();
             return back();
         } catch (\Exception $e) {
             DB::rollback();
+            dd($e);
             return back()->withErrors(['import' => $e->getMessage()]);
         }
     }

@@ -24,7 +24,6 @@ Route::get('/kebijakan-privasi', function () {
 
 
 Route::get('/clear', function () {
-    Artisan::call('db:seed');
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';
@@ -62,7 +61,6 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::resource('video', VidoesController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
-        // $total = DB::table('head')->where('bulan', $jobId)->count();
         $total = DB::table('head')->count();
         $done  = DB::table('paids')->where('bulan', $jobId)->where('status', 0)->count();
 
