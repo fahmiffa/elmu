@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\AddonController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\Home;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\MateriController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\RaportController;
@@ -17,17 +19,13 @@ use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::get('/kebijakan-privasi', function () {
     return view('policy');
 });
 
-
 Route::get('/payment/{par}', function ($par) {
     return view('payment', compact('par'));
 });
-
-
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
@@ -65,6 +63,8 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::resource('report', ReportController::class);
     Route::resource('raport', RaportController::class);
     Route::resource('video', VidoesController::class);
+    Route::resource('materi', MateriController::class);
+    Route::resource('campaign', CampaignController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         $total = DB::table('head')->count();

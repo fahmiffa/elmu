@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('materis', function (Blueprint $table) {
             $table->id();
-            $table->Biginteger('student_id');
+            $table->Biginteger('user');
             $table->string('file')->nullable();
             $table->timestamps();
         });

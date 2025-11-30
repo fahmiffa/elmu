@@ -1,15 +1,15 @@
 @if (Route::is('dashboard.master.*'))
-    <aside class="bg-white rounded-lg shadow-md overflow-hidden hidden md:block">
+    <aside class="bg-white rounded-lg shadow-md overflow-hidden overflow-y-auto h-screen md:block scroll-show scroll-hidden">
         <div class="bg-orange-600 text-white px-4 py-2 font-bold">MENU</div>
         <ul>
-            @include('base.master');
+            @include('base.master')
         </ul>
     </aside>
 @else
-    <aside class="bg-white rounded-lg shadow-md overflow-hidden hidden md:block">
+    <aside class="bg-white rounded-lg shadow-md overflow-y-auto h-screen hidden md:block scroll-show scroll-hidden">
         <div class="bg-orange-600 text-white px-4 py-2 font-bold">MENU</div>
         <ul>
-            @include('base.home');
+            @include('base.home')
         </ul>
     </aside>
 @endif
@@ -32,9 +32,9 @@
     </div>
     <nav class="p-4 space-y-2">
         @if (Route::is('dashboard.master.*'))
-            @include('base.master');
+            @include('base.master')
         @else
-            @include('base.home');
+            @include('base.home')
         @endif
     </nav>
 </aside>

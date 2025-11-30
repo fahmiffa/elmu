@@ -1,102 +1,103 @@
 @extends('base.layout')
 @section('title', 'Dashboard')
+
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" 
-         x-data="{
-            role: '{{ old('role', $items->role ?? '') }}',
-            error: '',
-            validateFile(event) {
-                this.error = '';
-                const file = event.target.files[0];
-                if (!file) return;
+    <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="videoForm('{{ old('role', $items->role ?? '') }}')">
 
-                // Validasi ukuran maksimal 2MB
-                if (file.size > 2 * 1024 * 1024) {
-                    this.error = 'File maksimal 2MB';
-                    event.target.value = '';
-                    return;
-                }
-
-                // Validasi ekstensi mp4
-                const allowedExtensions = ['mp4'];
-                const fileExtension = file.name.split('.').pop().toLowerCase();
-                if (!allowedExtensions.includes(fileExtension)) {
-                    this.error = 'Format file harus MP4';
-                    event.target.value = '';
-                    return;
-                }
-
-                // Kalau valid, submit form
-                this.$el.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }));
-            }
-         }"
-    >
-        <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
-        <form method="POST"
-            action="{{ isset($items) ? route('dashboard.video.update', ['video' => $items->id]) : route('dashboard.video.store') }}"
-            class="flex flex-col" enctype="multipart/form-data"
-            @submit.prevent="if(!error) $el.submit()"
-        >
-            @isset($items)
-                @method('PUT')
-            @endisset
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
-                    <div class="relative">
-                        <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
-                            class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                    </div>
-                    @error('name')
-                        <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div class="mb-4" >
-                    <label class="block mb-2 font-semibold" for="video">Video :</label>
-                    <input type="file" id="video" name="video" accept="video/mp4" required
-                        class="border border-gray-300  ring-0  px-3 py-2 focus:outline-[#FF9966] rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FF9966]"
-                        x-on:change="validateFile($event)"
-                    >
-                    @error('video')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-
-                    <template x-if="error">
-                        <p class="text-red-600 text-sm mt-1" x-text="error"></p>
-                    </template>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Status</label>
-                    <div class="flex items-center">
-                        <input type="radio" id="murid" name="role" value="2" x-model="role" class="mr-2">
-                        <label for="murid" class="mr-4">Murid</label>
-                        <input type="radio" id="guru" name="role" value="3" x-model="role" class="mr-2">
-                        <label for="guru">Guru</label>
-                    </div>
-                    @error('role')
-                        <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div class="mb-4" x-show="role === '2'">
-                    <label for="murid">Pilih Murid</label>
-                    <select x-data="dropdownSelect" name="murid" class="my-3">
-                        @foreach ($student as $item)
-                            <option value="{{ $item->user }}">{{ $item->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                @error('murid')
-                    <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                @enderror
+            <!-- Notifikasi sukses -->
+            <div x-show="success" x-transition class="mb-4 p-3 rounded bg-green-500 text-white text-sm">
+                Berhasil ditambahkan! Mengalihkan...
             </div>
 
-            <div class="flex items-center">
-                <button type="submit"
-                    class="cursor-pointer bg-orange-500 text-sm hover:bg-orange-700 text-white font-bold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
+
+
+            <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
+
+            <form method="POST"
+                action="{{ isset($items) ? route('dashboard.video.update', $items->id) : route('dashboard.video.store') }}"
+                enctype="multipart/form-data" class="flex flex-col" @submit.prevent="upload">
+
+                @csrf
+                @isset($items)
+                    @method('PUT')
+                @endisset
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                    {{-- Nama --}}
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
+                        <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
+                            class="border border-gray-300 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+
+                        @error('name')
+                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Upload Video --}}
+                    <div class="mb-4">
+                        <label class="block mb-2 font-semibold">Video :</label>
+
+                        <input type="file" name="video" accept="video/mp4" required @change="validateFile"
+                            class="border border-gray-300 px-3 py-2 rounded cursor-pointer focus:ring-2 focus:ring-[#FF9966]">
+
+                        {{-- Progress Bar --}}
+                        <div x-show="uploading" class="mt-2 w-full bg-gray-200 rounded overflow-hidden">
+                            <div class="bg-indigo-600 text-white text-xs text-center py-1" :style="`width: ${progress}%`"
+                                x-text="progress + '%'">
+                            </div>
+                        </div>
+
+                        {{-- Error --}}
+                        <p x-show="error" class="text-red-600 text-sm mt-1" x-text="error"></p>
+
+                        @error('video')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Pilihan Role --}}
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Status</label>
+
+                        <div class="flex items-center">
+                            <label class="mr-4">
+                                <input type="radio" name="role" value="2" x-model="role">
+                                Murid
+                            </label>
+
+                            <label>
+                                <input type="radio" name="role" value="3" x-model="role">
+                                Guru
+                            </label>
+                        </div>
+
+                        @error('role')
+                            <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Pilih murid --}}
+                    <div class="mb-4" x-show="role === '2'">
+                        <label>Pilih Murid</label>
+                        <select name="murid" x-data="dropdownSelect" class="my-3">
+                            @foreach ($student as $item)
+                                <option value="{{ $item->user }}">{{ $item->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Error murid --}}
+                    @error('murid')
+                        <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <button type="submit" :disabled="uploading"
+                    class="bg-orange-500 text-white text-sm font-bold py-2 px-3 w-25 rounded-2xl hover:bg-orange-700">
                     Simpan
                 </button>
-            </div>
-        </form>
-    </div>
-@endsection
+            </form>
+        </div>
+    @endsection

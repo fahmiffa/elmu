@@ -65,6 +65,24 @@
         </span> Absensi
     </li>
 </a>
+<a href="{{ route('dashboard.materi.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.materi.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-notepad-text-icon lucide-notepad-text">
+                <path d="M8 2v4" />
+                <path d="M12 2v4" />
+                <path d="M16 2v4" />
+                <rect width="16" height="18" x="4" y="4" rx="2" />
+                <path d="M8 10h6" />
+                <path d="M8 14h8" />
+                <path d="M8 18h5" />
+            </svg>
+        </span> Materi
+    </li>
+</a>
 <a href="{{ route('dashboard.level') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.level') ? 'bg-orange-100' : null }}">
@@ -100,9 +118,9 @@
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.raport.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-album-icon lucide-album">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-album-icon lucide-album">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                 <polyline points="11 3 11 11 14 8 17 11 17 3" />
             </svg>
@@ -123,5 +141,20 @@
                 <path d="M12 7v4" />
             </svg>
         </span> Laporan
+    </li>
+</a>
+<a href="{{ route('dashboard.campaign.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.campaign.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-megaphone-icon lucide-megaphone">
+                <path
+                    d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+                <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" />
+                <path d="M8 6v8" />
+            </svg>
+        </span> Pengumuman
     </li>
 </a>

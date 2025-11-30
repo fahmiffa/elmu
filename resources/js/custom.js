@@ -1,5 +1,219 @@
 import md5 from "blueimp-md5";
 
+export function trixEditor() {
+    return {
+        content: "",
+        updateTimer: null,
+        eventHandlers: [],
+
+        init() {
+            const trixEditorElement = this.$refs.trix;
+            const inputElement = this.$refs.input;
+
+            if (!trixEditorElement || !inputElement) {
+                console.error("Trix editor or input element not found");
+                return;
+            }
+
+            // Debounced update function
+            const updateContent = () => {
+                if (this.updateTimer) clearTimeout(this.updateTimer);
+
+                this.updateTimer = setTimeout(() => {
+                    if (trixEditorElement && inputElement) {
+                        inputElement.value = trixEditorElement.value;
+                        this.content = trixEditorElement.value;
+                    }
+                }, 50);
+            };
+
+            // Setup event listeners
+            const setupListeners = () => {
+                const handlers = [
+                    { event: "trix-change", handler: updateContent },
+                    {
+                        event: "trix-initialize",
+                        handler: () => console.log("Trix initialized"),
+                    },
+                ];
+
+                handlers.forEach(({ event, handler }) => {
+                    trixEditorElement.addEventListener(event, handler);
+                    this.eventHandlers.push({
+                        element: trixEditorElement,
+                        event,
+                        handler,
+                    });
+                });
+            };
+
+            setupListeners();
+        },
+
+        showContent() {
+            if (this.$refs.trix) {
+                this.content = this.$refs.trix.value;
+            }
+        },
+
+        clear() {
+            if (this.$refs.trix && this.$refs.trix.editor) {
+                this.$refs.trix.editor.loadHTML("");
+                this.content = "";
+            }
+        },
+
+        destroy() {
+            // Cleanup event listeners
+            this.eventHandlers.forEach(({ element, event, handler }) => {
+                element.removeEventListener(event, handler);
+            });
+            this.eventHandlers = [];
+
+            if (this.updateTimer) {
+                clearTimeout(this.updateTimer);
+            }
+        },
+    };
+}
+
+export function videoForm(initialRole = "") {
+    return {
+        role: initialRole,
+        error: "",
+        progress: 0,
+        uploading: false,
+        success: false, // 🔥 notifikasi sukses
+
+        validateFile(event) {
+            this.error = "";
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 4 * 1024 * 1024) {
+                this.error = "File maksimal 4MB";
+                event.target.value = "";
+                return;
+            }
+
+            const ext = file.name.split(".").pop().toLowerCase();
+            if (ext !== "mp4") {
+                this.error = "Format file harus MP4";
+                event.target.value = "";
+                return;
+            }
+        },
+
+        upload(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            this.uploading = true;
+            this.progress = 0;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open(form.method, form.action);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    this.progress = Math.round((e.loaded / e.total) * 100);
+                }
+            };
+
+            xhr.onload = () => {
+                this.uploading = false;
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    this.success = true;
+
+                    // 🔥 Tampilkan notifikasi 1.5 detik, lalu redirect
+                    setTimeout(() => {
+                        window.location.href = "/dashboard/video";
+                    }, 1500);
+                } else {
+                    this.error = "Upload gagal.";
+                }
+            };
+
+            xhr.onerror = () => {
+                this.uploading = false;
+                this.error = "Upload error.";
+            };
+
+            xhr.send(formData);
+        },
+    };
+}
+
+export function materiForm({ initialRole }) {
+    return {
+        role: initialRole,
+        error: "",
+        progress: 0,
+        uploading: false,
+        success: false,
+
+        validateFile(event) {
+            this.error = "";
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 4 * 1024 * 1024) {
+                this.error = "File maksimal 4MB";
+                event.target.value = "";
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+                this.error = "Format file harus PDF";
+                event.target.value = "";
+                return;
+            }
+        },
+
+        upload(e) {
+            const form = e.target.closest("form");
+            const formData = new FormData(form);
+
+            this.uploading = true;
+            this.progress = 0;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open(form.method, form.action);
+
+            xhr.upload.addEventListener("progress", (evt) => {
+                if (evt.lengthComputable) {
+                    this.progress = Math.round((evt.loaded / evt.total) * 100);
+                }
+            });
+
+            xhr.onload = () => {
+                this.uploading = false;
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    this.success = true;
+
+                    // 🔥 Tampilkan notifikasi 1.5 detik, lalu redirect
+                    setTimeout(() => {
+                        window.location.href = "/dashboard/materi";
+                    }, 1500);
+                } else {
+                    this.error = "Upload gagal.";
+                }
+            };
+
+            xhr.onerror = () => {
+                this.uploading = false;
+                this.error = "Terjadi error saat upload.";
+            };
+
+            xhr.send(formData);
+        },
+    };
+}
+
 export const layout = () => {
     return {
         sidebarOpen: true,
@@ -408,7 +622,7 @@ export function paket(data = []) {
         fields: data,
         addField() {
             if (!this.selectedId) return;
-            if (this.fields.find(f => f.id == this.selectedId)) {
+            if (this.fields.find((f) => f.id == this.selectedId)) {
                 return;
             }
             this.fields.push({
@@ -425,23 +639,25 @@ export function paket(data = []) {
             return select.options[select.selectedIndex].text;
         },
         formatCurrency(value) {
-            const numberString = value.replace(/[^,\d]/g, '');
-            const split = numberString.split(',');
+            const numberString = value.replace(/[^,\d]/g, "");
+            const split = numberString.split(",");
             let sisa = split[0].length % 3;
             let rupiah = split[0].substr(0, sisa);
             const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
             if (ribuan) {
-                const separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
+                const separator = sisa ? "." : "";
+                rupiah += separator + ribuan.join(".");
             }
 
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            rupiah = split[1] != undefined ? rupiah + "," + split[1] : rupiah;
             return rupiah;
         },
         formatFieldValue(index) {
-            this.fields[index].value = this.formatCurrency(this.fields[index].value);
-        }
+            this.fields[index].value = this.formatCurrency(
+                this.fields[index].value
+            );
+        },
     };
 }
 

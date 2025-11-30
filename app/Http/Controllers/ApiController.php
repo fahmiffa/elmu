@@ -1,10 +1,12 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Campaign;
 use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Level;
+use App\Models\Materi;
 use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
@@ -183,7 +185,7 @@ class ApiController extends Controller
         if ($role == 2) {
             $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
                 ->map(function ($q) {
-                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid'=> $q->murid->name];
+                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid' => $q->murid->name];
                 });
 
         } else {
@@ -191,10 +193,23 @@ class ApiController extends Controller
             $murid = Student::whereIn("id", $murid)->pluck("user")->toArray();
             $item  = Raport::whereIn('student_id', $murid)->with('murid')->latest()->get()
                 ->map(function ($q) {
-                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid'=> $q->murid->name];
+                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid' => $q->murid->name];
                 });
         }
         return response()->json($item);
+    }
+
+    public function campaign()
+    {
+        $items = Campaign::latest()->get();
+        return response()->json($items);
+    }
+
+    public function materi()
+    {
+        $id    = JWTAuth::user()->id;
+        $items = Materi::where('user', $id)->latest()->get();
+        return response()->json($items);
     }
 
     public function payment()

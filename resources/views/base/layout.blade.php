@@ -10,6 +10,27 @@
     <title>@yield('title', 'Dashboard')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
+
+    <style>
+        /* Scrollbar disembunyikan */
+        .scroll-hidden::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        /* Saat hover atau focus, tampilkan scrollbar */
+        .scroll-show:hover::-webkit-scrollbar,
+        .scroll-show:focus::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-show:hover::-webkit-scrollbar-thumb,
+        .scroll-show:focus::-webkit-scrollbar-thumb {
+            background: #c4c4c4;
+            border-radius: 10px;
+        }
+    </style>
+
 </head>
 
 <body class="bg-gray-100" x-data="layout()" x-init="init()">
@@ -35,7 +56,7 @@
         <!-- HEADER -->
         @include('base.header')
         <!-- MAIN CONTENT -->
-        <main class="max-w-7xl mx-auto mt-6 px-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <main class="max-w-7xl mx-auto mt-6 px-6 grid grid-cols-1 md:grid-cols-4 gap-6 py-2">
 
             <!-- SIDEBAR -->
             @include('base.side')

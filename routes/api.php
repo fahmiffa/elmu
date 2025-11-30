@@ -8,7 +8,7 @@ Route::post('/webhook', [Home::class, 'midtransHook']);
 Route::post('/status', function () {
     return response()->json([
         'status' => false,
-    ],200);
+    ], 200);
 });
 
 Route::prefix('fire')->group(function () {
@@ -25,6 +25,8 @@ Route::prefix('fire')->group(function () {
 Route::middleware('jwt')->group(function () {
     Route::post('/pay', [Home::class, 'midtransPay']);
     Route::get('/data', [ApiController::class, 'data']);
+    Route::get('/materi', [ApiController::class, 'materi']);
+    Route::get('/campaign', [ApiController::class, 'campaign']);
     Route::get('/miska', [ApiController::class, 'miska']);
     Route::post('/data/{par}', [ApiController::class, 'Updata']);
     Route::get('/program', [ApiController::class, 'program']);
