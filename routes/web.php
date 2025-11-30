@@ -23,6 +23,12 @@ Route::get('/kebijakan-privasi', function () {
 });
 
 
+Route::get('/payment/{par}', function ($par) {
+    return view('payment', compact('par'));
+});
+
+
+
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
     File::put(storage_path('logs/laravel.log'), '');

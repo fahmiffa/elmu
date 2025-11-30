@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    protected $appends = ['age', 'absen'];
+    protected $appends = ['age', 'absen','genders'];
     protected $hidden  = ['created_at', 'updated_at'];
 
     public function reg()
@@ -17,6 +17,20 @@ class Student extends Model
     public function getageAttribute()
     {
         return Carbon::parse($this->birth)->age . ' Tahun';
+    }
+
+    public function getgendersAttribute()
+    {
+        if($this->gender == 1)
+        {
+            return "Laki-laki";
+        }
+
+        if($this->gender == 2)
+        {
+            return "Perempuan";
+        }
+
     }
     
     public function users()

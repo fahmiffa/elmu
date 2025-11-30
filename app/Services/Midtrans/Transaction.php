@@ -55,8 +55,27 @@ class Transaction
 
         if ($data['transaction_status'] === 'pending') {
             if ($order) {
-                $order->status = 2;
-                $order->via    = json_encode($data['va_numbers']);
+                if ($data['payment_type'] === "bank_transfer") {
+                    $order->via    = json_encode($data['va_numbers']);
+                    $order->status = 2;
+                }
+
+                if ($data['payment_type'] === "echannel") {
+                    $order->via = json_encode([
+                        'bank'      => "Mandiri",
+                        'va_number' => $data['bill_key'],
+                        'code'      => $data['biller_code'],
+                    ]);
+                    $order->status = 2;
+                }
+
+                $order->save();
+            }
+        }
+
+        if ($data['transaction_status'] === 'expire') {
+            if ($order) {
+                $order->status = 3;
                 $order->save();
             }
         }

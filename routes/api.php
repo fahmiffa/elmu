@@ -5,6 +5,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/webhook', [Home::class, 'midtransHook']);
 
+Route::post('/status', function () {
+    return response()->json([
+        'status' => false,
+    ],200);
+});
+
 Route::prefix('fire')->group(function () {
     Route::post('/reg', [ApiController::class, 'reg']);
     Route::post('/refresh', [ApiController::class, 'refresh']);
@@ -19,6 +25,7 @@ Route::prefix('fire')->group(function () {
 Route::middleware('jwt')->group(function () {
     Route::post('/pay', [Home::class, 'midtransPay']);
     Route::get('/data', [ApiController::class, 'data']);
+    Route::get('/miska', [ApiController::class, 'miska']);
     Route::post('/data/{par}', [ApiController::class, 'Updata']);
     Route::get('/program', [ApiController::class, 'program']);
     Route::get('/unit', [ApiController::class, 'unit']);

@@ -24,8 +24,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -172,17 +172,28 @@ class ApiController extends Controller
     public function report()
     {
         $id   = JWTAuth::user()->id;
-        $item = Report::select('reason', 'reply')->where('user', $id)->latest()->get();
+        $item = Report::select('reason', 'reply')->where('user', $id)->get();
         return response()->json($item);
     }
 
     public function raport()
     {
         $id   = JWTAuth::user()->id;
-        $item = Raport::select('name', 'file')->where('student_id', $id)->latest()->get()
-            ->map(function ($q) {
-                return ['name' => $q->name, "url" => asset('storage/' . $q->file)];
-            });
+        $role = JWTAuth::user()->role;
+        if ($role == 2) {
+            $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
+                ->map(function ($q) {
+                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid'=> $q->murid->name];
+                });
+
+        } else {
+            $murid = JWTAuth::user()->data->murid->pluck("students")->toArray();
+            $murid = Student::whereIn("id", $murid)->pluck("user")->toArray();
+            $item  = Raport::whereIn('student_id', $murid)->with('murid')->latest()->get()
+                ->map(function ($q) {
+                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid'=> $q->murid->name];
+                });
+        }
         return response()->json($item);
     }
 
@@ -274,6 +285,24 @@ class ApiController extends Controller
 
         $da = $items->map(function ($q) {
             return ['name' => $q->name, 'url' => asset('storage/' . $q->pile)];
+        });
+        return response()->json($da);
+    }
+
+    public function miska()
+    {
+        $role = JWTAuth::user()->role;
+        $id   = JWTAuth::user()->id;
+        if ($role == 3) {
+            $items = Teach::where('user', $id)->first();
+            $teach = Teach::where("unit_id", $items->unit_id)->get();
+        } else {
+            $items = JWTAuth::user()->data->reg->where('do', 0)->first();
+            $teach = Teach::where("unit_id", $items->unit)->get();
+        }
+
+        $da = $teach->map(function ($q) {
+            return ['name' => $q->name, 'url' => $q->img ? asset('storage/' . $q->img) : asset("women.png"), 'hp' => $q->hp];
         });
         return response()->json($da);
     }
@@ -377,9 +406,30 @@ class ApiController extends Controller
 
     public function program()
     {
-        $id       = JWTAuth::user()->id;
+        $role     = JWTAuth::user()->role;
         $products = Program::select('id', 'name', 'des', 'level')->get();
-        return response()->json(['items' => $products]);
+        if ($role == 3) {
+            $products = $products->map(function ($item) {
+                $item->aktif = 0;
+                return $item;
+            });
+            return response()->json([
+                'items' => $products,
+            ]);
+
+        } else {
+            $items = JWTAuth::user()->data->reg->map(function ($q) {
+                return $q->programs;
+            });
+            $programIds = $items->pluck("id")->toArray();
+            $products   = $products->map(function ($item) use ($programIds) {
+                $item->aktif = in_array($item->id, $programIds) ? 1 : 0;
+                return $item;
+            });
+        }
+        return response()->json([
+            'items' => $products,
+        ]);
     }
 
     public function unit()
@@ -546,6 +596,7 @@ class ApiController extends Controller
 
         return response()->json(['status' => true, "data" => $request->new], 200);
     }
+
     public function Uplevel(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -894,8 +945,8 @@ class ApiController extends Controller
             $level->save();
 
             $to       = '62' . substr($user->nomor, 1);
-            $response = Http::post('https://node.extra.my.id/api/send', [
-                'number'  => env('NumberWa'),
+            $response = Http::post(env('URL_WA') . '/send', [
+                'number'  => env('NUMBER_WA'),
                 'to'      => $to,
                 'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : murik@",
             ]);
@@ -923,7 +974,6 @@ class ApiController extends Controller
         ],
             [
                 'hp.required' => 'Nomor wajib diisi.',
-                'hp.unique'   => 'Nomor sudah terdaftar.',
             ]);
         if ($validator->fails()) {
             return response()->json([
@@ -939,22 +989,28 @@ class ApiController extends Controller
                 ], 400);
             }
 
-            $pass           = Str::random(5);
+            $pass           = random_int(10000, 99999);
             $user->password = bcrypt($pass);
             $user->save();
 
             $to       = '62' . substr($user->nomor, 1);
-            $response = Http::post('https://node.extra.my.id/api/send', [
-                'number'  => env('NumberWa'),
+            $response = Http::post(env('URL_WA') . '/send', [
+                'number'  => env('NUMBER_WA'),
                 'to'      => $to,
                 'message' => "Anda reset Berhasil Password\nPassword akun anda : " . $pass,
             ]);
 
-            DB::commit();
-
-            return response()->json([
-                'status' => true,
-            ]);
+            if ($response->status() != 200) {
+                Log::error($response->json());
+                return response()->json([
+                    'errors' => ['hp' => 'Server Sibuk'],
+                ], 400);
+            } else {
+                DB::commit();
+                return response()->json([
+                    'status' => true,
+                ]);
+            }
 
         } catch (\Throwable $e) {
             DB::rollback();

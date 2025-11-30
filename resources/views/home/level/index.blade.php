@@ -52,35 +52,55 @@
                 </tbody>
             </table>
 
-            <div x-show="modalOpen" x-cloak style="background-color: rgba(0,0,0,0.5);"
-                class="fixed inset-0 flex items-center justify-center z-50"
-                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-                <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative" @click.away="closeModal()">
-                    <h2 class="text-sm font-bold mb-4">Upgrade Level</h2>
-                    <form method="POST" :action="'/dashboard/layanan/' + md5Component(selectedItem?.student_id) + ''">
-                        @csrf
-                        <p class="text-sm mb-4">Note: <span x-text="selectedItem?.note"></span></p>
-                        <input type="hidden" name="level" :value="selectedItem?.id">
-                        <div class="mb-4">
-                            <select name="book" required
-                                class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                                <option value="">Pilih Buku</option>
-                                @foreach ($lay as $val)
-                                    <option value="{{ $val->id }}">{{ $val->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <button
-                            class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
-                            Upgrade
-                        </button>
-                    </form>
+        <div x-show="modalOpen" x-cloak 
+            x-data="{ selesai: false }"
+            style="background-color: rgba(0,0,0,0.5);"
+            class="fixed inset-0 flex items-center justify-center z-50"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0">
+
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative" @click.away="closeModal()">
+                <h2 class="text-sm font-bold mb-4">Upgrade Level</h2>
+                <form method="POST" :action="'/dashboard/layanan/' + md5Component(selectedItem?.student_id)">
+                    @csrf
+
+                    <p class="text-sm mb-4">Note: <span x-text="selectedItem?.note"></span></p>
+
+                    <input type="hidden" name="level" :value="selectedItem?.id">
+
+                    <!-- CHECKBOX SELESAI -->
+                    <div class="text-red-500 text-xs font-semibold">Silahkan Ceklist, Jika siswa/murid sudah menyelesaikan program belajar </div>
+                    <div class="mb-3 flex items-center gap-2">
+                        <input type="checkbox" name="done" id="selesai" x-model="selesai" class="h-4 w-4">
+                        <label for="selesai" class="text-sm">Selesai</label>
+                    </div>
+
+
+                    <!-- SELECT BOOK -->
+                    <div class="mb-4">
+                        <select name="book"
+                            :required="!selesai"
+                            class="block border border-gray-300 ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                            <option value="">Pilih Buku</option>
+                            @foreach ($lay as $val)
+                                <option value="{{ $val->id }}">{{ $val->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <button
-                        class="mt-6 bg-gray-800 text-white text-xs cursor-pointer px-3 py-2 rounded-2xl hover:bg-gray-900 float-end"
-                        @click="closeModal()" type="button">Close</button>
-                </div>
+                        class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none">
+                        Upgrade
+                    </button>
+                </form>
+                <button class="mt-6 bg-gray-800 text-white text-xs cursor-pointer px-3 py-2 rounded-2xl hover:bg-gray-900 float-end"
+                    @click="closeModal()" type="button">
+                    Close
+                </button>
             </div>
         </div>
 

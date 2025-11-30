@@ -144,6 +144,7 @@ class Home extends Controller
                     'email'      => $email,
                     'phone'      => $hp,
                 ],
+                "callbacks"=> []
             ];
 
             return Transaction::create($params);
@@ -190,17 +191,31 @@ class Home extends Controller
     public function layanan(Request $request, $id)
     {
         $head           = Head::where(DB::raw('md5(students)'), $id)->firstOrFail();
-        $order          = new Order;
-        $order->head    = $head->id;
-        $order->student = $head->students;
-        $order->price   = $request->book;
-        $order->save();
-
-        Level::where('id', $request->level)->update(['status' => 1]);
+        $done = $request->has("done");
         $fcm =  $head->murid->users->fcm;
-
-        if($fcm)
+        if($done)
         {
+            $message = [
+                "message" => [
+                    "token"        => $fcm,
+                    "notification" => [
+                        "title" => "informasi",
+                        "body"  => "Anda telah menyelesaiakan program Belajar ".$head->paket->name,
+                    ],
+                ],
+            ];    
+
+            $head->done = 1;
+            $head->save();
+        }
+        else
+            {
+            $order          = new Order;
+            $order->head    = $head->id;
+            $order->student = $head->students;
+            $order->price   = $request->book;
+            $order->save();
+    
             $message = [
                 "message" => [
                     "token"        => $fcm,
@@ -210,6 +225,13 @@ class Home extends Controller
                     ],
                 ],
             ];    
+
+        }
+
+        Level::where('id', $request->level)->update(['status' => 1]);
+
+        if($fcm)
+        {
             FirebaseMessage::sendFCMMessage($message);
         }
 
@@ -226,7 +248,7 @@ class Home extends Controller
         // ->whereHas('kontrak',function($q){
         //     $q->where('month',1);
         // })
-            ->get();
+        ->where("done",0)->get();
 
         foreach ($head as $val) {
             $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
