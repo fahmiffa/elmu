@@ -33,11 +33,11 @@ Route::get('/clear', function () {
     return 'Log cleared';
 });
 
+Route::get('/video/{id}', [AuthController::class, 'video']);
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'loginForm']);
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/video/{id}', [AuthController::class, 'video']);
 });
 
 Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(function () {

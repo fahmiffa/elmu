@@ -1,5 +1,5 @@
 @extends('base.layout')
-@section('title', 'Dashboard Video')
+@section('title', 'Dashboard Pengumuman')
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 

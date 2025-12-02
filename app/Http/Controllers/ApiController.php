@@ -160,12 +160,24 @@ class ApiController extends Controller
             ], 400);
         }
 
+        $today    = now()->toDateString();
+
+
         $user = $request->user;
         for ($i = 0; $i < count($user); $i++) {
-            $present                    = new StudentPresent;
-            $present->student_id        = $user[$i];
-            $present->unit_schedules_id = $request->jadwal;
-            $present->save();
+
+            $alreadyExists = StudentPresent::where('student_id', $user[$i])
+                                            ->whereDate('created_at', $today)
+                                            ->where('unit_schedules_id', $request->jadwal)
+                                            ->exists();
+            if(!$alreadyExists)
+            {
+                $present                    = new StudentPresent;
+                $present->student_id        = $user[$i];
+                $present->unit_schedules_id = $request->jadwal;
+                $present->save();
+            }
+
         }
 
         return response()->json(['status' => true], 200);
@@ -251,7 +263,7 @@ class ApiController extends Controller
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
             $da        = Teach::where('user', $id)->first();
-            $items     = Head::where('unit', $da->unit_id)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
+            $items     = Head::where('unit', $da->unit_id)->where('done',0)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
             $allJadwal = collect();
             $allMurid  = collect();
 
@@ -529,49 +541,53 @@ class ApiController extends Controller
             $guru     = Teach::where('user', $id)->first();
             $unit     = $guru->unit_id;
             $students = $res->whereHas('reg.units', function ($q) use ($unit) {
-                $q->where('unit', $unit);
+                $q->where('unit', $unit)->where('done',0);
             })->get();
 
             $grouped = [];
             foreach ($students as $student) {
                 foreach ($student->reg as $reg) {
-                    $programName = $reg->programs->name ?? 'Unknown Program';
-                    $className   = $reg->units->kelas[0]->name ?? 'Unknown Class';
-
-                    $key = $programName . '|' . $className;
-
-                    if (! isset($grouped[$key])) {
-                        $grouped[$key] = [
-                            'program'  => $programName,
-                            'class'    => $className,
-                            'students' => [],
+                    if($reg->done == 0)
+                    {
+                        $programName = $reg->programs->name ?? 'Unknown Program';
+                        $className   = $reg->units->kelas[0]->name ?? 'Unknown Class';
+    
+                        $key = $programName . '|' . $className;
+    
+                        if (! isset($grouped[$key])) {
+                            $grouped[$key] = [
+                                'program'  => $programName,
+                                'class'    => $className,
+                                'students' => [],
+                            ];
+                        }
+    
+                        $bills = collect($reg->bill)->map(function ($bill) use ($reg) {
+                            return [
+                                'total'      => $bill->total,
+                                'price'      => (int) $reg->product->harga,
+                                'status'     => $bill->status,
+                                "keterangan" => "Tagihan Bulan " . $bill->bulan,
+                                "kit"        => $bill->kit,
+                            ];
+                        })->toArray();
+    
+                        $lay = collect($reg->lay)->map(function ($a) {
+                            return [
+                                'price'      => (int) $a->product->harga,
+                                'total'      => (int) $a->product->harga,
+                                "keterangan" => $a->product->item->name,
+                                "kit"        => null,
+                                "status"     => $a->status,
+                            ];
+                        })->toArray();
+    
+                        $grouped[$key]['students'][] = [
+                            'name'  => $student->name,
+                            'bills' => array_merge($bills, $lay),
                         ];
+
                     }
-
-                    $bills = collect($reg->bill)->map(function ($bill) use ($reg) {
-                        return [
-                            'total'      => $bill->total,
-                            'price'      => (int) $reg->product->harga,
-                            'status'     => $bill->status,
-                            "keterangan" => "Tagihan Bulan " . $bill->bulan,
-                            "kit"        => $bill->kit,
-                        ];
-                    })->toArray();
-
-                    $lay = collect($reg->lay)->map(function ($a) {
-                        return [
-                            'price'      => (int) $a->product->harga,
-                            'total'      => (int) $a->product->harga,
-                            "keterangan" => $a->product->item->name,
-                            "kit"        => null,
-                            "status"     => $a->status,
-                        ];
-                    })->toArray();
-
-                    $grouped[$key]['students'][] = [
-                        'name'  => $student->name,
-                        'bills' => array_merge($bills, $lay),
-                    ];
                 }
             }
             return response()->json(array_values($grouped));
@@ -757,30 +773,33 @@ class ApiController extends Controller
         $bill          = [];
         $hasStatusZero = false;
 
-        foreach ($student->reg as $val) {
-
-            foreach ($val->bill as $a) {
-                if ($a->status != 1) {
-                    $hasStatusZero = true;
-                    $bill[]        = [
-                        'total'      => (int) $a->total,
-                        "keterangan" => "Anda punya tagihan bulan " . $a->bulan,
-                        "status"     => $a->status,
-                    ];
+        if($student)
+        {
+            foreach ($student->reg as $val) {
+    
+                foreach ($val->bill as $a) {
+                    if ($a->status != 1) {
+                        $hasStatusZero = true;
+                        $bill[]        = [
+                            'total'      => (int) $a->total,
+                            "keterangan" => "Anda punya tagihan bulan " . $a->bulan,
+                            "status"     => $a->status,
+                        ];
+                    }
                 }
-            }
-
-            foreach ($val->lay as $a) {
-                if ($a->status != 1) {
-                    $hasStatusZero = true;
-                    $bill[]        = [
-                        'total'      => (int) $a->product->harga,
-                        "keterangan" => "Anda punya tagihan " . $a->product->item->name,
-                        "status"     => $a->status,
-                    ];
+    
+                foreach ($val->lay as $a) {
+                    if ($a->status != 1) {
+                        $hasStatusZero = true;
+                        $bill[]        = [
+                            'total'      => (int) $a->product->harga,
+                            "keterangan" => "Anda punya tagihan " . $a->product->item->name,
+                            "status"     => $a->status,
+                        ];
+                    }
                 }
+    
             }
-
         }
 
         if (! $hasStatusZero) {

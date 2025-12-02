@@ -1,5 +1,5 @@
 @if (Route::is('dashboard.master.*'))
-    <aside class="bg-white rounded-lg shadow-md overflow-hidden overflow-y-auto h-screen md:block scroll-show scroll-hidden">
+    <aside class="bg-white rounded-lg shadow-md overflow-y-auto h-screen hidden md:block scroll-show scroll-hidden">
         <div class="bg-orange-600 text-white px-4 py-2 font-bold">MENU</div>
         <ul>
             @include('base.master')

@@ -16,12 +16,13 @@ class AuthController extends Controller
 
     public function video($id)
     {
-        $user = User::where(DB::raw('md5(id)'), $id)->first();
-        if ($user->role == 3) {
-            $items = Vidoes::where('to', 3)->get();
-        } else {
-            $items = Vidoes::where('user', $id)->get();
-        }
+        $items = null;
+        // $user = User::where(DB::raw('md5(id)'), $id)->first();
+        // if ($user->role == 3) {
+        //     $items = Vidoes::where('to', 3)->get();
+        // } else {
+        //     $items = Vidoes::where('user', $id)->get();
+        // }
 
         return view('auth.video',compact('items'));
     }

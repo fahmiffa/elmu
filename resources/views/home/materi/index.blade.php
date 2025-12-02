@@ -18,6 +18,7 @@
                         <th class="px-4 py-2">No</th>
                         <th class="px-4 py-2">Name</th>
                         <th class="px-4 py-2">Materi</th>
+                        <th class="px-4 py-2">To</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -39,6 +40,13 @@
                                             d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" />
                                     </svg>
                                 </a>
+                            </td>
+                            <td class="px-4 py-2">
+                                <template x-for="(item, index) in row.users" :key="index">
+                                    <dl>
+                                        <dt x-text="item.name" class="font-semibold capitalize"></dt>
+                                    </dl>
+                                </template>
                             </td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">

@@ -13,7 +13,7 @@ class MateriController extends Controller
      */
     public function index()
     {
-        $items = Materi::all();
+        $items = Materi::with('users')->get();
         return view('home.materi.index', compact('items'));
     }
 

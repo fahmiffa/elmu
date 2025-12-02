@@ -28,7 +28,7 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
-                            <td class="px-4 py-2">
+                            <td class="px-4 py-2 text-nowrap">
                                 <template x-for="(jadwalByDay, day) in groupJadwalByDay(row.jadwal)" :key="day">
                                     <div class="mb-3">
                                         <div class="font-semibold" x-text="day"></div>
