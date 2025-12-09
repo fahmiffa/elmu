@@ -592,12 +592,12 @@ class Home extends Controller
             bulan,
             MIN(first) as first,
             MIN(head) as head,
-            MIN(status) as status,
-            COUNT(*) as total
+            COUNT(*) as tot
         ')
-                ->groupBy('tahun', 'bulan')
+                ->groupBy('tahun', 'bulan','status')
                 ->orderBy('tahun')
                 ->orderBy('bulan')
+                ->orderBy('status')
                 ->get();
 
             foreach ($data->pluck('tahun')->unique() as $tahun) {
@@ -609,12 +609,13 @@ class Home extends Controller
                 }
             }
 
+
             foreach ($data as $item) {
                 $tahun     = $item->tahun;
                 $bulan     = $bulanMap[$item->bulan];
                 $statusKey = $item->status == 1 ? 'bayar' : 'belum';
 
-                $dummyData[$tahun][$bulan][$statusKey] = (int) $item->total;
+                $dummyData[$tahun][$bulan][$statusKey] = (int) $item->total * $item->tot;
             }
 
             $year = [];
