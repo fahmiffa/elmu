@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paid extends Model
 {
-    protected $appends = ['tempo', 'kit', 'total'];
+    protected $appends = ['tempo', 'kit', 'total', 'tipe'];
 
     public function reg()
     {
@@ -24,11 +24,28 @@ class Paid extends Model
         } else {
             // Billing normal → tanggal 2 bulan berjalan
             $date = Carbon::parse($this->created_at)
-                // ->addMonthNoOverflow() // bulan berikutnya
+            // ->addMonthNoOverflow() // bulan berikutnya
                 ->day(2)
                 ->locale('id');
             return $date->translatedFormat('l, d F Y');
         }
+    }
+
+    public function gettipeAttribute()
+    {
+        if($this->status == 1)
+        {
+            if ($this->via == "cash") {
+                return "Offline";
+            } else {
+                return "Online";
+            }
+        }
+        else
+        {
+            return null;
+        }
+
     }
 
     public function getkitAttribute()
@@ -49,7 +66,8 @@ class Paid extends Model
     {
         $price = (int) $this->reg->prices->harga;
         $kit   = (int) $this->reg->programs->kit;
-        return (int) $this->first == 1 ? $price + $kit : $price;
+        $val = (int) $this->first == 1 ? $price + $kit : $price;
+        return $val;
     }
 
     public function murid()

@@ -13,7 +13,7 @@ class VidoesController extends Controller
      */
     public function index()
     {
-        $items = Vidoes::all();
+        $items = Vidoes::with('guru','murid')->get();
         return view('home.video.index', compact('items'));
     }
 

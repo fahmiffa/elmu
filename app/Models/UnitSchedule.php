@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class UnitSchedule extends Model
 {
     protected $appends = ['start_time', 'end_time'];
+    protected $hidden  = ['created_at', 'updated_at','deleted_at'];
 
     public function getStartTimeAttribute()
     {

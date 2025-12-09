@@ -13,6 +13,18 @@
             </a>
         </div>
 
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm">Show:</span>
+            <select x-model="perPage" @change="resetPage()"
+                class="border border-gray-300 rounded-lg p-1 focus:outline-[#FF9966]">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="1000">1000</option>
+                <option value="all">All</option>
+            </select>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 text-sm">
                 <thead>
@@ -28,7 +40,9 @@
                 <tbody>
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
-                            <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="px-4 py-2"
+                                x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
+                            </td>
                             <td class="px-4 py-2" x-text="row.kode"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
                             <td class="px-4 py-2" x-text="row.addr"></td>

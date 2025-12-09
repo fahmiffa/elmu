@@ -13,6 +13,17 @@
             </a>
         </div>
 
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm">Show:</span>
+            <select x-model="perPage" @change="resetPage()"
+                class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="1000">1000</option>
+                <option value="all">All</option>
+            </select>
+        </div>
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 text-sm">
                 <thead>
@@ -22,22 +33,25 @@
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                         <th class="px-4 py-2">Kontrak</th>
                         <th class="px-4 py-2">Program</th>
-                        <th class="px-4 py-2">Kelas</th>
-                        <th class="px-4 py-2">Unit</th>
                         <th class="px-4 py-2">Tanggal</th>
-                        {{-- <th class="px-4 py-2">Action</th> --}}
                     </tr>
                 </thead>
                 <tbody>
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
-                            <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                            <td class="px-4 py-2"
+                                x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
+                            </td>
                             <td class="px-4 py-2" x-text="row.induk"></td>
                             <td class="px-4 py-2" x-text="row.murid.name"></td>
                             <td class="px-4 py-2" x-text="row.kontrak.name"></td>
-                            <td class="px-4 py-2" x-text="row.programs.name"></td>
-                            <td class="px-4 py-2" x-text="row.class.name"></td>
-                            <td class="px-4 py-2" x-text="row.units.name"></td>
+                            <td class="px-4 py-2">
+                                <dl>
+                                    <dt x-text="row.programs.name" class="font-semibold capitalize"></dt>
+                                    <dt x-text="row.class.name" class="capitalize"></dt>
+                                    <dt x-text="row.units.name" class="capitalize"></dt>
+                                </dl>
+                            </td>
                             <td class="px-4 py-2" x-text="row.waktu"></td>
                         </tr>
                     </template>

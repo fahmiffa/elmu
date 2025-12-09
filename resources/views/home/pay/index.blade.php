@@ -101,6 +101,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-sm">Show:</span>
+                        <select x-model="perPage" @change="resetPage()"
+                            class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
+                            <option value="10">10</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="1000">1000</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white border border-gray-200 text-sm">
                             <thead>
@@ -111,13 +122,16 @@
                                     <th class="px-4 py-2">Waktu</th>
                                     <th class="px-4 py-2">Total</th>
                                     <th class="px-4 py-2">Status</th>
+                                    <th class="px-4 py-2">TIpe</th>
                                     <th class="px-4 py-2">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="(row, index) in paginatedData()" :key="row.id">
                                     <tr class="border-t border-gray-300">
-                                        <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                                        <td class="px-4 py-2"
+                                            x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
+                                        </td>
                                         <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="row.tempo ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
@@ -126,9 +140,10 @@
                                             x-text="
                                         row.status == 0 ? 'Tagihan' : 
                                         (row.status == 2 ? 'Menunggu Pembayaran' : 
-                                        (row.status == 1 ? 'Lunas' : 'Unknown'))
+                                        (row.status == 1 ? 'Lunas' : 'Kadaluarsa'))
                                         ">
                                         </td>
+                                        <td class="px-4 py-2" x-text="row.tipe"></td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
 
@@ -150,7 +165,7 @@
                                                     </button>
                                                 </form>
 
-                                                <button x-show="row.status == 0" @click="modal.openModal(row.id)"
+                                                <button x-show="row.status != 1" @click="modal.openModal(row.id)"
                                                     class="cursor-pointer text-xs  text-orange-600 font-semibold p-1">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -242,6 +257,17 @@
                             class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
                     </div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-sm">Show:</span>
+                        <select x-model="perPage" @change="resetPage()"
+                            class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
+                            <option value="10">10</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="1000">1000</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white border border-gray-200 text-sm">
                             <thead>
@@ -251,13 +277,16 @@
                                     <th class="px-4 py-2">Layanan</th>
                                     <th class="px-4 py-2">Harga</th>
                                     <th class="px-4 py-2">Status</th>
+                                    <th class="px-4 py-2">Tipe</th>
                                     <th class="px-4 py-2">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="(row, index) in paginatedData()" :key="row.id">
                                     <tr class="border-t border-gray-300">
-                                        <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                                        <td class="px-4 py-2"
+                                            x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
+                                        </td>
                                         <td class="px-4 py-2 text-nowrap" x-text="row.reg?.murid?.name ?? '-'"></td>
                                         <td class="px-4 py-2 text-nowrap" x-text="row.product?.item.name ?? '-'"></td>
                                         <td class="px-4 py-2" x-text="formatNumber(row.product.harga)"></td>
@@ -268,6 +297,7 @@
                                         (row.status == 1 ? 'Lunas' : 'Unknown'))
                                         ">
                                         </td>
+                                        <td class="px-4 py-2 text-nowrap" x-text="row.tipe"></td>
                                         <td class="px-4 py-2">
                                             <div class="flex items-center gap-1">
                                                 <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null"

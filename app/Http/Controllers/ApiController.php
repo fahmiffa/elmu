@@ -160,18 +160,16 @@ class ApiController extends Controller
             ], 400);
         }
 
-        $today    = now()->toDateString();
-
+        $today = now()->toDateString();
 
         $user = $request->user;
         for ($i = 0; $i < count($user); $i++) {
 
             $alreadyExists = StudentPresent::where('student_id', $user[$i])
-                                            ->whereDate('created_at', $today)
-                                            ->where('unit_schedules_id', $request->jadwal)
-                                            ->exists();
-            if(!$alreadyExists)
-            {
+                ->whereDate('created_at', $today)
+                ->where('unit_schedules_id', $request->jadwal)
+                ->exists();
+            if (! $alreadyExists) {
                 $present                    = new StudentPresent;
                 $present->student_id        = $user[$i];
                 $present->unit_schedules_id = $request->jadwal;
@@ -219,8 +217,22 @@ class ApiController extends Controller
 
     public function materi()
     {
-        $id    = JWTAuth::user()->id;
-        $items = Materi::where('user', $id)->latest()->get();
+        $id   = JWTAuth::user()->id;
+        $role = JWTAuth::user()->role;
+        if ($role == 2) {
+
+            $da = JWTAuth::user()->data->program->pluck("id")->toArray();
+
+        } else {
+            $da = JWTAuth::user()->data->head->pluck("program")->toArray();
+        }
+        $items = Materi::whereIn('program_id', $da)->with('program')->latest()->get()
+            ->map(function ($q) {
+                return ["id" => $q->id,
+                    "name"       => $q->program->name,
+                    "pdf"        => $q->pdf];
+            });
+
         return response()->json($items);
     }
 
@@ -263,7 +275,7 @@ class ApiController extends Controller
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
             $da        = Teach::where('user', $id)->first();
-            $items     = Head::where('unit', $da->unit_id)->where('done',0)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
+            $items     = Head::where('unit', $da->unit_id)->where('done', 0)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
             $allJadwal = collect();
             $allMurid  = collect();
 
@@ -300,20 +312,82 @@ class ApiController extends Controller
 
     }
 
-    public function videos()
+    private function youtubeToEmbed($url)
     {
-        $role = JWTAuth::user()->role;
-        $id   = JWTAuth::user()->id;
-        if ($role == 3) {
-            $items = Vidoes::where('to', 3)->get();
-        } else {
-            $items = Vidoes::where('user', $id)->get();
+        preg_match(
+            '/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/',
+            $url,
+            $matches
+        );
+
+        if (! isset($matches[1])) {
+            return null;
         }
 
-        $da = $items->map(function ($q) {
-            return ['name' => $q->name, 'url' => asset('storage/' . $q->pile)];
-        });
-        return response()->json($da);
+        $videoId = $matches[1];
+
+        return "https://www.youtube.com/embed/" . $videoId;
+    }
+
+    public function video(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'yt'   => 'required|url',
+            'to'   => 'required',
+            'name' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $id    = JWTAuth::user()->data->id;
+        $embed = $this->youtubeToEmbed($request->yt);
+        if ($embed) {
+            $vid             = new Vidoes;
+            $vid->teach_id   = $id;
+            $vid->name       = $request->name;
+            $vid->student_id = $request->to;
+            $vid->pile       = $embed;
+            $vid->save();
+            return response()->json(['status' => true, 'data' => $vid], 200);
+        } else {
+            return response()->json(['error' => 'url tidak valid'], 404);
+        }
+    }
+
+    public function videos()
+    {
+        $id   = JWTAuth::user()->data->id;
+        $user = Vidoes::where('teach_id', $id);
+        if ($user->exists()) {
+            $items = $user->get();
+        }
+
+        $to = Vidoes::where('student_id', $id);
+        if ($to->exists()) {
+            $items = $to->get();
+        }
+        return response()->json($items);
+    }
+
+    public function murid()
+    {
+        $id       = JWTAuth::user()->id;
+        $da       = Teach::where('user', $id)->first();
+        $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->get();
+        $allMurid = collect();
+
+        foreach ($items as $head) {
+            $allMurid->push($head->murid);
+        }
+
+        return response()->json([
+            'murid' => $allMurid->values()->unique('id')->all(),
+        ]);
     }
 
     public function miska()
@@ -403,7 +477,7 @@ class ApiController extends Controller
             'token'      => $token,
             'expires_in' => auth('api')->factory()->getTTL() * 1,
             'role'       => $user->role,
-            'uid'        => md5($user->id),
+            'uid'        => md5($user->data->id),
         ]);
     }
 
@@ -541,19 +615,18 @@ class ApiController extends Controller
             $guru     = Teach::where('user', $id)->first();
             $unit     = $guru->unit_id;
             $students = $res->whereHas('reg.units', function ($q) use ($unit) {
-                $q->where('unit', $unit)->where('done',0);
+                $q->where('unit', $unit)->where('done', 0);
             })->get();
 
             $grouped = [];
             foreach ($students as $student) {
                 foreach ($student->reg as $reg) {
-                    if($reg->done == 0)
-                    {
+                    if ($reg->done == 0) {
                         $programName = $reg->programs->name ?? 'Unknown Program';
                         $className   = $reg->units->kelas[0]->name ?? 'Unknown Class';
-    
+
                         $key = $programName . '|' . $className;
-    
+
                         if (! isset($grouped[$key])) {
                             $grouped[$key] = [
                                 'program'  => $programName,
@@ -561,7 +634,7 @@ class ApiController extends Controller
                                 'students' => [],
                             ];
                         }
-    
+
                         $bills = collect($reg->bill)->map(function ($bill) use ($reg) {
                             return [
                                 'total'      => $bill->total,
@@ -571,7 +644,7 @@ class ApiController extends Controller
                                 "kit"        => $bill->kit,
                             ];
                         })->toArray();
-    
+
                         $lay = collect($reg->lay)->map(function ($a) {
                             return [
                                 'price'      => (int) $a->product->harga,
@@ -581,7 +654,7 @@ class ApiController extends Controller
                                 "status"     => $a->status,
                             ];
                         })->toArray();
-    
+
                         $grouped[$key]['students'][] = [
                             'name'  => $student->name,
                             'bills' => array_merge($bills, $lay),
@@ -773,10 +846,9 @@ class ApiController extends Controller
         $bill          = [];
         $hasStatusZero = false;
 
-        if($student)
-        {
+        if ($student) {
             foreach ($student->reg as $val) {
-    
+
                 foreach ($val->bill as $a) {
                     if ($a->status != 1) {
                         $hasStatusZero = true;
@@ -787,7 +859,7 @@ class ApiController extends Controller
                         ];
                     }
                 }
-    
+
                 foreach ($val->lay as $a) {
                     if ($a->status != 1) {
                         $hasStatusZero = true;
@@ -798,7 +870,7 @@ class ApiController extends Controller
                         ];
                     }
                 }
-    
+
             }
         }
 

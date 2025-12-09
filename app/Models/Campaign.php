@@ -10,6 +10,6 @@ class Campaign extends Model
 
     public function getgambarAttribute()
     {
-        return asset('storage/' . $this->file);
+        return $this->file ? asset('storage/' . $this->file) : asset('image.png');
     }
 }

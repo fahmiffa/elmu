@@ -44,8 +44,9 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/chart-json/{par}', [Home::class, 'chart'])->name('chart.sales');
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [Home::class, 'index'])->name('home');
+    Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
-    Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg');
+    Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
     Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
     Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
     Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
@@ -63,7 +64,6 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::resource('report', ReportController::class);
     Route::resource('raport', RaportController::class);
     Route::resource('video', VidoesController::class);
-    Route::resource('materi', MateriController::class);
     Route::resource('campaign', CampaignController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
@@ -75,6 +75,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     });
 
     Route::prefix('master')->name('master.')->group(function () {
+        Route::resource('materi', MateriController::class);
         Route::get('/', [Home::class, 'master'])->name('index');
         Route::get('/user', [Home::class, 'user'])->name('user');
         Route::get('/user/{id}/detail', [Home::class, 'userEdit'])->name('user.edit');

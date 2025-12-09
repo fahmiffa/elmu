@@ -15,7 +15,6 @@ use App\Models\Price;
 use App\Models\Program;
 use App\Models\Student;
 use App\Models\Unit;
-use App\Models\UnitKelas;
 use App\Models\User;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
@@ -33,13 +32,13 @@ class Home extends Controller
 {
     public function absensi()
     {
-        $items = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present')->get();
+        $items = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present', 'class')->get();
         return view('home.present.index', compact('items'));
     }
 
     public function level()
     {
-        $items = Head::has('level')->with('murid:id,name', 'level.guru')->get();
+        $items = Head::has('level')->with('murid:id,name', 'level.guru', 'class')->get();
         $lay   = Addon::where('first', 0)->with('price')->latest()->get();
         return view('home.level.index', compact('items', 'lay'));
     }
@@ -48,17 +47,15 @@ class Home extends Controller
     {
         try {
 
-            if($par == "bul")
-            {
-                $order = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
-                $fcm   = $order->reg->murid->users->fcm;
-                $billname = "bulan ".$order->bulan;
+            if ($par == "bul") {
+                $order    = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
+                $fcm      = $order->reg->murid->users->fcm;
+                $billname = "bulan " . $order->bulan;
             }
 
-            if($par == "lay")
-            {
-                $order = Order::where(DB::raw('md5(id)'), $id)->firstOrFail();
-                $fcm   = $order->reg->murid->users->fcm;
+            if ($par == "lay") {
+                $order    = Order::where(DB::raw('md5(id)'), $id)->firstOrFail();
+                $fcm      = $order->reg->murid->users->fcm;
                 $billname = $order->product->item->name;
             }
 
@@ -97,7 +94,7 @@ class Home extends Controller
         try {
 
             if ($request->tipe == 0) {
-                $kode = 'trx-m'.date("YmdHis");
+                $kode       = 'trx-m' . date("YmdHis");
                 $order      = Paid::where('id', $request->id)->first();
                 $order->mid = $kode;
                 $order->save();
@@ -109,7 +106,7 @@ class Home extends Controller
                 $mid    = $order->mid;
                 $des    = "Tagihan Bulan " . $order->bulan;
             } else {
-                $kode = 'trx-o'.date("YmdHis");
+                $kode     = 'trx-o' . date("YmdHis");
                 $lay      = Order::where('id', $request->id)->firstOrFail();
                 $lay->mid = $kode;
                 $lay->save();
@@ -144,7 +141,7 @@ class Home extends Controller
                     'email'      => $email,
                     'phone'      => $hp,
                 ],
-                "callbacks"=> []
+                "callbacks"           => [],
             ];
 
             return Transaction::create($params);
@@ -190,32 +187,29 @@ class Home extends Controller
 
     public function layanan(Request $request, $id)
     {
-        $head           = Head::where(DB::raw('md5(students)'), $id)->firstOrFail();
+        $head = Head::where(DB::raw('md5(students)'), $id)->firstOrFail();
         $done = $request->has("done");
-        $fcm =  $head->murid->users->fcm;
-        if($done)
-        {
+        $fcm  = $head->murid->users->fcm;
+        if ($done) {
             $message = [
                 "message" => [
                     "token"        => $fcm,
                     "notification" => [
                         "title" => "informasi",
-                        "body"  => "Anda telah menyelesaiakan program Belajar ".$head->paket->name,
+                        "body"  => "Anda telah menyelesaiakan program Belajar " . $head->paket->name,
                     ],
                 ],
-            ];    
+            ];
 
             $head->done = 1;
             $head->save();
-        }
-        else
-            {
+        } else {
             $order          = new Order;
             $order->head    = $head->id;
             $order->student = $head->students;
             $order->price   = $request->book;
             $order->save();
-    
+
             $message = [
                 "message" => [
                     "token"        => $fcm,
@@ -224,14 +218,13 @@ class Home extends Controller
                         "body"  => "Anda punya tagihan " . $order->product->item->name,
                     ],
                 ],
-            ];    
+            ];
 
         }
 
         Level::where('id', $request->level)->update(['status' => 1]);
 
-        if($fcm)
-        {
+        if ($fcm) {
             FirebaseMessage::sendFCMMessage($message);
         }
 
@@ -244,19 +237,18 @@ class Home extends Controller
         $bulan = $request->input('bulan');
         $da    = [];
 
-        $head = Head::select('id','old')
+        $head = Head::select('id', 'old')
         // ->whereHas('kontrak',function($q){
         //     $q->where('month',1);
         // })
-        ->where("done",0)->get();
+            ->where("done", 0)->get();
 
         foreach ($head as $val) {
-            $paid  = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
+            $paid = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
             if ($paid == false) {
                 $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0];
             }
         }
-
 
         if (count($da) > 0) {
             BulkInsertJob::dispatch($da);
@@ -274,6 +266,12 @@ class Home extends Controller
     {
         $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level')->get();
         return view('home.reg.index', compact('items'));
+    }
+
+    public function akademik()
+    {
+        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level')->get();
+        return view('home.reg.list', compact('items'));
     }
 
     public function invoice($id)
@@ -304,7 +302,7 @@ class Home extends Controller
                 $paid->save();
             }
 
-            $fcm   = $paid->reg->murid->users->fcm;
+            $fcm = $paid->reg->murid->users->fcm;
 
             if ($fcm) {
                 $message = [
@@ -355,11 +353,11 @@ class Home extends Controller
 
     public function AddReg()
     {
-        $kelas = Kelas::with('program:id,name','units:id,name')->get();
+        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
         $kontrak = Payment::all();
         $grade   = Grade::all();
-        $action = "Form Pendaftaran";
-        $head   = Head::has('murid')->get();
+        $action  = "Form Pendaftaran";
+        $head    = Head::has('murid')->get();
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 
@@ -415,7 +413,6 @@ class Home extends Controller
                 if ($request->hasFile('image')) {
                     $path = $request->file('image')->store('images', 'public');
                 }
-
 
                 $user           = new User;
                 $user->name     = UserName($request->name);
@@ -590,11 +587,17 @@ class Home extends Controller
 
         if ($par == 'pay') {
 
-            $data = DB::table('paids')
-                ->selectRaw('tahun, bulan, status, count(*) as total')
-                ->groupBy('bulan', 'tahun', 'status')
-                ->orderBy('tahun', 'asc')
-                ->orderBy('bulan', 'asc')
+            $data = Paid::selectRaw('
+            tahun,
+            bulan,
+            MIN(first) as first,
+            MIN(head) as head,
+            MIN(status) as status,
+            COUNT(*) as total
+        ')
+                ->groupBy('tahun', 'bulan')
+                ->orderBy('tahun')
+                ->orderBy('bulan')
                 ->get();
 
             foreach ($data->pluck('tahun')->unique() as $tahun) {

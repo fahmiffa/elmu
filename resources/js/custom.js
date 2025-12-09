@@ -160,8 +160,8 @@ export function materiForm({ initialRole }) {
             const file = event.target.files[0];
             if (!file) return;
 
-            if (file.size > 4 * 1024 * 1024) {
-                this.error = "File maksimal 4MB";
+            if (file.size > 2 * 1024 * 1024) {
+                this.error = "File maksimal 2MB";
                 event.target.value = "";
                 return;
             }
@@ -195,9 +195,8 @@ export function materiForm({ initialRole }) {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     this.success = true;
 
-                    // 🔥 Tampilkan notifikasi 1.5 detik, lalu redirect
                     setTimeout(() => {
-                        window.location.href = "/dashboard/materi";
+                        window.location.href = "/dashboard/master/materi";
                     }, 1500);
                 } else {
                     this.error = "Upload gagal.";
@@ -312,12 +311,20 @@ export const dataTable = (data) => {
         },
 
         paginatedData() {
+            if (this.perPage === "all") {
+                return this.filteredData();
+            }
+
             const start = (this.currentPage - 1) * this.perPage;
-            return this.filteredData().slice(start, start + this.perPage);
+            return this.filteredData().slice(
+                start,
+                start + Number(this.perPage)
+            );
         },
 
         totalPages() {
-            return Math.ceil(this.filteredData().length / this.perPage);
+            if (this.perPage === "all") return 1;
+            return Math.ceil(this.filteredData().length / Number(this.perPage));
         },
 
         nextPage() {
@@ -368,7 +375,6 @@ export const dataTableReg = (data) => {
         perPage: 10,
         rows: data,
         selectedRow: null,
-        open: false,
         modalOpen: false,
         selectedItem: null,
 
@@ -413,12 +419,16 @@ export const dataTableReg = (data) => {
         },
 
         paginatedData() {
+            if (this.perPage === "all") {
+                return this.filteredData();
+            }
             const start = (this.currentPage - 1) * this.perPage;
             return this.filteredData().slice(start, start + this.perPage);
         },
 
         totalPages() {
-            return Math.ceil(this.filteredData().length / this.perPage);
+            if (this.perPage === "all") return 1;
+            return Math.ceil(this.filteredData().length / Number(this.perPage));
         },
 
         nextPage() {
@@ -429,14 +439,20 @@ export const dataTableReg = (data) => {
             if (this.currentPage > 1) this.currentPage--;
         },
 
+        resetPage() {
+            this.currentPage = 1; // Reset page saat perPage berubah
+        },
+
         deleteRow(e) {
             if (confirm("Yakin ingin menghapus data?")) {
                 e.target.submit();
             }
         },
+
         formatNumber(number) {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         },
+
         formatWIB(datetimeStr) {
             if (!datetimeStr) return "";
             const date = new Date(datetimeStr);
@@ -497,12 +513,20 @@ export const dataTablePay = (data) => {
         },
 
         paginatedData() {
+            if (this.perPage === "all") {
+                return this.filteredData();
+            }
+
             const start = (this.currentPage - 1) * this.perPage;
-            return this.filteredData().slice(start, start + this.perPage);
+            return this.filteredData().slice(
+                start,
+                start + Number(this.perPage)
+            );
         },
 
         totalPages() {
-            return Math.ceil(this.filteredData().length / this.perPage);
+            if (this.perPage === "all") return 1;
+            return Math.ceil(this.filteredData().length / Number(this.perPage));
         },
 
         nextPage() {

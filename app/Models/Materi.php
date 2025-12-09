@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Materi extends Model
 {
-    protected $hidden = ['created_at', 'updated_at', 'pile','user'];
+    protected $hidden = ['created_at', 'updated_at'];
 
     protected $appends = ['pdf'];
 
@@ -14,8 +14,8 @@ class Materi extends Model
         return asset('storage/' . $this->pile);
     }
 
-    public function users()
+    public function program()
     {
-        return $this->HasMany(User::class, 'id', 'user');
+        return $this->HasOne(Program::class, 'id', 'program_id');
     }
 }

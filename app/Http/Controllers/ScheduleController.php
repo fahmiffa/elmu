@@ -14,7 +14,7 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $items = Head::has('jadwal')->with('jadwal', 'murid')->get();
+        $items = Head::has('jadwal')->with('jadwal', 'murid','class')->get();
         return view('home.schedule.index', compact('items'));
     }
 

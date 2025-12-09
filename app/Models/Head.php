@@ -11,7 +11,8 @@ class Head extends Model
 {
     use SoftDeletes;
     protected $table   = 'head';
-    protected $appends = ['kode', 'waktu', 'induk'];
+    protected $appends = ['kode', 'waktu', 'induk', 'status'];
+    protected $hidden  = ['created_at', 'updated_at', 'deleted_at'];
 
     public function murid()
     {
@@ -92,6 +93,20 @@ class Head extends Model
         $global = str_pad($this->global, 4, '0', STR_PAD_LEFT);
         $unit   = str_pad($this->units->id, 3, '0', STR_PAD_LEFT);
         return $global . '' . $unit . '' . $munit . '/' . $this->programs->kode;
+    }
+
+    public function getstatusAttribute()
+    {
+        if ($this->done == 1) {
+            return "Lulus";
+        } else if ($this->done == 0) {
+            return "Aktif";
+        } else if ($this->done == 2) {
+            return "Tidak Aktif";
+        } else if($this->done == 3)
+        {
+            return "Cuti";
+        }
     }
 
     public function jadwal()

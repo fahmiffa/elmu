@@ -25,6 +25,7 @@ Route::prefix('fire')->group(function () {
 Route::middleware('jwt')->group(function () {
     Route::post('/pay', [Home::class, 'midtransPay']);
     Route::get('/data', [ApiController::class, 'data']);
+    Route::get('/murid', [ApiController::class, 'murid']);
     Route::get('/materi', [ApiController::class, 'materi']);
     Route::get('/campaign', [ApiController::class, 'campaign']);
     Route::get('/miska', [ApiController::class, 'miska']);
@@ -33,6 +34,7 @@ Route::middleware('jwt')->group(function () {
     Route::get('/unit', [ApiController::class, 'unit']);
     Route::get('/bill', [ApiController::class, 'bill']);
     Route::get('/video', [ApiController::class, 'videos']);
+    Route::post('/video', [ApiController::class, 'video']);
     Route::get('/level', [ApiController::class, 'level']);
     Route::post('/level', [ApiController::class, 'Uplevel']);
     Route::post('/pass', [ApiController::class, 'upass']);

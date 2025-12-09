@@ -1,4 +1,4 @@
-<a href="{{ route('dashboard.reg') }}">
+<a href="{{ route('dashboard.reg.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.reg.*') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
@@ -25,6 +25,21 @@
                 <path d="M6 12h.01M18 12h.01" />
             </svg>
         </span> Pembayaran
+    </li>
+</a>
+<a href="{{ route('dashboard.akademik') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.akademik') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-graduation-cap-icon lucide-graduation-cap">
+                <path
+                    d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                <path d="M22 10v6" />
+                <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+            </svg>
+        </span> AKademik
     </li>
 </a>
 <a href="{{ route('dashboard.jadwal.index') }}">
@@ -63,24 +78,6 @@
                 <path d="m16 19 2 2 4-4" />
             </svg>
         </span> Absensi
-    </li>
-</a>
-<a href="{{ route('dashboard.materi.index') }}">
-    <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.materi.*') ? 'bg-orange-100' : null }}">
-        <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-notepad-text-icon lucide-notepad-text">
-                <path d="M8 2v4" />
-                <path d="M12 2v4" />
-                <path d="M16 2v4" />
-                <rect width="16" height="18" x="4" y="4" rx="2" />
-                <path d="M8 10h6" />
-                <path d="M8 14h8" />
-                <path d="M8 18h5" />
-            </svg>
-        </span> Materi
     </li>
 </a>
 <a href="{{ route('dashboard.level') }}">

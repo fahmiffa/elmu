@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Teach extends Model
 {
     protected $appends = ['age'];
-    protected $hidden = ['created_at', 'updated_at'];
+    protected $hidden  = ['created_at', 'updated_at'];
 
     public function murid()
+    {
+        return $this->HasMany(Head::class, 'unit', 'unit_id');
+    }
+
+    public function head()
     {
         return $this->HasMany(Head::class, 'unit', 'unit_id');
     }

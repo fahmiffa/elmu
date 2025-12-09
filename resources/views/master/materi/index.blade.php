@@ -1,11 +1,11 @@
 @extends('base.layout')
-@section('title', 'Dashboard Video')
+@section('title', 'Dashboard Materi')
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
         <div class="mb-4 flex justify-end items-center gap-2">
 
-            <a href="{{ route('dashboard.materi.create') }}"
+            <a href="{{ route('dashboard.master.materi.create') }}"
                 class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
                 Tambah
             </a>
@@ -16,9 +16,8 @@
                 <thead>
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
-                        <th class="px-4 py-2">Name</th>
+                        <th class="px-4 py-2">Program</th>
                         <th class="px-4 py-2">Materi</th>
-                        <th class="px-4 py-2">To</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
                 </thead>
@@ -26,7 +25,7 @@
                     <template x-for="(row, index) in paginatedData()" :key="row.id">
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
-                            <td class="px-4 py-2" x-text="row.name"></td>
+                            <td class="px-4 py-2" x-text="row.program.name"></td>
                             <td class="px-4 py-2 items-center">
                                 <a :href="'/storage/' + row.pile + ''" class="text-orange-600 hover:text-orange-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -42,15 +41,8 @@
                                 </a>
                             </td>
                             <td class="px-4 py-2">
-                                <template x-for="(item, index) in row.users" :key="index">
-                                    <dl>
-                                        <dt x-text="item.name" class="font-semibold capitalize"></dt>
-                                    </dl>
-                                </template>
-                            </td>
-                            <td class="px-4 py-2">
                                 <div class="flex items-center gap-1">
-                                    <form :action="'/dashboard/materi/' + row.id" method="POST"
+                                    <form :action="'/dashboard/master/materi/' + row.id" method="POST"
                                         @submit.prevent="deleteRow($event)">
                                         @csrf
                                         @method('DELETE')

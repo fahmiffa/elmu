@@ -174,3 +174,21 @@
         Jenjang
     </li>
 </a>
+<a href="{{ route('dashboard.master.materi.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.materi.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-notepad-text-icon lucide-notepad-text">
+                <path d="M8 2v4" />
+                <path d="M12 2v4" />
+                <path d="M16 2v4" />
+                <rect width="16" height="18" x="4" y="4" rx="2" />
+                <path d="M8 10h6" />
+                <path d="M8 14h8" />
+                <path d="M8 18h5" />
+            </svg>
+        </span> Materi
+    </li>
+</a>

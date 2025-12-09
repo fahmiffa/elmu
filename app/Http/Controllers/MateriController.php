@@ -2,8 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Materi;
-use App\Models\Student;
-use App\Models\Teach;
+use App\Models\Program;
 use Illuminate\Http\Request;
 
 class MateriController extends Controller
@@ -13,8 +12,8 @@ class MateriController extends Controller
      */
     public function index()
     {
-        $items = Materi::with('users')->get();
-        return view('home.materi.index', compact('items'));
+        $items = Materi::with('program')->get();
+        return view('master.materi.index', compact('items'));
     }
 
     /**
@@ -22,10 +21,9 @@ class MateriController extends Controller
      */
     public function create()
     {
-        $student = Student::latest()->get();
-        $teach   = Teach::latest()->get();
+        $program = Program::latest()->get();
         $action  = "Tambah Materi";
-        return view('home.materi.form', compact('action', 'student', 'teach'));
+        return view('master.materi.form', compact('action', 'program'));
     }
 
     /**
@@ -34,27 +32,21 @@ class MateriController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'user' => 'required',
-            'role' => 'required|in:3,2',
+            'program' => 'required',
             'materi'  => 'required|mimes:pdf|max:20480',
         ], ['required' => 'Feild Wajib diisi',
-            'in'           => 'FIeld invalid',
         ]);
 
         if ($request->hasFile('materi')) {
             $path = $request->file('materi')->store('materi', 'public');
         }
 
-        foreach ($request->user as $val) {
-            $item       = new Materi;
-            $item->pile = $path;
-            $item->name = $request->name;
-            $item->user = $val;
-            $item->save();
-        }
+        $item             = new Materi;
+        $item->pile       = $path;
+        $item->program_id = $request->program;
+        $item->save();
 
-        return redirect()->route('dashboard.materi.index');
+        return redirect()->route('dashboard.master.materi.index');
     }
 
     /**
