@@ -46,7 +46,33 @@
                                     <dt x-text="row.units.name" class="capitalize"></dt>
                                 </dl>
                             </td>
-                            <td class="px-4 py-2" x-text="row.status"></td>
+                            <td class="px-4 py-2 items-center flex-row text-center">
+                                <div x-show="row.done === 0">
+                                    <button @click="openModal(row)"
+                                        class="bg-orange-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-orange-600"
+                                        type="button" x-text="row.status"></button>
+                                </div>
+
+                                <div x-show="row.done === 1">
+                                    <button @click="openModal(row)"
+                                        class="bg-green-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-green-600"
+                                        type="button" x-text="row.status"></button>
+                                </div>
+
+                                <div x-show="row.done === 2">
+                                    <button @click="openModal(row)"
+                                        class="bg-red-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-red-600"
+                                        type="button" x-text="row.status"></button>
+                                </div>
+
+                                <div x-show="row.done === 3">
+                                    <button @click="openModal(row)"
+                                        class="bg-gray-800 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-gray-800"
+                                        type="button" x-text="row.status"></button>
+                                </div>
+
+                                <div x-text="row.note"></div>
+                            </td>
                         </tr>
                     </template>
                     <tr x-show="filteredData().length === 0">
@@ -55,6 +81,45 @@
                 </tbody>
             </table>
         </div>
+
+           <div x-show="modalOpen" x-cloak style="background-color: rgba(0,0,0,0.5);"
+                class="fixed inset-0 flex items-center justify-center z-50"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative" @click.away="closeModal()">
+                    <h2 class="text-sm font-bold mb-4">Update Status</h2>
+                    <form method="POST" :action="'/dashboard/status/' + selectedItem?.id + ''">
+                        @csrf
+                        <input type="hidden" name="id" :value="selectedItem?.id">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Status</label>
+                            <select class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]" name="status" required>
+                            <option value="">Pilih</option>
+                            <option value="3">Off (Keluar)</option>
+                            <option value="2">Cuti</option>
+                            <option value="1">Lulus</option>
+                            <option value="0">Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Keterangan</label>
+                            <textarea name="keterangan" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('keterangan') }}</textarea>
+                            @error('keterangan')
+                                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <button
+                            class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
+                            Simpan
+                        </button>
+                    </form>
+                    <button
+                        class="mt-6 bg-gray-800 text-white text-xs cursor-pointer px-3 py-2 rounded-2xl hover:bg-gray-900 float-end"
+                        @click="closeModal()" type="button">Close</button>
+                </div>
+            </div>
 
         <div class="flex justify-between items-center mt-4">
             <button @click="prevPage()" :disabled="currentPage === 1"

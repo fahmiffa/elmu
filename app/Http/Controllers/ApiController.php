@@ -173,6 +173,7 @@ class ApiController extends Controller
                 $present                    = new StudentPresent;
                 $present->student_id        = $user[$i];
                 $present->unit_schedules_id = $request->jadwal;
+                $present->teach_id          = JWTAuth::user()->data->id;
                 $present->save();
             }
 
@@ -315,19 +316,18 @@ class ApiController extends Controller
     private function youtubeToEmbed($url)
     {
         preg_match(
-            '/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/',
+            '/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/',
             $url,
             $matches
         );
 
-        if (! isset($matches[1])) {
+        if (!isset($matches[1])) {
             return null;
         }
 
-        $videoId = $matches[1];
-
-        return "https://www.youtube.com/embed/" . $videoId;
+        return "https://www.youtube.com/embed/" . $matches[1];
     }
+
 
     public function video(Request $request)
     {
@@ -378,16 +378,24 @@ class ApiController extends Controller
     {
         $id       = JWTAuth::user()->id;
         $da       = Teach::where('user', $id)->first();
-        $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->get();
-        $allMurid = collect();
-
-        foreach ($items as $head) {
-            $allMurid->push($head->murid);
+        if($da)
+        {
+            $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->get();
+            $allMurid = collect();
+    
+            foreach ($items as $head) {
+                $allMurid->push($head->murid);
+            }
+    
+            return response()->json([
+                'murid' => $allMurid->values()->unique('id')->all(),
+            ]);
+        }
+        else
+        {
+             return response()->json([]);
         }
 
-        return response()->json([
-            'murid' => $allMurid->values()->unique('id')->all(),
-        ]);
     }
 
     public function miska()

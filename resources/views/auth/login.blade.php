@@ -4,7 +4,7 @@
     <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-600 w-full">
         <div class="bg-white shadow-md md:w-full max-w-md rounded-3xl md:mx-0 mx-5">
             <div class="p-8">
-                <img src="https://murikaceria.co.id/v2/wp-content/uploads/2024/01/LogoTypeOrange.svg"
+                <img src="{{ asset('murika.png') }}"
                     class="w-50 object-contain mx-auto" alt="Logo Murika">
                 <div class="flex my-3">
                     <div class="text-sm md:text-2xl font-bold text-orange-600">Login</div>

@@ -231,6 +231,16 @@ class Home extends Controller
         return back()->with('status', 'Ugrade Level berhasil');
     }
 
+    public function status(Request $request, $id)
+    {
+        $head = Head::where('id', $id)->firstOrFail();
+        $head->note = $request->keterangan;
+        $head->done = $request->status;
+        $head->save(); 
+
+        return back()->with('status', 'Update status berhasil');
+    }
+
     public function bill(Request $request)
     {
 
@@ -288,7 +298,7 @@ class Home extends Controller
     {
         if ($par == "bul") {
             $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-            if ($paid->status == 0) {
+            if ($paid->status != 1) {
                 $user = $paid->reg->murid->users;
                 if ($user->status == 0) {
                     $user->status = 1;
