@@ -29,6 +29,7 @@ Route::get('/payment/{par}', function ($par) {
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
+    Artisan::call('db:seed');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';
 });

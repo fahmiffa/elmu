@@ -1,11 +1,12 @@
 services:
   app:
-    build : .
-    container_name: elmu
-    working_dir: /var/www/html
-    volumes:
-      - ./:/var/www/html
+    build: .
+    container_name: laravel-frankenphp
     ports:
-      - "80:80"
-    command: php -S 0.0.0.0:80 -t public
-
+      - "80:8001"
+      - "443:8001"
+    volumes:
+      - .:/app
+      - ./Caddyfile:/etc/caddy/Caddyfile 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -472,7 +472,7 @@ class ApiController extends Controller
                 return response()->json(['error' => 'Invalid credentials'], 401);
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Could not create token'], 500);
+            return response()->json(['error' => 'Could not create token '.$e->getMessage()], 500);
         }
 
         // Simpan FCM jika ada
@@ -898,8 +898,7 @@ class ApiController extends Controller
                 ->with('data')
                 ->where('id', $id)->first();
             $induk          = optional($student->data->reg->first())->induk;
-            $induk          = $induk ? substr($induk, 0, -3) : null;
-            $student->induk = $induk;
+            $student->induk = $induk ? substr($induk, 0, -4) : null;
             $student->data->makeHidden('reg');
 
             return response()->json($student);
