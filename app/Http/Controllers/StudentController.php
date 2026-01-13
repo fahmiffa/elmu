@@ -127,7 +127,6 @@ class StudentController extends Controller
             return back();
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
             return back()->withErrors(['import' => $e->getMessage()]);
         }
     }

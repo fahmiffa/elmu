@@ -13,11 +13,12 @@ class DatabaseSeeder extends Seeder
     {
         // User
         DB::table('users')->insert([
-            'name'      => 'Test User',
-            'email'     => 'test@example.com',
-            'password'  => Hash::make('rahasia'),
+            'name'      => 'Murika',
+            'email'     => 'elmu@murika',
+            'password'  => Hash::make('3lmu'),
             'status'    => 1,    
-            'nomor'     => '085',
+            'role'      => 0,
+            'nomor'     => '08',
             'created_at'=> now(),
             'updated_at'=> now(),
         ]);

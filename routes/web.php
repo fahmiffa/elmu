@@ -29,6 +29,7 @@ Route::get('/payment/{par}', function ($par) {
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
+    Artisan::call('db:seed');
     File::put(storage_path('logs/laravel.log'), '');
     return 'Log cleared';
 });
@@ -58,6 +59,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/layanan/{id}', [Home::class, 'layanan'])->name('layanan');
+    Route::post('/status/{id}', [Home::class, 'status'])->name('status');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
     Route::resource('jadwal', ScheduleController::class);

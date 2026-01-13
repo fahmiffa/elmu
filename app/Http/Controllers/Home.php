@@ -49,26 +49,31 @@ class Home extends Controller
 
             if ($par == "bul") {
                 $order    = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
-                $fcm      = $order->reg->murid->users->fcm;
+                $fcm      = $order->reg->murid->users->fcm ?? null;
                 $billname = "bulan " . $order->bulan;
             }
 
             if ($par == "lay") {
                 $order    = Order::where(DB::raw('md5(id)'), $id)->firstOrFail();
-                $fcm      = $order->reg->murid->users->fcm;
+                $fcm      = $order->reg->murid->users->fcm ?? null;
                 $billname = $order->product->item->name;
             }
 
-            $message = [
-                "message" => [
-                    "token"        => $fcm,
-                    "notification" => [
-                        "title" => "Tagihan",
-                        "body"  => "Anda punya tagihan " . $billname,
+            if($fcm)
+            {
+                $message = [
+                    "message" => [
+                        "token"        => $fcm,
+                        "notification" => [
+                            "title" => "Tagihan",
+                            "body"  => "Anda punya tagihan " . $billname,
+                        ],
                     ],
-                ],
-            ];
-            FirebaseMessage::sendFCMMessage($message);
+                ];
+                FirebaseMessage::sendFCMMessage($message);
+
+            }
+
             return back();
         } catch (\Exception $e) {
             return back();
@@ -164,7 +169,7 @@ class Home extends Controller
 
     public function user()
     {
-        $items = User::with('data')->get();
+        $items = User::with('data')->where('role','!=',0)->get();
         return view('master.user.index', compact('items'));
     }
 
@@ -231,6 +236,16 @@ class Home extends Controller
         return back()->with('status', 'Ugrade Level berhasil');
     }
 
+    public function status(Request $request, $id)
+    {
+        $head = Head::where('id', $id)->firstOrFail();
+        $head->note = $request->keterangan;
+        $head->done = $request->status;
+        $head->save(); 
+
+        return back()->with('status', 'Update status berhasil');
+    }
+
     public function bill(Request $request)
     {
 
@@ -288,7 +303,7 @@ class Home extends Controller
     {
         if ($par == "bul") {
             $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-            if ($paid->status == 0) {
+            if ($paid->status != 1) {
                 $user = $paid->reg->murid->users;
                 if ($user->status == 0) {
                     $user->status = 1;
@@ -545,6 +560,7 @@ class Home extends Controller
 
     public function chart($par)
     {
+        $dummyData = [];
         $bulanMap = [
             1 => 'Jan', 2  => 'Feb', 3  => 'Mar', 4  => 'Apr',
             5 => 'Mei', 6  => 'Jun', 7  => 'Jul', 8  => 'Aug',
@@ -556,6 +572,7 @@ class Home extends Controller
 
         if ($par == 'reg') {
             $data = DB::table('head')
+                ->where('old',0)
                 ->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
                 ->groupByRaw('YEAR(created_at), MONTH(created_at)')
                 ->orderByRaw('YEAR(created_at), MONTH(created_at)')

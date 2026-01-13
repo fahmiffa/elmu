@@ -22,12 +22,12 @@ class BulkInsertJob implements ShouldQueue
     public function handle(): void
     {
         try {
-        \Log::info('⏳ Proses insert dimulai...');
-        DB::table('paids')->insert($this->data);
-        \Log::info('✅ Insert berhasil');
-    } catch (\Exception $e) {
-        \Log::error('Insert gagal: '.$e->getMessage());
-        throw $e; 
-    }
+            \Log::info('⏳ Proses insert dimulai...');
+            DB::table('paids')->insert($this->data);
+            \Log::info('✅ Insert berhasil');
+        } catch (\Exception $e) {
+            \Log::error('Insert gagal: '.$e->getMessage());
+            throw $e; 
+        }
     }
 }

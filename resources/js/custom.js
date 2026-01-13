@@ -377,10 +377,8 @@ export const dataTableReg = (data) => {
         selectedItem: null,
 
         openModal(item) {
-            if (item.status === 0) {
-                this.selectedItem = item;
-                this.modalOpen = true;
-            }
+            this.selectedItem = item;
+            this.modalOpen = true;
         },
         closeModal() {
             this.modalOpen = false;

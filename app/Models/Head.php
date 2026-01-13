@@ -102,10 +102,10 @@ class Head extends Model
         } else if ($this->done == 0) {
             return "Aktif";
         } else if ($this->done == 2) {
-            return "Tidak Aktif";
+            return "Cuti";
         } else if($this->done == 3)
         {
-            return "Cuti";
+            return "Keluar";
         }
     }
 
