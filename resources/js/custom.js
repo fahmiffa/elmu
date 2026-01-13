@@ -224,8 +224,6 @@ export const layout = () => {
         toggleSidebar() {
             this.sidebarOpen = !this.sidebarOpen;
             localStorage.setItem("sidebarOpen", this.sidebarOpen);
-            if (!isMobileDevice) {
-            }
         },
         toggleSidebarMobile() {
             this.sidebarOpen = !this.sidebarOpen;
