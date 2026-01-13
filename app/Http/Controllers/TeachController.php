@@ -155,6 +155,7 @@ class TeachController extends Controller
      */
     public function destroy(Teach $teach)
     {
+        $teach->akun->delete();
         $teach->delete();
         return redirect()->route('dashboard.master.teach.index');
     }
