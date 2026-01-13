@@ -1,3 +1,4 @@
+@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.reg.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.reg.*') ? 'bg-orange-100' : null }}">
@@ -13,6 +14,7 @@
         </span> Pendaftaran
     </li>
 </a>
+@endif
 <a href="{{ route('dashboard.pay') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.pay') ? 'bg-orange-100' : null }}">
@@ -42,6 +44,7 @@
         </span> AKademik
     </li>
 </a>
+@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.jadwal.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.jadwal.*') ? 'bg-orange-100' : null }}">
@@ -66,6 +69,7 @@
         </span> Penjadwalan
     </li>
 </a>
+@endif
 <a href="{{ route('dashboard.absensi') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.absensi') ? 'bg-orange-100' : null }}">
@@ -111,6 +115,7 @@
         </span> Video
     </li>
 </a>
+@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.raport.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.raport.*') ? 'bg-orange-100' : null }}">
@@ -155,3 +160,4 @@
         </span> Pengumuman
     </li>
 </a>
+@endif

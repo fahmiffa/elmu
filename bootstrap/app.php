@@ -14,11 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->alias([
-            'isRole' => \App\Http\Middleware\isRole::class,
-            'jwt'    => \App\Http\Middleware\JwtMiddleware::class,
+            'isRole'           => \App\Http\Middleware\isRole::class,
+            'restrictOperator' => \App\Http\Middleware\RestrictOperator::class,
+            'jwt'              => \App\Http\Middleware\JwtMiddleware::class,
         ]);
-
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-
-    })->create();
+    ->withExceptions(function (Exceptions $exceptions): void {})->create();

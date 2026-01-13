@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -41,6 +42,18 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+
+            // Cek apakah role adalah Admin (0) atau Operator (4)
+            if (!in_array($user->role, [0, 4])) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akses ditolak. Hanya Admin dan Operator yang dapat login.',
+                ]);
+            }
+
             if ($user->status != 1) {
                 Auth::logout();
 

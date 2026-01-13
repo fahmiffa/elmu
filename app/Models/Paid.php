@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Carbon\Carbon;
@@ -24,7 +25,7 @@ class Paid extends Model
         } else {
             // Billing normal → tanggal 2 bulan berjalan
             $date = Carbon::parse($this->created_at)
-            // ->addMonthNoOverflow() // bulan berikutnya
+                // ->addMonthNoOverflow() // bulan berikutnya
                 ->day(2)
                 ->locale('id');
             return $date->translatedFormat('l, d F Y');
@@ -33,19 +34,15 @@ class Paid extends Model
 
     public function gettipeAttribute()
     {
-        if($this->status == 1)
-        {
+        if ($this->status == 1) {
             if ($this->via == "cash") {
                 return "Offline";
             } else {
                 return "Online";
             }
-        }
-        else
-        {
+        } else {
             return null;
         }
-
     }
 
     public function getkitAttribute()
@@ -62,13 +59,37 @@ class Paid extends Model
         ] : null;
     }
 
-    public function gettotalAttribute()
+
+    public function getTotalAttribute()
     {
-        $price = (int) $this->reg->prices->harga;
-        $kit   = (int) $this->reg->programs->kit;
-        $val = (int) $this->first == 1 ? $price + $kit : $price;
-        return $val;
+        $hargaBulan = (int) $this->reg->prices->harga;
+        $kit        = (int) $this->reg->programs->kit;
+        $week       = (int) $this->week;   // 1–4
+        $first      = (int) $this->first;
+
+        // Ambil hari dari tanggal daftar
+        $day = Carbon::parse($this->created_at)->dayOfWeek;
+        // 1 = Senin, 2 = Selasa, ..., 7 = Minggu
+
+        // Senin–Selasa
+        $weeks = in_array($day, [1, 2])
+            ? (5 - $week)
+            : (4 - $week);
+
+        $weeks = max(0, $weeks);
+
+        $meetings = $weeks * 2;
+        $pricePerMeeting = $hargaBulan / 8;
+
+        $total = $meetings * $pricePerMeeting;
+
+        if ($first === 1) {
+            $total += $kit;
+        }
+
+        return (int) round($total);
     }
+
 
     public function murid()
     {

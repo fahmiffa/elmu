@@ -47,26 +47,28 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
-    Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
-    Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
-    Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
+    Route::middleware('restrictOperator')->group(function () {
+        Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
+        Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
+        Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
+        Route::resource('report', ReportController::class);
+        Route::resource('raport', RaportController::class);
+        Route::resource('campaign', CampaignController::class);
+        Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
+        Route::resource('jadwal', ScheduleController::class);
+    });
+    Route::get('/level', [Home::class, 'level'])->name('level');
     Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
     Route::post('/pembayaran/{id}/{par}', [Home::class, 'payment'])->name('payment');
     Route::post('/send/{id}/{par}', [Home::class, 'send'])->name('send');
-    Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
-    Route::get('/level', [Home::class, 'level'])->name('level');
     Route::get('setting', [Home::class, 'setting'])->name('setting');
     Route::post('/pass', [Home::class, 'pass'])->name('pass');
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/layanan/{id}', [Home::class, 'layanan'])->name('layanan');
     Route::post('/status/{id}', [Home::class, 'status'])->name('status');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
-    Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
-    Route::resource('jadwal', ScheduleController::class);
-    Route::resource('report', ReportController::class);
-    Route::resource('raport', RaportController::class);
+    Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
     Route::resource('video', VidoesController::class);
-    Route::resource('campaign', CampaignController::class);
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         $total = DB::table('head')->count();
@@ -76,11 +78,17 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         return response()->json(['progress' => $progress]);
     });
 
-    Route::prefix('master')->name('master.')->group(function () {
+    Route::prefix('master')->middleware('isRole')->name('master.')->group(function () {
         Route::resource('materi', MateriController::class);
         Route::get('/', [Home::class, 'master'])->name('index');
         Route::get('/user', [Home::class, 'user'])->name('user');
+        Route::get('/user/create', [Home::class, 'userCreate'])->name('user.create');
+        Route::post('/user', [Home::class, 'userStore'])->name('user.store');
+        Route::get('/user/{id}/edit', [Home::class, 'userEditAction'])->name('user.edit-form');
+        Route::put('/user/{user}/update', [Home::class, 'userUpdateData'])->name('user.update-data');
         Route::get('/user/{id}/detail', [Home::class, 'userEdit'])->name('user.edit');
+        Route::get('/user/{id}/password', [Home::class, 'userPass'])->name('user.pass');
+        Route::put('/user/{id}/password', [Home::class, 'userPassUpdate'])->name('user.pass.update');
         Route::put('/user/{user}', [Home::class, 'userUpdate'])->name('user.update');
         Route::resource('unit', UnitController::class);
         Route::resource('zone', ZoneController::class);

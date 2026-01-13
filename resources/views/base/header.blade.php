@@ -6,8 +6,10 @@
         <nav class="space-x-6">
             <a href="{{ route('dashboard.home') }}"
                 class="@if (Route::is('dashboard.home')) font-semibold @endif ">Home</a>
+            @if(Auth::user()->role == 0)
             <a href="{{ route('dashboard.master.index') }}"
                 class="@if (Route::is('dashboard.master.index')) font-semibold @endif ">Master</a>
+            @endif
         </nav>
         <div class="flex space-x-4">
             <a href="{{ route('dashboard.setting') }}">
@@ -38,9 +40,10 @@
             <h2 class="text-xl font-semibold">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
             </h2>
             @if (request()->segment(3))
-                <p class="text-sm opacity-80">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
-                    >
-                    {{ request()->segment(3) ? str_replace("-"," ",ucfirst(request()->segment(3))) : null }}</p>
+            <p class="text-sm opacity-80">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
+                >
+                {{ request()->segment(3) ? str_replace("-"," ",ucfirst(request()->segment(3))) : null }}
+            </p>
             @endif
         </div>
 

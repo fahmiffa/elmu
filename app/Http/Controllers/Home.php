@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Jobs\BulkInsertJob;
 use App\Models\Addon;
-use App\Models\App;
 use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
@@ -14,33 +14,55 @@ use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
 use App\Models\Student;
+use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
-use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class Home extends Controller
 {
     public function absensi()
     {
-        $items = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present', 'class')->get();
-        return view('home.present.index', compact('items'));
+        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present', 'class', 'units', 'programs');
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('unit', $unitIds);
+        }
+        $items = $query->get();
+        $units = Unit::all();
+        $pro   = Program::all();
+        return view('home.present.index', compact('items', 'units', 'pro'));
     }
 
     public function level()
     {
-        $items = Head::has('level')->with('murid:id,name', 'level.guru', 'class')->get();
+        $query = Head::has('level')->with('murid:id,name', 'level.guru', 'class', 'units', 'programs');
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('unit', $unitIds);
+        }
+        $items = $query->get()->map(function ($item) {
+            $item->level->map(function ($lvl) {
+                $lvl->tgl = \Carbon\Carbon::parse($lvl->created_at)->locale('id')->translatedFormat('d F Y');
+                return $lvl;
+            });
+            return $item;
+        });
         $lay   = Addon::where('first', 0)->with('price')->latest()->get();
-        return view('home.level.index', compact('items', 'lay'));
+        $units = Unit::all();
+        $pro   = Program::all();
+        return view('home.level.index', compact('items', 'lay', 'units', 'pro'));
     }
 
     public function send(Request $request, $id, $par)
@@ -59,8 +81,7 @@ class Home extends Controller
                 $billname = $order->product->item->name;
             }
 
-            if($fcm)
-            {
+            if ($fcm) {
                 $message = [
                     "message" => [
                         "token"        => $fcm,
@@ -71,7 +92,6 @@ class Home extends Controller
                     ],
                 ];
                 FirebaseMessage::sendFCMMessage($message);
-
             }
 
             return back();
@@ -150,13 +170,11 @@ class Home extends Controller
             ];
 
             return Transaction::create($params);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Gagal membuat transaksi: ' . $e->getMessage(),
             ], 500);
         }
-
     }
 
     public function midtransHook(Request $request)
@@ -164,13 +182,65 @@ class Home extends Controller
         Log::info('Midtrans Webhook Received:', $request->all());
         $data = $request->all();
         return Transaction::hook($data);
-
     }
 
     public function user()
     {
-        $items = User::with('data')->where('role','!=',0)->get();
+        $items = User::with('data', 'zone')->where('role', '!=', 0)->get();
         return view('master.user.index', compact('items'));
+    }
+
+    public function userCreate()
+    {
+        $zones = Zone::all();
+        $action = "Tambah Akun";
+        return view('master.user.form_user', compact('zones', 'action'));
+    }
+
+    public function userStore(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email|unique:users,email',
+            'username' => 'required|unique:users,name',
+            'password' => 'required|min:6',
+            'zone_id'  => 'nullable|exists:zones,id',
+        ]);
+
+        User::create([
+            'name'     => $request->username,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => 4,
+            'status'   => 1,
+            'zone_id'  => $request->zone_id,
+        ]);
+
+        return redirect()->route('dashboard.master.user')->with('status', 'Akun berhasil ditambahkan');
+    }
+
+    public function userEditAction($id)
+    {
+        $user  = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $zones = Zone::all();
+        $action = "Edit Akun";
+        return view('master.user.form_user', compact('user', 'zones', 'action'));
+    }
+
+    public function userUpdateData(Request $request, User $user)
+    {
+        $request->validate([
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'username' => 'required|unique:users,name,' . $user->id,
+            'zone_id'  => 'nullable|exists:zones,id',
+        ]);
+
+        $user->update([
+            'name'    => $request->username,
+            'email'   => $request->email,
+            'zone_id' => $request->zone_id,
+        ]);
+
+        return redirect()->route('dashboard.master.user')->with('status', 'Akun berhasil diperbarui');
     }
 
     public function userUpdate(Request $request, User $user)
@@ -190,8 +260,30 @@ class Home extends Controller
         }
     }
 
+    public function userPass($id)
+    {
+        $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        return view('master.user.pass', compact('user'));
+    }
+
+    public function userPassUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return redirect()->route('dashboard.master.user')->with('status', 'Password user berhasil diperbarui');
+    }
+
     public function layanan(Request $request, $id)
     {
+        if (Auth::user()->role == 4) {
+            return redirect()->back()->with('error', 'Akses dibatasi.');
+        }
         $head = Head::where(DB::raw('md5(students)'), $id)->firstOrFail();
         $done = $request->has("done");
         $fcm  = $head->murid->users->fcm;
@@ -224,7 +316,6 @@ class Home extends Controller
                     ],
                 ],
             ];
-
         }
 
         Level::where('id', $request->level)->update(['status' => 1]);
@@ -241,7 +332,7 @@ class Home extends Controller
         $head = Head::where('id', $id)->firstOrFail();
         $head->note = $request->keterangan;
         $head->done = $request->status;
-        $head->save(); 
+        $head->save();
 
         return back()->with('status', 'Update status berhasil');
     }
@@ -253,9 +344,9 @@ class Home extends Controller
         $da    = [];
 
         $head = Head::select('id', 'old')
-        // ->whereHas('kontrak',function($q){
-        //     $q->where('month',1);
-        // })
+            // ->whereHas('kontrak',function($q){
+            //     $q->where('month',1);
+            // })
             ->where("done", 0)->get();
 
         foreach ($head as $val) {
@@ -279,13 +370,23 @@ class Home extends Controller
 
     public function reg()
     {
-        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level')->get();
+        $query = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level');
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('unit', $unitIds);
+        }
+        $items = $query->get();
         return view('home.reg.index', compact('items'));
     }
 
     public function akademik()
     {
-        $items = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level')->get();
+        $query = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level');
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('unit', $unitIds);
+        }
+        $items = $query->get();
         return view('home.reg.list', compact('items'));
     }
 
@@ -330,7 +431,6 @@ class Home extends Controller
                     ],
                 ];
                 FirebaseMessage::sendFCMMessage($message);
-
             }
 
             return back()->with('status', 'Pembayaran berhasil');
@@ -359,7 +459,6 @@ class Home extends Controller
                     ],
                 ];
                 FirebaseMessage::sendFCMMessage($message);
-
             }
             return back()->with('status', 'Pembayaran berhasil');
         }
@@ -378,40 +477,41 @@ class Home extends Controller
 
     public function regStore(Request $request)
     {
-        $validated = $request->validate([
-            // Wajib diisi
-            'murid'                 => "required_if:option,2",
-            'grade'                 => 'required',
-            'kelas'                 => ['required', Rule::in(Kelas::pluck('id')->toArray())],
-            'gender'                => 'nullable|in:1,2',
-            'place'                 => 'nullable|string',
-            'birth'                 => 'nullable|date',
-            'dad'                   => 'nullable|string',
-            'dadJob'                => 'nullable|string',
-            'mom'                   => 'nullable|string',
-            'momJob'                => 'nullable|string',
-            'hp_parent'             => 'nullable|string',
-            'kontrak'               => 'required',
-            'program'               => ['required', Rule::in(Program::pluck('id')->toArray())],
-            'unit'                  => ['required', Rule::in(Unit::pluck('id')->toArray())],
-            'email'                 => 'required_if:option,1|unique:users,email',
+        $validated = $request->validate(
+            [
+                // Wajib diisi
+                'murid'                 => "required_if:option,2",
+                'grade'                 => 'required',
+                'kelas'                 => ['required', Rule::in(Kelas::pluck('id')->toArray())],
+                'gender'                => 'nullable|in:1,2',
+                'place'                 => 'nullable|string',
+                'birth'                 => 'nullable|date',
+                'dad'                   => 'nullable|string',
+                'dadJob'                => 'nullable|string',
+                'mom'                   => 'nullable|string',
+                'momJob'                => 'nullable|string',
+                'hp_parent'             => 'nullable|string',
+                'kontrak'               => 'required',
+                'program'               => ['required', Rule::in(Program::pluck('id')->toArray())],
+                'unit'                  => ['required', Rule::in(Unit::pluck('id')->toArray())],
+                'email'                 => 'required_if:option,1|unique:users,email',
 
-            // Optional
-            'name'                  => 'required_if:option,1',
-            'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'sekolah_kelas'         => 'nullable|string',
-            'alamat'                => 'nullable|string',
-            'alamat_sekolah'        => 'nullable|string',
-            'dream'                 => 'nullable|string',
-            'hp_siswa'              => 'nullable|string',
-            'agama'                 => 'nullable|string',
-            'sosmedChild'           => 'nullable|string',
-            'sosmedOther'           => 'nullable|string',
-            'study'                 => 'nullable|string',
-            'rank'                  => 'nullable|string',
-            'pendidikan_non_formal' => 'nullable|string',
-            'prestasi'              => 'nullable|string',
-        ],
+                // Optional
+                'name'                  => 'required_if:option,1',
+                'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sekolah_kelas'         => 'nullable|string',
+                'alamat'                => 'nullable|string',
+                'alamat_sekolah'        => 'nullable|string',
+                'dream'                 => 'nullable|string',
+                'hp_siswa'              => 'nullable|string',
+                'agama'                 => 'nullable|string',
+                'sosmedChild'           => 'nullable|string',
+                'sosmedOther'           => 'nullable|string',
+                'study'                 => 'nullable|string',
+                'rank'                  => 'nullable|string',
+                'pendidikan_non_formal' => 'nullable|string',
+                'prestasi'              => 'nullable|string',
+            ],
             [
                 'required'    => 'Field Wajib disi',
                 'required_if' => 'Field Wajib disi',
@@ -492,7 +592,6 @@ class Home extends Controller
                 $level->head       = $head->id;
                 $level->status     = 1;
                 $level->save();
-
             } else {
 
                 $parent = Head::where('id', $request->murid)->firstOrFail();
@@ -528,7 +627,6 @@ class Home extends Controller
             DB::commit();
 
             return redirect()->route('dashboard.reg');
-
         } catch (\Exception $e) {
             DB::rollback();
 
@@ -548,32 +646,63 @@ class Home extends Controller
 
     public function pay()
     {
-        $items = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc')->get();
-        $lay   = Order::has('product')->with('reg.murid.users', 'product.item')->get();
-        return view('home.pay.index', compact('items', 'lay'));
+        $queryPaid  = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc');
+        $queryOrder = Order::has('product')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.units', 'product.item');
+
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $queryPaid->whereHas('reg', function ($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+            $queryOrder->whereHas('reg', function ($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+        }
+
+        $items = $queryPaid->get();
+        $lay   = $queryOrder->get();
+        $units = Unit::all();
+        $pro   = Program::all();
+        return view('home.pay.index', compact('items', 'lay', 'units', 'pro'));
     }
 
     public function master()
     {
-        return view('master.index');
+        $kelas = Kelas::count();
+        $unit  = Unit::count();
+        $murid = Student::count();
+        $guru  = Teach::count();
+        return view('master.index', compact('kelas', 'unit', 'murid', 'guru'));
     }
 
     public function chart($par)
     {
         $dummyData = [];
         $bulanMap = [
-            1 => 'Jan', 2  => 'Feb', 3  => 'Mar', 4  => 'Apr',
-            5 => 'Mei', 6  => 'Jun', 7  => 'Jul', 8  => 'Aug',
-            9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+            1 => 'Jan',
+            2  => 'Feb',
+            3  => 'Mar',
+            4  => 'Apr',
+            5 => 'Mei',
+            6  => 'Jun',
+            7  => 'Jul',
+            8  => 'Aug',
+            9 => 'Sep',
+            10 => 'Okt',
+            11 => 'Nov',
+            12 => 'Des',
         ];
 
         $now   = (int) date('Y');
         $start = (int) env('APP_START');
 
         if ($par == 'reg') {
-            $data = DB::table('head')
-                ->where('old',0)
-                ->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
+            $query = DB::table('head')->where('old', 0);
+            if (Auth::user()->zone_id) {
+                $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $query->whereIn('unit', $unitIds);
+            }
+            $data = $query->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
                 ->groupByRaw('YEAR(created_at), MONTH(created_at)')
                 ->orderByRaw('YEAR(created_at), MONTH(created_at)')
                 ->get();
@@ -604,14 +733,23 @@ class Home extends Controller
 
         if ($par == 'pay') {
 
-            $data = Paid::selectRaw('
-            tahun,
-            bulan,
-            MIN(first) as first,
-            MIN(head) as head,
-            COUNT(*) as tot
-        ')
-                ->groupBy('tahun', 'bulan','status')
+            $query = Paid::query();
+            if (Auth::user()->zone_id) {
+                $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $query->whereHas('reg', function ($q) use ($unitIds) {
+                    $q->whereIn('unit', $unitIds);
+                });
+            }
+
+            $data = $query->selectRaw('
+                tahun,
+                bulan,
+                status,
+                MIN(first) as first,
+                MIN(head) as head,
+                COUNT(*) as tot
+            ')
+                ->groupBy('tahun', 'bulan', 'status')
                 ->orderBy('tahun')
                 ->orderBy('bulan')
                 ->orderBy('status')
@@ -675,11 +813,10 @@ class Home extends Controller
             return back()->withErrors(['current_password' => 'Password Sekarang salah']);
         }
 
-        Auth::user()->update([
+        User::where('id', Auth::id())->update([
             'password' => Hash::make($request->new_password),
         ]);
 
         return back()->with('success', 'Password berhasil diperbarui.');
     }
-
 }

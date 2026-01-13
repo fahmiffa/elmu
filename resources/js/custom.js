@@ -256,6 +256,8 @@ export const dataTable = (data) => {
     console.log(data);
     return {
         search: "",
+        filterUnit: "",
+        filterProgram: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -285,13 +287,21 @@ export const dataTable = (data) => {
         },
 
         filteredData() {
-            let temp = this.rows.filter((row) =>
-                Object.values(row).some((val) => {
+            let temp = this.rows.filter((row) => {
+                const matchesSearch = Object.values(row).some((val) => {
                     return String(val)
                         .toLowerCase()
                         .includes(this.search.toLowerCase());
-                })
-            );
+                });
+
+                const matchesUnit =
+                    this.filterUnit === "" || row.unit == this.filterUnit;
+                const matchesProgram =
+                    this.filterProgram === "" ||
+                    row.program == this.filterProgram;
+
+                return matchesSearch && matchesUnit && matchesProgram;
+            });
 
             temp.sort((a, b) => {
                 let valA = a[this.sortColumn];
@@ -333,6 +343,10 @@ export const dataTable = (data) => {
             if (this.currentPage > 1) this.currentPage--;
         },
 
+        resetPage() {
+            this.currentPage = 1;
+        },
+
         deleteRow(e) {
             if (confirm("Yakin ingin menghapus data?")) {
                 e.target.submit();
@@ -367,6 +381,8 @@ export const dataTable = (data) => {
 export const dataTableReg = (data) => {
     return {
         search: "",
+        filterUnit: "",
+        filterProgram: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -395,9 +411,19 @@ export const dataTableReg = (data) => {
         },
 
         filteredData() {
-            let temp = this.rows.filter((row) =>
-                row.murid.name.toLowerCase().includes(this.search.toLowerCase())
-            );
+            let temp = this.rows.filter((row) => {
+                const matchesSearch = row.murid.name
+                    .toLowerCase()
+                    .includes(this.search.toLowerCase());
+
+                const matchesUnit =
+                    this.filterUnit === "" || row.unit == this.filterUnit;
+                const matchesProgram =
+                    this.filterProgram === "" ||
+                    row.program == this.filterProgram;
+
+                return matchesSearch && matchesUnit && matchesProgram;
+            });
 
             temp.sort((a, b) => {
                 let valA = a[this.sortColumn];
@@ -469,6 +495,8 @@ export const dataTableReg = (data) => {
 export const dataTablePay = (data) => {
     return {
         search: "",
+        filterUnit: "",
+        filterProgram: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -487,11 +515,19 @@ export const dataTablePay = (data) => {
         },
 
         filteredData() {
-            let temp = this.rows.filter((row) =>
-                row.reg.murid.name
+            let temp = this.rows.filter((row) => {
+                const matchesSearch = row.reg.murid.name
                     .toLowerCase()
-                    .includes(this.search.toLowerCase())
-            );
+                    .includes(this.search.toLowerCase());
+
+                const matchesUnit =
+                    this.filterUnit === "" || row.reg.unit == this.filterUnit;
+                const matchesProgram =
+                    this.filterProgram === "" ||
+                    row.reg.program == this.filterProgram;
+
+                return matchesSearch && matchesUnit && matchesProgram;
+            });
 
             temp.sort((a, b) => {
                 let valA = a[this.sortColumn];

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -32,6 +33,15 @@ class User extends Authenticatable implements JWTSubject
         if ($this->role == 2) {
             return "User";
         }
+
+        if ($this->role == 4) {
+            return "Operator";
+        }
+    }
+
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id');
     }
 
     public function data()
@@ -63,6 +73,11 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'role',
+        'zone_id',
+        'status',
+        'username',
+        'nomor'
     ];
 
     /**

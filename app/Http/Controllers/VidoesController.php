@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Vidoes;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
 
 class VidoesController extends Controller
 {
@@ -13,8 +14,18 @@ class VidoesController extends Controller
      */
     public function index()
     {
-        $items = Vidoes::with('guru','murid')->get();
-        return view('home.video.index', compact('items'));
+        $items = Vidoes::with(['guru', 'murid.reg' => function ($q) {
+            $q->where('done', 0); // Active registration
+        }])->get()->map(function ($item) {
+            // Flatten for easier JS filtering if needed
+            $activeReg = $item->murid->reg->first();
+            $item->unit = $activeReg?->unit;
+            $item->program = $activeReg?->program;
+            return $item;
+        });
+        $units = \App\Models\Unit::all();
+        $pro   = \App\Models\Program::all();
+        return view('home.video.index', compact('items', 'units', 'pro'));
     }
 
     /**
@@ -37,7 +48,8 @@ class VidoesController extends Controller
             'role'  => 'required|in:3,2',
             'video' => 'required|mimes:mp4|max:20480',
             'murid' => 'required_if:role,murid|exists:students,user',
-        ], ['required' => 'Feild Wajib diisi',
+        ], [
+            'required' => 'Feild Wajib diisi',
             'in'           => 'FIeld invalid',
         ]);
 
@@ -55,7 +67,6 @@ class VidoesController extends Controller
         $item->save();
 
         return redirect()->route('dashboard.video.index');
-
     }
 
     public function destroy(Vidoes $video)
