@@ -74,7 +74,9 @@ class StudentController extends Controller
                     $user->password = bcrypt('murik@');
                     $user->save();
 
-                    $siswa                        = new Student;
+                    $siswa                        = Student::where('name',$row[2])->exists() ? Student::where('name',$row[2])->first() :  new Student;
+                    $siswa->nama_panggilan        = $row[1] ?? null;
+                    $siswa->name                  = $row[2] ?? null;
                     $siswa->user                  = $user->id;
                     $siswa->place                 = $row[3] ?? null;
                     $siswa->birth                 = $birth;
@@ -86,7 +88,6 @@ class StudentController extends Controller
                     $siswa->dad                   = $row[11] ?? null;
                     $siswa->dadJob                = $row[12] ?? null;
                     $siswa->sosmedChild           = $row[14] ?? null;
-                    $siswa->name                  = $row[2] ?? null;
                     $siswa->hp_parent             = $row[15] ?? null;
                     $siswa->gender                = $row[17] ?? null;
                     $siswa->alamat_sekolah        = $row[18] ?? null;

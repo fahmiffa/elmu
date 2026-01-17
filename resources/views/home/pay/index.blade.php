@@ -138,6 +138,7 @@
                             <tr class="bg-orange-500 text-left text-white">
                                 <th class="px-4 py-2">No</th>
                                 <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                                <th class="px-4 py-2">Panggilan</th>
                                 <th class="px-4 py-2">Program/Unit</th>
                                 <th class="px-4 py-2">Jatuh Tempo</th>
                                 <th class="px-4 py-2">Waktu</th>
@@ -156,6 +157,7 @@
                                         x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                                     </td>
                                     <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.name ?? '-'"></td>
+                                    <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.nama_panggilan ?? ''"></td>
                                     <td class="px-4 py-2">
                                         <div class="text-xs">
                                             <div class="font-semibold" x-text="row.reg?.units?.name ?? '-'"></div>

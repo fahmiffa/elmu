@@ -138,6 +138,7 @@
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
                         <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                        <th class="px-4 py-2">Panggilan</th>
                         <th class="px-4 py-2">Umur</th>
                         <th class="px-4 py-2">Gender</th>
                         <th class="px-4 py-2">Alamat</th>
@@ -149,6 +150,7 @@
                         <tr class="border-t border-gray-300">
                             <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                             <td class="px-4 py-2" x-text="row.name"></td>
+                            <td class="px-4 py-2" x-text="row.nama_panggilan"></td>
                             <td class="px-4 py-2" x-text="row.birth ? row.age : null"></td>
                             <td class="px-4 py-2" x-text="row.genders"></td>
                             <td class="px-4 py-2" x-text="row.alamat_sekolah"></td>
