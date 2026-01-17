@@ -1,8 +1,4 @@
-{
-	auto_https off
-}
-
-:8080 {
+murika.co.id {
 	root * public
 	php_server
 	file_server

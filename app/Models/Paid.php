@@ -60,35 +60,45 @@ class Paid extends Model
     }
 
 
-    public function getTotalAttribute()
-    {
-        $hargaBulan = (int) $this->reg->prices->harga;
-        $kit        = (int) $this->reg->programs->kit;
-        $week       = (int) $this->week;   // 1–4
-        $first      = (int) $this->first;
+public function getTotalAttribute()
+{
+    $hargaBulan = (int) $this->reg->prices->harga;
+    $kit        = (int) $this->reg->programs->kit;
+    $first      = (int) $this->first;
 
-        // Ambil hari dari tanggal daftar
-        $day = Carbon::parse($this->created_at)->dayOfWeek;
-        // 1 = Senin, 2 = Selasa, ..., 7 = Minggu
+    // Hari daftar (WIB)
+    $created = Carbon::parse($this->created_at)->timezone('Asia/Jakarta');
+    $day = $created->dayOfWeekIso; // 1 = Senin ... 7 = Minggu
 
-        // Senin–Selasa
-        $weeks = in_array($day, [1, 2])
-            ? (5 - $week)
-            : (4 - $week);
+    // Minggu ke berapa dalam bulan (1–4)
+    $week = min(4, $created->weekOfMonth);
 
-        $weeks = max(0, $weeks);
+    // Sisa minggu termasuk minggu ini
+    $weeksRemaining = 4 - $week + 1;
 
-        $meetings = $weeks * 2;
-        $pricePerMeeting = $hargaBulan / 8;
-
-        $total = $meetings * $pricePerMeeting;
-
-        if ($first === 1) {
-            $total += $kit;
-        }
-
-        return (int) round($total);
+    // Hitung pertemuan sesuai hari daftar
+    if (in_array($day, [1, 2])) {
+        // Senin / Selasa → dapat full minggu
+        $meetings = $weeksRemaining * 2;
+    } else {
+        // Rabu–Minggu → minggu ini dikurangi 1
+        $meetings = max(0, $weeksRemaining * 2 - 2);
     }
+
+    // Harga per pertemuan
+    $pricePerMeeting = $hargaBulan / 8;
+
+    // Total biaya kelas
+    $total = $meetings * $pricePerMeeting * 2;
+
+    // Tambah kit jika pendaftaran pertama
+    if ($first === 1) {
+        $total += $kit;
+    }
+
+    return (int) round($total);
+}
+
 
 
     public function murid()
