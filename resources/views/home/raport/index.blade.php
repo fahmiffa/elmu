@@ -28,6 +28,7 @@
                     <tr class="bg-orange-500 text-left text-white">
                         <th class="px-4 py-2">No</th>
                         <th class="px-4 py-2">Name</th>
+                        <th class="px-4 py-2">Panggilan</th>
                         <th class="px-4 py-2">Raport</th>
                         <th class="px-4 py-2">Action</th>
                     </tr>
@@ -39,6 +40,7 @@
                                 x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                             </td>
                             <td class="px-4 py-2" x-text="row.name"></td>
+                            <td class="px-4 py-2" x-text="row.murid.name"></td>
                             <td class="px-4 py-2 items-center">
                                 <a :href="'/storage/' + row.file + ''" class="text-orange-600 hover:text-orange-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"

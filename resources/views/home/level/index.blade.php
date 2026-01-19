@@ -50,6 +50,7 @@
                 <tr class="bg-orange-500 text-left text-white">
                     <th class="px-4 py-2">No</th>
                     <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                    <th class="px-4 py-2">Panggilan</th>
                     <th class="px-4 py-2">Program</th>
                     <th class="px-4 py-2">Level</th>
                 </tr>
@@ -65,6 +66,7 @@
                             <div class="whitespace-nowrap">
                                 <dl>
                                     <dt x-text="row.units.name" class="font-semibold capitalize"></dt>
+                                    <dt x-text="row.units.nama_panggilan"></dt>
                                     <dt class="text-xs">
                                         <span x-text="row.programs.name"></span>
                                         <span x-text="row.class.name"></span>

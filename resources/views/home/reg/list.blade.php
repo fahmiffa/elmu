@@ -27,6 +27,7 @@
                     <th class="px-4 py-2">No</th>
                     <th class="px-4 py-2 text-nowrap">Nomor Induk</th>
                     <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                    <th class="px-4 py-2">Panggilan</th>
                     <th class="px-4 py-2">Program</th>
                     <th class="px-4 py-2">Status</th>
                 </tr>
@@ -39,6 +40,7 @@
                         </td>
                         <td class="px-4 py-2" x-text="row.induk"></td>
                         <td class="px-4 py-2" x-text="row.murid.name"></td>
+                        <td class="px-4 py-2" x-text="row.murid.nama_panggilan"></td>
                         <td class="px-4 py-2">
                             <dl>
                                 <dt x-text="row.programs.name" class="font-semibold capitalize"></dt>
