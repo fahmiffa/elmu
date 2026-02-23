@@ -145,9 +145,7 @@
                                 <th class="px-4 py-2">Total</th>
                                 <th class="px-4 py-2">Status</th>
                                 <th class="px-4 py-2">TIpe</th>
-                                @if(Auth::user()->role != 4)
                                 <th class="px-4 py-2">Action</th>
-                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -176,7 +174,6 @@
                                         ">
                                     </td>
                                     <td class="px-4 py-2" x-text="row.tipe"></td>
-                                    @if(Auth::user()->role != 4)
                                     <td class="px-4 py-2">
                                         <div class="flex items-center gap-1">
 
@@ -266,7 +263,6 @@
                                             </div>
                                         </div>
                                     </td>
-                                    @endif
                                 </tr>
                             </template>
                             <tr x-show="filteredData().length === 0">
@@ -331,9 +327,7 @@
                                 <th class="px-4 py-2">Harga</th>
                                 <th class="px-4 py-2">Status</th>
                                 <th class="px-4 py-2">Tipe</th>
-                                @if(Auth::user()->role != 4)
                                 <th class="px-4 py-2">Action</th>
-                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -360,7 +354,6 @@
                                         ">
                                     </td>
                                     <td class="px-4 py-2 text-nowrap" x-text="row.tipe"></td>
-                                    @if(Auth::user()->role != 4)
                                     <td class="px-4 py-2">
                                         <div class="flex items-center gap-1">
                                             <form x-show="row.status != 1 && row.reg.murid.users.fcm !== null"
@@ -448,7 +441,6 @@
                                             </div>
                                         </div>
                                     </td>
-                                    @endif
                                 </tr>
                             </template>
                             <tr x-show="filteredData().length === 0">

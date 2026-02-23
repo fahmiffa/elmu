@@ -74,6 +74,7 @@ class ApiController extends Controller
         if ($par == "child") {
             $validator = Validator::make($request->all(), [
                 'alamat'                => 'required',
+                'nama_panggilan'        => 'required',
                 'agama'                 => 'required',
                 'tempat_tanggal_lahir'  => 'required',
                 'tanggal_lahir'         => 'required',
@@ -99,6 +100,7 @@ class ApiController extends Controller
             $user->save();
 
             $siswa->alamat                = $request->alamat;
+            $siswa->nama_panggilan        = $request->nama_panggilan;
             $siswa->place                 = $request->tempat_tanggal_lahir;
             $siswa->birth                 = \Carbon\Carbon::createFromFormat('d-m-Y', $request->tanggal_lahir);
             $siswa->dream                 = $request->cita_cita;
@@ -486,6 +488,7 @@ class ApiController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 1,
             'role'       => $user->role,
             'uid'        => md5($user->data->id),
+            'id'         => $user->id,
         ]);
     }
 
@@ -897,6 +900,7 @@ class ApiController extends Controller
             $student = User::select('id', 'name', 'email', 'status', 'role')
                 ->with('data')
                 ->where('id', $id)->first();
+                
             $induk          = optional($student->data->reg->first())->induk;
             $student->induk = $induk ? substr($induk, 0, -4) : null;
             $student->data->makeHidden('reg');
@@ -1110,7 +1114,7 @@ class ApiController extends Controller
             $response = Http::post(env('URL_WA') . '/send', [
                 'number'  => env('NUMBER_WA'),
                 'to'      => $to,
-                'message' => "Anda reset Berhasil Password\nPassword akun anda : " . $pass,
+                'message' => "Anda reset Berhasil Password\nPassword akun anda : *" . $pass."*",
             ]);
 
             if ($response->status() != 200) {

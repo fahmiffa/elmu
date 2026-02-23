@@ -8,6 +8,8 @@ Route::post('/webhook', [Home::class, 'midtransHook']);
 Route::post('/status', function () {
     return response()->json([
         'status' => false,
+        'versi'=> env('APP_VERSION'),
+        'message'=> 'Mohon maaf, aplikasi sedang dalam perbaikan.\nSilahkan coba lagi secara berkala'
     ], 200);
 });
 

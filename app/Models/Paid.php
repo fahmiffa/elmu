@@ -89,12 +89,13 @@ public function getTotalAttribute()
     $pricePerMeeting = $hargaBulan / 8;
 
     // Total biaya kelas
-    $total = $meetings * $pricePerMeeting * 2;
+    $total = $meetings * $pricePerMeeting;
 
     // Tambah kit jika pendaftaran pertama
     if ($first === 1) {
         $total += $kit;
     }
+
 
     return (int) round($total);
 }

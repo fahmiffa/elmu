@@ -32,8 +32,8 @@ function userName($name)
     $name = strtolower(str_replace(" ", "", $name));
 
     // Ambil 5 karakter pertama jika panjangnya lebih dari 5
-    if (strlen($name) > 5) {
-        $name = substr($name, 0, 5);
+    if (strlen($name) > 7) {
+        $name = substr($name, 0, 7);
     }
 
     // Tambahkan angka acak 5 digit

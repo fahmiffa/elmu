@@ -19,6 +19,12 @@ use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
+
+// Route::any('{any}', function () {
+//    abort(404, 'Data karyawan tidak ditemukan');
+// });
+
+
 Route::get('/kebijakan-privasi', function () {
     return view('policy');
 });

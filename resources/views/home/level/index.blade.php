@@ -82,11 +82,9 @@
                                         <span class="text-xs font-normal text-gray-500" x-text="'(' + item.tgl + ')'"></span>
                                     </div>
                                     <div x-show="item.status === 0">
-                                        @if(Auth::user()->role != 4)
                                         <button @click="openModal(item)"
                                             class="bg-orange-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-orange-600"
                                             type="button">Verifikasi</button>
-                                        @endif
                                     </div>
                                 </div>
                             </template>

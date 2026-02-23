@@ -50,43 +50,27 @@
                         </td>
                         <td class="px-4 py-2 items-center flex-row text-center">
                             <div x-show="row.done === 0">
-                                @if(Auth::user()->role != 4)
                                 <button @click="openModal(row)"
                                     class="bg-orange-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-orange-600"
                                     type="button" x-text="row.status"></button>
-                                @else
-                                <span class="bg-orange-500 text-xs font-semibold text-white px-3 py-2 rounded-2xl" x-text="row.status"></span>
-                                @endif
                             </div>
 
                             <div x-show="row.done === 1">
-                                @if(Auth::user()->role != 4)
                                 <button @click="openModal(row)"
                                     class="bg-green-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-green-600"
                                     type="button" x-text="row.status"></button>
-                                @else
-                                <span class="bg-green-500 text-xs font-semibold text-white px-3 py-2 rounded-2xl" x-text="row.status"></span>
-                                @endif
                             </div>
 
                             <div x-show="row.done === 2">
-                                @if(Auth::user()->role != 4)
                                 <button @click="openModal(row)"
                                     class="bg-red-500 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-red-600"
                                     type="button" x-text="row.status"></button>
-                                @else
-                                <span class="bg-red-500 text-xs font-semibold text-white px-3 py-2 rounded-2xl" x-text="row.status"></span>
-                                @endif
                             </div>
 
                             <div x-show="row.done === 3">
-                                @if(Auth::user()->role != 4)
                                 <button @click="openModal(row)"
                                     class="bg-gray-800 text-xs cursor-pointer font-semibold text-white px-3 py-2 rounded-2xl hover:bg-gray-800"
                                     type="button" x-text="row.status"></button>
-                                @else
-                                <span class="bg-gray-800 text-xs font-semibold text-white px-3 py-2 rounded-2xl" x-text="row.status"></span>
-                                @endif
                             </div>
 
                             <div x-text="row.note"></div>

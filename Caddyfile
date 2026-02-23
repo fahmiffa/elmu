@@ -1,5 +1,28 @@
-murika.co.id {
+app.murika.co.id {
 	root * public
 	php_server
 	file_server
+}
+
+mail.murika.co.id, webmail.murika.co.id {
+    reverse_proxy 127.0.0.1:8080 {
+        header_up Host {host}
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Ssl on
+        header_up X-Url-Scheme https
+        header_up X-Forwarded-For {remote_host}
+    }
+}
+
+
+:4000 {
+    root * /home/Qranafa/seller/public
+    php_server
+    file_server
+}
+
+
+murika.co.id {
+    root * /home/Qranafa/landing_murika/public
+    php_server
 }
