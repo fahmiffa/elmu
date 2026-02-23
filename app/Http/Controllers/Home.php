@@ -494,7 +494,7 @@ class Home extends Controller
                 'kontrak'               => 'required',
                 'program'               => ['required', Rule::in(Program::pluck('id')->toArray())],
                 'unit'                  => ['required', Rule::in(Unit::pluck('id')->toArray())],
-                'email'                 => 'required_if:option,1|unique:users,email',
+                'email'                 => 'exclude_if:option,2|required|email|unique:users,email',
 
                 // Optional
                 'name'                  => 'required_if:option,1',
