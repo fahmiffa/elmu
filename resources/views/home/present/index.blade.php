@@ -68,8 +68,9 @@
                         </td>
                         <td class="px-4 py-2">
                             <template x-for="(item, index) in row.present" :key="index">
-                                <dl>
+                                <dl class="mb-2 last:mb-0">
                                     <dt x-text="item.tanggal" class="font-semibold capitalize"></dt>
+                                    <dd class="text-xs text-gray-600" x-text="'Guru: ' + (item.guru?.name ?? '-')"></dd>
                                 </dl>
                             </template>
                         </td>

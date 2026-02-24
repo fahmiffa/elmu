@@ -34,7 +34,7 @@ class Home extends Controller
 {
     public function absensi()
     {
-        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present', 'class', 'units', 'programs');
+        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present.guru', 'class', 'units', 'programs');
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
