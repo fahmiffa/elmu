@@ -4,7 +4,7 @@
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
 
     <div class="mb-4 flex flex-wrap items-center gap-2">
-        <input type="text" x-model="search" placeholder="Cari Nama"
+        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
             class="flex-1 min-w-[200px] border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
         <select x-model="filterUnit" @change="resetPage()"

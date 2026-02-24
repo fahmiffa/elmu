@@ -22,7 +22,7 @@
             <div x-show="tab === 'home'" x-transition x-data="dataTablePay({{ json_encode($items) }})">
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <input type="text" x-model="search" placeholder="Cari Nama"
+                        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
                             class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
                         <select x-model="filterUnit" @change="resetPage()"
@@ -284,7 +284,7 @@
             <div x-show="tab === 'lay'" x-transition x-data="dataTablePay({{ json_encode($lay) }})">
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <input type="text" x-model="search" placeholder="Cari Nama"
+                        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
                             class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
                         <select x-model="filterUnit" @change="resetPage()"

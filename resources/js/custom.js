@@ -288,11 +288,15 @@ export const dataTable = (data) => {
 
         filteredData() {
             let temp = this.rows.filter((row) => {
-                const matchesSearch = Object.values(row).some((val) => {
-                    return String(val)
-                        .toLowerCase()
-                        .includes(this.search.toLowerCase());
-                });
+                const keyword = this.search.toLowerCase();
+                const name = (row.name ?? row.users?.name ?? "").toLowerCase();
+                const panggilan = (
+                    row.nama_panggilan ??
+                    row.users?.data?.nama_panggilan ??
+                    ""
+                ).toLowerCase();
+                const matchesSearch =
+                    name.includes(keyword) || panggilan.includes(keyword);
 
                 const matchesUnit =
                     this.filterUnit === "" || row.unit == this.filterUnit;
@@ -326,7 +330,7 @@ export const dataTable = (data) => {
             const start = (this.currentPage - 1) * this.perPage;
             return this.filteredData().slice(
                 start,
-                start + Number(this.perPage)
+                start + Number(this.perPage),
             );
         },
 
@@ -412,9 +416,13 @@ export const dataTableReg = (data) => {
 
         filteredData() {
             let temp = this.rows.filter((row) => {
-                const matchesSearch = row.murid.name
-                    .toLowerCase()
-                    .includes(this.search.toLowerCase());
+                const keyword = this.search.toLowerCase();
+                const name = (row.murid?.name ?? "").toLowerCase();
+                const panggilan = (
+                    row.murid?.nama_panggilan ?? ""
+                ).toLowerCase();
+                const matchesSearch =
+                    name.includes(keyword) || panggilan.includes(keyword);
 
                 const matchesUnit =
                     this.filterUnit === "" || row.unit == this.filterUnit;
@@ -516,9 +524,13 @@ export const dataTablePay = (data) => {
 
         filteredData() {
             let temp = this.rows.filter((row) => {
-                const matchesSearch = row.reg.murid.name
-                    .toLowerCase()
-                    .includes(this.search.toLowerCase());
+                const keyword = this.search.toLowerCase();
+                const name = (row.reg?.murid?.name ?? "").toLowerCase();
+                const panggilan = (
+                    row.reg?.murid?.nama_panggilan ?? ""
+                ).toLowerCase();
+                const matchesSearch =
+                    name.includes(keyword) || panggilan.includes(keyword);
 
                 const matchesUnit =
                     this.filterUnit === "" || row.reg.unit == this.filterUnit;
@@ -552,7 +564,7 @@ export const dataTablePay = (data) => {
             const start = (this.currentPage - 1) * this.perPage;
             return this.filteredData().slice(
                 start,
-                start + Number(this.perPage)
+                start + Number(this.perPage),
             );
         },
 
@@ -711,7 +723,7 @@ export function paket(data = []) {
         },
         formatFieldValue(index) {
             this.fields[index].value = this.formatCurrency(
-                this.fields[index].value
+                this.fields[index].value,
             );
         },
     };
@@ -751,7 +763,7 @@ export function reg(kelas, initial = {}) {
                 .filter(
                     function (p) {
                         return p.id == Number(this.selectedKelas);
-                    }.bind(this)
+                    }.bind(this),
                 )
                 .flatMap(function (e) {
                     return e.program.map(function (unit) {
@@ -772,7 +784,7 @@ export function reg(kelas, initial = {}) {
                 .filter(
                     function (p) {
                         return p.id == Number(this.selectedKelas);
-                    }.bind(this)
+                    }.bind(this),
                 )
                 .flatMap(function (e) {
                     return e.units.map(function (unit) {
@@ -810,7 +822,7 @@ export function schedule(data, initial = {}) {
                 value: j.id,
                 label: `${j.parse} - ${j.name} (${j.start.slice(
                     0,
-                    5
+                    5,
                 )} - ${j.end.slice(0, 5)})`,
             }));
 
@@ -840,7 +852,7 @@ export function schedule(data, initial = {}) {
                 value: j.id,
                 text: `${j.parse} - ${j.name} (${j.start.slice(
                     0,
-                    5
+                    5,
                 )} - ${j.end.slice(0, 5)})`,
             }));
         },
@@ -977,7 +989,7 @@ export function salesChart(par, reg) {
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector(
-                        "meta[name=csrf-token]"
+                        "meta[name=csrf-token]",
                     ),
                 },
             })
@@ -1071,7 +1083,7 @@ export function payChart(par, reg) {
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector(
-                        "meta[name=csrf-token]"
+                        "meta[name=csrf-token]",
                     ),
                 },
             })
@@ -1097,10 +1109,10 @@ export function payChart(par, reg) {
             const total = Object.values(dataByYear);
 
             const bayarData = categories.map(
-                (month) => dataByYear[month]?.bayar || 0
+                (month) => dataByYear[month]?.bayar || 0,
             );
             const belumData = categories.map(
-                (month) => dataByYear[month]?.belum || 0
+                (month) => dataByYear[month]?.belum || 0,
             );
 
             const chartData = {
