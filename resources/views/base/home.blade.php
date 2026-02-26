@@ -36,15 +36,15 @@
         </svg>
     </div>
     <ul x-show="open" x-cloak x-transition class="bg-gray-50">
-        <a href="{{ route('dashboard.pay', ['tab' => 'home']) }}">
+        <a href="{{ route('dashboard.pay.monthly') }}">
             <li
-                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ request('tab') == 'home' ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
+                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ Route::is('dashboard.pay.monthly') ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
                 <span class="text-xs">Bulanan</span>
             </li>
         </a>
-        <a href="{{ route('dashboard.pay', ['tab' => 'lay']) }}">
+        <a href="{{ route('dashboard.pay.service') }}">
             <li
-                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ request('tab') == 'lay' ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
+                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ Route::is('dashboard.pay.service') ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
                 <span class="text-xs">Layanan</span>
             </li>
         </a>

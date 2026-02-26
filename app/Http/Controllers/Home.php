@@ -70,7 +70,7 @@ class Home extends Controller
         try {
 
             if ($par == "bul") {
-                $order    = Paid::where(DB::raw('md5(id)'), $request->id)->firstOrFail();
+                $order    = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
                 $fcm      = $order->reg->murid->users->fcm ?? null;
                 $billname = "bulan " . $order->bulan;
             }
@@ -646,26 +646,38 @@ class Home extends Controller
         return view('home.schedule.index', compact('items'));
     }
 
-    public function pay()
+    public function monthly()
     {
-        $queryPaid  = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc');
-        $queryOrder = Order::has('product')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.units', 'product.item');
+        $queryPaid = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc');
 
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $queryPaid->whereHas('reg', function ($q) use ($unitIds) {
                 $q->whereIn('unit', $unitIds);
             });
+        }
+
+        $items = $queryPaid->get();
+        $units = Unit::all();
+        $pro   = Program::all();
+        return view('home.pay.monthly', compact('items', 'units', 'pro'));
+    }
+
+    public function service()
+    {
+        $queryOrder = Order::has('product')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.units', 'product.item');
+
+        if (Auth::user()->zone_id) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $queryOrder->whereHas('reg', function ($q) use ($unitIds) {
                 $q->whereIn('unit', $unitIds);
             });
         }
 
-        $items = $queryPaid->get();
         $lay   = $queryOrder->get();
         $units = Unit::all();
         $pro   = Program::all();
-        return view('home.pay.index', compact('items', 'lay', 'units', 'pro'));
+        return view('home.pay.service', compact('lay', 'units', 'pro'));
     }
 
     public function master()

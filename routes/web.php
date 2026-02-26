@@ -64,7 +64,10 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::resource('jadwal', ScheduleController::class);
     });
     Route::get('/level', [Home::class, 'level'])->name('level');
-    Route::get('/pembayaran', [Home::class, 'pay'])->name('pay');
+    Route::prefix('pembayaran')->name('pay.')->group(function () {
+        Route::get('/bulanan', [Home::class, 'monthly'])->name('monthly');
+        Route::get('/layanan', [Home::class, 'service'])->name('service');
+    });
     Route::post('/pembayaran/{id}/{par}', [Home::class, 'payment'])->name('payment');
     Route::post('/send/{id}/{par}', [Home::class, 'send'])->name('send');
     Route::get('setting', [Home::class, 'setting'])->name('setting');
