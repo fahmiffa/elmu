@@ -511,6 +511,7 @@ class Home extends Controller
                 'rank'                  => 'nullable|string',
                 'pendidikan_non_formal' => 'nullable|string',
                 'prestasi'              => 'nullable|string',
+                'panggilan'             => 'nullable|string',
             ],
             [
                 'required'    => 'Field Wajib disi',
@@ -539,6 +540,7 @@ class Home extends Controller
 
                 $siswa                        = new Student;
                 $siswa->user                  = $user->id;
+                $siswa->nama_panggilan        = $request->panggilan;
                 $siswa->name                  = $request->name;
                 $siswa->img                   = $path;
                 $siswa->grade_id              = $request->grade;

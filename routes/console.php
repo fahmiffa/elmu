@@ -10,7 +10,6 @@ use App\Models\Head;
 use App\Models\Paid;
 
 Schedule::call(function () {
-      // Log::info('Scheduler running: menulis log setiap menit');
 })->everyMinute();
 
 Schedule::call(function () {
@@ -23,7 +22,7 @@ Schedule::call(function () {
       foreach ($head as $val) {
             $paid = Paid::where('bulan', date("m"))->where('tahun', date("Y"))->where('head', $val->id)->exists();
             if ($paid == false) {
-                  $da[] = ['head' => $val->id, 'bulan' => date("m"), 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0];
+                  $da[] = ['head' => $val->id, 'bulan' => date("m"), 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0,'created_at'=> date('Y-m-d H:i:s')];
                   $fcm = $val->murid->users->fcm ?? null;
                   if($fcm)
                   {

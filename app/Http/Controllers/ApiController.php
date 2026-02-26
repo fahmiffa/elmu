@@ -974,6 +974,7 @@ class ApiController extends Controller
             'rank'                  => 'nullable|string',
             'pendidikan_non_formal' => 'nullable|string',
             'prestasi'              => 'nullable|string',
+            'panggilan'             => 'nullable|string',
         ],
             [
                 'hp.required'    => 'Nomor wajib diisi.',
@@ -1006,6 +1007,7 @@ class ApiController extends Controller
             $siswa                        = new Student;
             $siswa->user                  = $user->id;
             $siswa->name                  = $request->name;
+            $siswa->nama_panggilan        = $request->panggilan;
             $siswa->img                   = $path;
             $siswa->grade_id              = $request->grade_id;
             $siswa->alamat                = $request->alamat;
@@ -1065,7 +1067,7 @@ class ApiController extends Controller
             $response = Http::post(env('URL_WA') . '/send', [
                 'number'  => env('NUMBER_WA'),
                 'to'      => $to,
-                'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : murik@",
+                'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : *murik@*",
             ]);
 
             DB::commit();

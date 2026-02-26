@@ -21,6 +21,13 @@ mail.murika.co.id, webmail.murika.co.id {
     file_server
 }
 
+// :5000 {
+//     root * /home/Qranafa/breskul/public
+//     php_server
+//     file_server
+// }
+
+
 murika.co.id {
     root * /home/Qranafa/landing_murika/public
     php_server

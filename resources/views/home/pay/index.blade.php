@@ -140,7 +140,7 @@
                                 <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                                 <th class="px-4 py-2">Panggilan</th>
                                 <th class="px-4 py-2">Program/Unit</th>
-                                <th class="px-4 py-2">Jatuh Tempo</th>
+                                <th class="px-4 py-2 text-nowarp">Tempo</th>
                                 <th class="px-4 py-2">Waktu</th>
                                 <th class="px-4 py-2">Total</th>
                                 <th class="px-4 py-2">Status</th>
@@ -163,7 +163,7 @@
                                             <div class="text-gray-500" x-text="row.reg?.class?.name ?? '-'"></div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-2" x-text="row.tempo ?? '-'"></td>
+                                    <td class="px-4 py-2 text-nowarp" x-text="row.tempo ?? '-'"></td>
                                     <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
                                     <td class="px-4 py-2" x-text="formatNumber(row.total)"></td>
                                     <td class="px-4 py-2"

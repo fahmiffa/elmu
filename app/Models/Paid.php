@@ -23,7 +23,6 @@ class Paid extends Model
                 ->locale('id');
             return $date->translatedFormat('l, d F Y');
         } else {
-            // Billing normal → tanggal 2 bulan berjalan
             $date = Carbon::parse($this->created_at)
                 // ->addMonthNoOverflow() // bulan berikutnya
                 ->day(2)
@@ -94,10 +93,13 @@ public function getTotalAttribute()
     // Tambah kit jika pendaftaran pertama
     if ($first === 1) {
         $total += $kit;
+        return (int) round($total);
+    }
+    else
+    {
+        return $hargaBulan;
     }
 
-
-    return (int) round($total);
 }
 
 
