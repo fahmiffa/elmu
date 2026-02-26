@@ -3,7 +3,7 @@
 @section('content')
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
 
-    <div x-data="{ tab: 'home' }">
+    <div x-data="{ tab: '{{ request('tab', 'home') }}' }">
         <div class="flex border-b border-gray-300">
             <button class="px-4 py-2 -mb-px text-sm font-medium border-b-2 cursor-pointer"
                 :class="tab === 'home' ? 'border-orange-500 text-orange-600' :

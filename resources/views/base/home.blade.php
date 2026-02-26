@@ -15,20 +15,41 @@
     </li>
 </a>
 @endif
-<a href="{{ route('dashboard.pay') }}">
-    <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.pay') ? 'bg-orange-100' : null }}">
-        <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-banknote-icon lucide-banknote">
-                <rect width="20" height="12" x="2" y="6" rx="2" />
-                <circle cx="12" cy="12" r="2" />
-                <path d="M6 12h.01M18 12h.01" />
-            </svg>
-        </span> Pembayaran
-    </li>
-</a>
+<li x-data="{ open: {{ Route::is('dashboard.pay') ? 'true' : 'false' }} }" class="border-b border-gray-300">
+    <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.pay') ? 'bg-orange-100' : null }}"
+        @click="open = !open">
+        <div class="flex items-center">
+            <span class="text-orange-500 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-banknote-icon lucide-banknote">
+                    <rect width="20" height="12" x="2" y="6" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
+                </svg>
+            </span> Pembayaran
+        </div>
+        <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200"
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </div>
+    <ul x-show="open" x-cloak x-transition class="bg-gray-50">
+        <a href="{{ route('dashboard.pay', ['tab' => 'home']) }}">
+            <li
+                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ request('tab') == 'home' ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
+                <span class="text-xs">Bulanan</span>
+            </li>
+        </a>
+        <a href="{{ route('dashboard.pay', ['tab' => 'lay']) }}">
+            <li
+                class="flex items-center pl-12 py-2 border-b border-gray-200 hover:bg-orange-50 {{ request('tab') == 'lay' ? 'text-orange-600 font-bold' : 'text-gray-600' }}">
+                <span class="text-xs">Layanan</span>
+            </li>
+        </a>
+    </ul>
+</li>
 <a href="{{ route('dashboard.akademik') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.akademik') ? 'bg-orange-100' : null }}">
