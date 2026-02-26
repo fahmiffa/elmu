@@ -29,7 +29,6 @@
                     <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
                         class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
-                    @if(Auth::user()->role == 0)
                     <select x-model="filterUnit" @change="resetPage()"
                         class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
                         <option value="">Semua Unit</option>
@@ -37,7 +36,6 @@
                         <option value="{{ $u->id }}">{{ $u->name }}</option>
                         @endforeach
                     </select>
-                    @endif
 
                     <select x-model="filterProgram" @change="resetPage()"
                         class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">

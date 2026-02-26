@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Zone_units;
 
 class Home extends Controller
 {
@@ -40,7 +41,13 @@ class Home extends Controller
             $query->whereIn('unit', $unitIds);
         }
         $items = $query->get();
+
         $units = Unit::all();
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
+        }
         $pro   = Program::all();
         return view('home.present.index', compact('items', 'units', 'pro'));
     }
@@ -48,10 +55,14 @@ class Home extends Controller
     public function level()
     {
         $query = Head::has('level')->with('murid:id,name,nama_panggilan', 'level.guru', 'class', 'units', 'programs');
-        if (Auth::user()->zone_id) {
-            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+        $units = Unit::all();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
         }
+
         $items = $query->get()->map(function ($item) {
             $item->level->map(function ($lvl) {
                 $lvl->tgl = \Carbon\Carbon::parse($lvl->created_at)->locale('id')->translatedFormat('d F Y');
@@ -59,9 +70,10 @@ class Home extends Controller
             });
             return $item;
         });
+
         $lay   = Addon::where('first', 0)->with('price')->latest()->get();
-        $units = Unit::all();
         $pro   = Program::all();
+
         return view('home.level.index', compact('items', 'lay', 'units', 'pro'));
     }
 
@@ -659,6 +671,13 @@ class Home extends Controller
 
         $items = $queryPaid->get();
         $units = Unit::all();
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $queryPaid->whereHas('reg', function ($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+            $units = Unit::whereIn('id', $unitIds)->get();
+        }
         $pro   = Program::all();
         return view('home.pay.monthly', compact('items', 'units', 'pro'));
     }
@@ -676,6 +695,13 @@ class Home extends Controller
 
         $lay   = $queryOrder->get();
         $units = Unit::all();
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $queryOrder->whereHas('reg', function ($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+            $units = Unit::whereIn('id', $unitIds)->get();
+        }
         $pro   = Program::all();
         return view('home.pay.service', compact('lay', 'units', 'pro'));
     }
