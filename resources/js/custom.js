@@ -296,8 +296,11 @@ export const dataTable = (data) => {
                     row.users?.data?.nama_panggilan ??
                     ""
                 ).toLowerCase();
+                const email = (row.email ?? "").toLowerCase();
                 const matchesSearch =
-                    name.includes(keyword) || panggilan.includes(keyword);
+                    name.includes(keyword) ||
+                    panggilan.includes(keyword) ||
+                    email.includes(keyword);
 
                 const matchesUnit =
                     this.filterUnit === "" || row.unit == this.filterUnit;

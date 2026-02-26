@@ -47,7 +47,7 @@ class Home extends Controller
 
     public function level()
     {
-        $query = Head::has('level')->with('murid:id,name', 'level.guru', 'class', 'units', 'programs');
+        $query = Head::has('level')->with('murid:id,name,nama_panggilan', 'level.guru', 'class', 'units', 'programs');
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);

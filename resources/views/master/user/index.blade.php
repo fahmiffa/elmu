@@ -3,9 +3,19 @@
 @section('content')
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
-    <div class="mb-4 flex justify-between items-center gap-2">
-        <input type="text" x-model="search" placeholder="Cari Nama"
-            class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+            <input type="text" x-model="search" placeholder="Cari Nama"
+                class="w-full md:w-1/2 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+            <select x-model="filterRole" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Tipe</option>
+                <option value="3">Guru</option>
+                <option value="2">User</option>
+                <option value="4">Operator</option>
+            </select>
+        </div>
 
         <a href="{{ route('dashboard.master.user.create') }}"
             class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">

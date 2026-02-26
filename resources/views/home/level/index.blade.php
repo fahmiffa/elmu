@@ -15,6 +15,7 @@
         <input type="text" x-model="search" placeholder="Cari Nama"
             class="flex-1 min-w-[200px] border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
+        @if(Auth::user()->role == 0)
         <select x-model="filterUnit" @change="resetPage()"
             class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
             <option value="">Semua Unit</option>
@@ -22,6 +23,7 @@
             <option value="{{ $u->id }}">{{ $u->name }}</option>
             @endforeach
         </select>
+        @endif
 
         <select x-model="filterProgram" @change="resetPage()"
             class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
@@ -33,7 +35,7 @@
     </div>
 
     <div class="flex items-center gap-2 mb-3">
-        <span class="text-xs">Show:</span>
+        <span class="text-xs">Show: </span>
         <select x-model="perPage" @change="resetPage()"
             class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
             <option value="10">10</option>
@@ -62,11 +64,11 @@
                             x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                         </td>
                         <td class="px-4 py-2" x-text="row.murid.name"></td>
+                        <td class="px-4 py-2" x-text="row.murid.nama_panggilan"></td>
                         <td class="px-4 py-2">
                             <div class="whitespace-nowrap">
                                 <dl>
                                     <dt x-text="row.units.name" class="font-semibold capitalize"></dt>
-                                    <dt x-text="row.units.nama_panggilan"></dt>
                                     <dt class="text-xs">
                                         <span x-text="row.programs.name"></span>
                                         <span x-text="row.class.name"></span>
