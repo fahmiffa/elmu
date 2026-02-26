@@ -258,6 +258,7 @@ export const dataTable = (data) => {
         search: "",
         filterUnit: "",
         filterProgram: "",
+        filterRole: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -304,7 +305,15 @@ export const dataTable = (data) => {
                     this.filterProgram === "" ||
                     row.program == this.filterProgram;
 
-                return matchesSearch && matchesUnit && matchesProgram;
+                const matchesRole =
+                    this.filterRole === "" || row.role == this.filterRole;
+
+                return (
+                    matchesSearch &&
+                    matchesUnit &&
+                    matchesProgram &&
+                    matchesRole
+                );
             });
 
             temp.sort((a, b) => {
@@ -511,7 +520,9 @@ export const dataTablePay = (data) => {
         perPage: 10,
         rows: data,
         selectedRow: null,
-        open: false,
+        startDate: "",
+        endDate: "",
+        tabStatus: "tagihan",
 
         sortBy(column) {
             if (this.sortColumn === column) {
@@ -538,7 +549,37 @@ export const dataTablePay = (data) => {
                     this.filterProgram === "" ||
                     row.reg.program == this.filterProgram;
 
-                return matchesSearch && matchesUnit && matchesProgram;
+                let matchesDate = true;
+                if (this.startDate || this.endDate) {
+                    const rowDate = new Date(row.created_at);
+                    rowDate.setHours(0, 0, 0, 0);
+
+                    if (this.startDate) {
+                        const start = new Date(this.startDate);
+                        start.setHours(0, 0, 0, 0);
+                        if (rowDate < start) matchesDate = false;
+                    }
+                    if (this.endDate) {
+                        const end = new Date(this.endDate);
+                        end.setHours(23, 59, 59, 999);
+                        if (rowDate > end) matchesDate = false;
+                    }
+                }
+
+                let matchesStatus = true;
+                if (this.tabStatus === "riwayat") {
+                    matchesStatus = row.status == 1;
+                } else {
+                    matchesStatus = row.status != 1;
+                }
+
+                return (
+                    matchesSearch &&
+                    matchesUnit &&
+                    matchesProgram &&
+                    matchesDate &&
+                    matchesStatus
+                );
             });
 
             temp.sort((a, b) => {
