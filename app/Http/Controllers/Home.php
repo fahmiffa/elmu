@@ -715,22 +715,89 @@ class Home extends Controller
         return view('master.index', compact('kelas', 'unit', 'murid', 'guru'));
     }
 
+    public function reportUnit(Request $request)
+    {
+        $bulan = $request->input('bulan', (int)date('m'));
+        $tahun = $request->input('tahun', (int)date('Y'));
+
+        $items = Unit::get()->map(function ($unit) use ($bulan, $tahun) {
+            $headIds = Head::where('unit', $unit->id)->where('done', 0)->pluck('id');
+
+            $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {
+                $q->where('unit', $unit->id)->where('done', 0);
+            })->count();
+
+            // Total Monthly Payment
+            $paidMonthly = Paid::whereIn('head', $headIds)
+                ->where('bulan', $bulan)
+                ->where('tahun', $tahun)
+                ->get();
+
+            $unit->paid_monthly = $paidMonthly->where('status', 1)->sum(function ($p) {
+                return $p->total;
+            });
+            $unit->unpaid_monthly = $paidMonthly->where('status', '!=', 1)->sum(function ($p) {
+                return $p->total;
+            });
+
+            // Total Service Payment
+            $paidService = Order::whereIn('head', $headIds)
+                ->whereMonth('created_at', $bulan)
+                ->whereYear('created_at', $tahun)
+                ->with('product')
+                ->get();
+
+            $unit->paid_service = $paidService->where('status', 1)->sum(function ($o) {
+                return $o->product->harga ?? 0;
+            });
+            $unit->unpaid_service = $paidService->where('status', '!=', 1)->sum(function ($o) {
+                return $o->product->harga ?? 0;
+            });
+
+            return $unit;
+        });
+
+        $now   = (int) date('Y');
+        $start = (int) env('APP_START', 2025);
+        $years = [];
+        for ($y = $now; $y >= $start; $y--) {
+            $years[] = $y;
+        }
+
+        $bulanMap = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        return view('home.report_unit', compact('items', 'years', 'bulanMap', 'bulan', 'tahun'));
+    }
+
     public function chart($par)
     {
         $dummyData = [];
         $bulanMap = [
-            1 => 'Jan',
-            2  => 'Feb',
-            3  => 'Mar',
-            4  => 'Apr',
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
             5 => 'Mei',
-            6  => 'Jun',
-            7  => 'Jul',
-            8  => 'Aug',
-            9 => 'Sep',
-            10 => 'Okt',
-            11 => 'Nov',
-            12 => 'Des',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
         ];
 
         $now   = (int) date('Y');
@@ -738,8 +805,8 @@ class Home extends Controller
 
         if ($par == 'reg') {
             $query = DB::table('head')->where('old', 0);
-            if (Auth::user()->zone_id) {
-                $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
                 $query->whereIn('unit', $unitIds);
             }
             $data = $query->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
@@ -774,26 +841,14 @@ class Home extends Controller
         if ($par == 'pay') {
 
             $query = Paid::query();
-            if (Auth::user()->zone_id) {
-                $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
                 $query->whereHas('reg', function ($q) use ($unitIds) {
                     $q->whereIn('unit', $unitIds);
                 });
             }
 
-            $data = $query->selectRaw('
-                tahun,
-                bulan,
-                status,
-                MIN(first) as first,
-                MIN(head) as head,
-                COUNT(*) as tot
-            ')
-                ->groupBy('tahun', 'bulan', 'status')
-                ->orderBy('tahun')
-                ->orderBy('bulan')
-                ->orderBy('status')
-                ->get();
+            $data = $query->with('reg.prices', 'reg.programs')->get();
 
             foreach ($data->pluck('tahun')->unique() as $tahun) {
                 foreach ($bulanMap as $num => $namaBulan) {
@@ -807,10 +862,12 @@ class Home extends Controller
 
             foreach ($data as $item) {
                 $tahun     = $item->tahun;
-                $bulan     = $bulanMap[$item->bulan];
+                $bulan     = $bulanMap[(int)$item->bulan] ?? null;
+                if (!$bulan) continue;
+
                 $statusKey = $item->status == 1 ? 'bayar' : 'belum';
 
-                $dummyData[$tahun][$bulan][$statusKey] = (int) $item->total * $item->tot;
+                $dummyData[$tahun][$bulan][$statusKey] += (int) $item->total;
             }
 
             $year = [];

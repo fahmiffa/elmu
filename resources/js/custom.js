@@ -268,6 +268,7 @@ export const dataTable = (data) => {
         open: false,
         modalOpen: false,
         selectedItem: null,
+        deletingId: null,
 
         openModal(item) {
             this.selectedItem = item;
@@ -363,8 +364,9 @@ export const dataTable = (data) => {
             this.currentPage = 1;
         },
 
-        deleteRow(e) {
+        deleteRow(e, id) {
             if (confirm("Yakin ingin menghapus data?")) {
+                this.deletingId = id;
                 e.target.submit();
             }
         },
@@ -1025,6 +1027,8 @@ export function salesChart(par, reg) {
             "November",
             "Desember",
         ],
+        years: [new Date().getFullYear()],
+        dummyData: {},
 
         async fetchData(actionUrl) {
             const method = "GET";
@@ -1034,7 +1038,7 @@ export function salesChart(par, reg) {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector(
                         "meta[name=csrf-token]",
-                    ),
+                    ).content,
                 },
             })
                 .then((res) => res.json())
@@ -1119,6 +1123,8 @@ export function payChart(par, reg) {
             "November",
             "Desember",
         ],
+        years: [new Date().getFullYear()],
+        dummyData: {},
 
         async fetchData(actionUrl) {
             const method = "GET";
@@ -1128,7 +1134,7 @@ export function payChart(par, reg) {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector(
                         "meta[name=csrf-token]",
-                    ),
+                    ).content,
                 },
             })
                 .then((res) => res.json())
@@ -1141,6 +1147,21 @@ export function payChart(par, reg) {
                 });
         },
 
+        get paidTotal() {
+            const monthName = this.months[this.selectedMonth - 1];
+            return this.dummyData[this.selectedYear]?.[monthName]?.bayar || 0;
+        },
+
+        get unpaidTotal() {
+            const monthName = this.months[this.selectedMonth - 1];
+            return this.dummyData[this.selectedYear]?.[monthName]?.belum || 0;
+        },
+
+        formatNumber(number) {
+            if (!number) return "0";
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+
         chartInstance: null,
 
         updateChart() {
@@ -1149,8 +1170,7 @@ export function payChart(par, reg) {
 
         renderChart() {
             const dataByYear = this.dummyData[this.selectedYear] || {};
-            const categories = Object.keys(dataByYear);
-            const total = Object.values(dataByYear);
+            const categories = this.months;
 
             const bayarData = categories.map(
                 (month) => dataByYear[month]?.bayar || 0,
@@ -1175,13 +1195,15 @@ export function payChart(par, reg) {
 
             const options = {
                 chart: {
-                    width: 700,
+                    width: "auto",
                     height: 400,
                     title: par,
-                    // title: `Grafik Penjualan Tahun ${this.selectedYear}`,
                 },
                 xAxis: {
                     title: "Bulan",
+                    label: {
+                        interval: 1,
+                    },
                 },
                 yAxis: {
                     title: "Jumlah",

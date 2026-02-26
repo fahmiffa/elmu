@@ -35,41 +35,43 @@
 
 <body class="bg-gray-100" x-data="layout()" x-init="init()">
     @if (session('status'))
-        <div x-data="{ show: false, message: '' }" x-init="@if (session('status')) message = '{{ session('status') }}';
-                show = true;
-                setTimeout(() => show = false, 3000); @endif" class="fixed top-4 right-10 z-[100]">
-            <div x-show="show" x-transition class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
-                <span x-text="message"></span>
-            </div>
+    <div x-data="{ show: false, message: '' }" x-init="message = '{{ session('status') }}';
+        show = true;
+        setTimeout(() => show = false, 3000);" class="fixed top-4 right-10 z-[100]">
+        <div x-show="show" x-transition class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
+            <span x-text="message"></span>
         </div>
+    </div>
+    @endif
 
-        <div x-data="{ show: false, message: '' }" x-init="@if (session('err')) message = '{{ session('err') }}';
-                show = true;
-                setTimeout(() => show = false, 3000); @endif" class="fixed top-50 right-4 z-[100]">
-            <div x-show="show" x-transition class="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
-                <span x-text="message"></span>
-            </div>
+    @if (session('err'))
+    <div x-data="{ show: false, message: '' }" x-init="message = '{{ session('err') }}';
+        show = true;
+        setTimeout(() => show = false, 3000);" class="fixed top-4 right-10 z-[100]">
+        <div x-show="show" x-transition class="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
+            <span x-text="message"></span>
         </div>
+    </div>
     @endif
 
     @if (Route::is('dashboard.*'))
-        <!-- HEADER -->
-        @include('base.header')
-        <!-- MAIN CONTENT -->
-        <main class="max-w-7xl mx-auto mt-6 px-6 grid grid-cols-1 md:grid-cols-4 gap-6 py-2">
+    <!-- HEADER -->
+    @include('base.header')
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto mt-6 px-6 grid grid-cols-1 md:grid-cols-4 gap-6 py-2">
 
-            <!-- SIDEBAR -->
-            @include('base.side')
+        <!-- SIDEBAR -->
+        @include('base.side')
 
-            <!-- CONTENT -->
-            <section class="col-span-3">
-                @yield('content')
-            </section>
+        <!-- CONTENT -->
+        <section class="col-span-3">
+            @yield('content')
+        </section>
 
 
-        </main>
+    </main>
     @else
-        @yield('content')
+    @yield('content')
     @endif
 </body>
 @stack('script')

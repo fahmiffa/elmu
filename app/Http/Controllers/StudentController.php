@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
@@ -7,9 +8,17 @@ use App\Models\Kelas;
 use App\Models\Level;
 use App\Models\Payment;
 use App\Models\Price;
+use App\Models\Order;
+use App\Models\Paid;
+use App\Models\Raport;
+use App\Models\Report;
+use App\Models\Schedules_students;
 use App\Models\Student;
+use App\Models\StudentPresent;
 use App\Models\User;
-use DB;
+use App\Models\Vidoes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -74,7 +83,7 @@ class StudentController extends Controller
                     $user->password = bcrypt('murik@');
                     $user->save();
 
-                    $siswa                        = Student::where('name',$row[2])->exists() ? Student::where('name',$row[2])->first() :  new Student;
+                    $siswa                        = Student::where('name', $row[2])->exists() ? Student::where('name', $row[2])->first() :  new Student;
                     $siswa->nama_panggilan        = $row[1] ?? null;
                     $siswa->name                  = $row[2] ?? null;
                     $siswa->user                  = $user->id;
@@ -120,7 +129,6 @@ class StudentController extends Controller
                     $level->level      = $row[16] ?? null; // perbaikan
                     $level->status     = 1;
                     $level->save();
-
                 }
             }
 
@@ -226,7 +234,6 @@ class StudentController extends Controller
             DB::commit();
 
             return redirect()->route('dashboard.master.student.index');
-
         } catch (\Throwable $e) {
             DB::rollback();
 
@@ -244,6 +251,41 @@ class StudentController extends Controller
      */
     public function destroy(Student $student)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $userId = $student->user;
+            $studentId = $student->id;
+            $headIds = Head::where('students', $studentId)->pluck('id');
+
+            // Delete related to Head
+            Paid::whereIn('head', $headIds)->delete();
+            Order::whereIn('head', $headIds)->delete();
+            Schedules_students::whereIn('head', $headIds)->delete();
+            Level::whereIn('head', $headIds)->delete();
+
+            // Delete related to Student
+            StudentPresent::where('student_id', $studentId)->delete();
+            Vidoes::where('student_id', $studentId)->delete();
+            Raport::where('student_id', $userId)->delete();
+
+            // Delete Reports (linked to User)
+            Report::where('user', $userId)->delete();
+
+            // Delete Head records (Soft Delete)
+            Head::whereIn('id', $headIds)->delete();
+
+            // Delete Student and User
+            $student->delete();
+            if ($userId) {
+                User::where('id', $userId)->delete();
+            }
+
+            DB::commit();
+            return back()->with('status', 'Data murid berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('err', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 }
