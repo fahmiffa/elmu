@@ -840,7 +840,9 @@ class Home extends Controller
 
         if ($par == 'pay') {
 
-            $query = Paid::query();
+            $query = Paid::whereHas('reg',function($q){
+                $q->where('done',0);
+            });
             if (Auth::user()->role == 4 && Auth::user()->zone_id) {
                 $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
                 $query->whereHas('reg', function ($q) use ($unitIds) {
