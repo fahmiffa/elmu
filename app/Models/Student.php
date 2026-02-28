@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Student extends Model
 {
@@ -20,9 +22,13 @@ class Student extends Model
         return [
             'unit'    => $head?->units?->name ?? null,
             'program' => $head?->programs?->name ?? null,
-            'kelas'->$head?->class?->name ?? null,
+            'kelas'   => $head?->class?->name ?? null,
         ];
+    }
 
+    public function grade()
+    {
+        return $this->belongsTo(Grade::class, 'grade_id', 'id');
     }
 
     public function program()
@@ -51,7 +57,6 @@ class Student extends Model
         if ($this->gender == 2) {
             return "Perempuan";
         }
-
     }
 
     public function users()
@@ -62,7 +67,7 @@ class Student extends Model
     public function getabsenAttribute()
     {
         $today           = Carbon::today();
-        $hasEnteredToday = \DB::table('student_presents')
+        $hasEnteredToday = DB::table('student_presents')
             ->where('student_id', $this->id)
             ->whereDate('created_at', $today)
             ->exists();

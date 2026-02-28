@@ -652,6 +652,112 @@ class Home extends Controller
         }
     }
 
+    public function regEdit($id)
+    {
+        $items   = Head::where(DB::raw('md5(id)'), $id)->with('murid.users', 'murid.grade')->firstOrFail();
+        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
+        $kontrak = Payment::all();
+        $grade   = Grade::all();
+        $action  = "Edit Pendaftaran";
+        $head    = Head::has('murid')->get();
+        $edit    = true;
+        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head', 'items', 'edit'));
+    }
+
+    public function regUpdate(Request $request, $id)
+    {
+        $headItem = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $siswa = $headItem->murid;
+
+        $validator = Validator::make($request->all(), [
+            'grade' => 'required',
+            'kelas' => 'required',
+            'kontrak' => 'required',
+            'program' => 'required',
+            'unit' => 'required',
+            'name' => 'required',
+            'email' => $siswa->user ? 'required|email|unique:users,email,' . $siswa->user : 'nullable',
+        ], [
+            'required' => 'Field Wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Update Student
+            if ($siswa) {
+                $siswa->name = $request->name;
+                $siswa->nama_panggilan = $request->panggilan;
+                $siswa->grade_id = $request->grade;
+                $siswa->alamat = $request->alamat;
+                $siswa->place = $request->place;
+                $siswa->birth = $request->birth;
+                $siswa->gender = $request->gender;
+                $siswa->hp_parent = $request->hp_parent;
+                $siswa->dad = $request->dad;
+                $siswa->mom = $request->mom;
+                $siswa->hp_siswa = $request->hp_siswa;
+                $siswa->save();
+
+                if ($siswa->users && $request->email) {
+                    $siswa->users->email = $request->email;
+                    $siswa->users->save();
+                }
+            }
+
+            // Update Head
+            $price = Price::where('kelas', $request->kelas)
+                ->where('product', $request->program)
+                ->first();
+
+            $headItem->unit = $request->unit;
+            $headItem->kelas = $request->kelas;
+            $headItem->price = $price->id;
+            $headItem->program = $request->program;
+            $headItem->payment = $request->kontrak;
+            $headItem->save();
+
+            DB::commit();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil diperbarui!']);
+            }
+
+            return redirect()->route('dashboard.reg.index')->with('status', 'Pendaftaran berhasil diperbarui!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors('Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+        }
+    }
+
+    public function regDestroy($id)
+    {
+        try {
+            $head = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+            $head->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil dihapus!']);
+            }
+
+            return redirect()->route('dashboard.reg.index')->with('status', 'Pendaftaran berhasil dihapus!');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus data');
+        }
+    }
+
     public function schedule()
     {
         $items = Paid::has('reg')->with('reg.murid', 'reg.paket', 'reg.class', 'reg.kontrak')->get();
@@ -840,8 +946,8 @@ class Home extends Controller
 
         if ($par == 'pay') {
 
-            $query = Paid::whereHas('reg',function($q){
-                $q->where('done',0);
+            $query = Paid::whereHas('reg', function ($q) {
+                $q->where('done', 0);
             });
             if (Auth::user()->role == 4 && Auth::user()->zone_id) {
                 $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');

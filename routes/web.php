@@ -56,8 +56,11 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
     Route::middleware('restrictOperator')->group(function () {
         Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
-        Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
+        Route::post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
         Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
+        Route::get('/pendaftaran/{id}/edit', [Home::class, 'regEdit'])->name('reg.edit');
+        Route::put('/pendaftaran/{id}', [Home::class, 'regUpdate'])->name('reg.update');
+        Route::post('/pendaftaran/{id}/hapus', [Home::class, 'regDestroy'])->name('reg.destroy');
         Route::resource('report', ReportController::class);
         Route::resource('raport', RaportController::class);
         Route::resource('campaign', CampaignController::class);

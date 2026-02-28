@@ -34,7 +34,8 @@
                     <th class="px-4 py-2">Panggilan</th>
                     <th class="px-4 py-2">Kontrak</th>
                     <th class="px-4 py-2">Program</th>
-                    <th class="px-4 py-2">Tanggal</th>
+                    <th class="px-4 py-2 text-nowrap">Tanggal</th>
+                    <th class="px-4 py-2 text-center text-nowrap">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,7 +44,7 @@
                         <td class="px-4 py-2"
                             x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                         </td>
-                        <td class="px-4 py-2" x-text="row.induk"></td>
+                        <td class="px-4 py-2 text-nowrap" x-text="row.induk"></td>
                         <td class="px-4 py-2" x-text="row.murid.name"></td>
                         <td class="px-4 py-2" x-text="row.murid.nama_panggilan"></td>
                         <td class="px-4 py-2" x-text="row.kontrak.name"></td>
@@ -54,7 +55,33 @@
                                 <dt x-text="row.units.name" class="capitalize"></dt>
                             </dl>
                         </td>
-                        <td class="px-4 py-2" x-text="row.waktu"></td>
+                        <td class="px-4 py-2 text-nowrap" x-text="row.waktu"></td>
+                        <td class="px-4 py-2">
+                            <div class="flex items-center justify-center gap-2">
+                                <a :href="'/dashboard/pendaftaran/' + md5(row.id) + '/edit'"
+                                    class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                    </svg>
+                                </a>
+                                <form :action="'/dashboard/pendaftaran/' + md5(row.id) + '/hapus'" method="POST"
+                                    @submit.prevent="deleteRow($event, row.id)">
+                                    @csrf
+                                    <button type="submit"
+                                        class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 </template>
                 <tr x-show="filteredData().length === 0">

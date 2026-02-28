@@ -484,6 +484,9 @@ export const dataTable = (data) => {
 export const dataTableReg = (data) => {
     return {
         search: "",
+        md5(id) {
+            return md5(id);
+        },
         filterUnit: "",
         filterProgram: "",
         sortColumn: "name",
@@ -1004,10 +1007,10 @@ export function currencyInput(initialValue = "") {
 export function reg(kelas, initial = {}) {
     const val = kelas.map((e) => ({ value: e.id, label: e.name }));
     return {
-        selectedKelas: "",
+        selectedKelas: initial.kelas || "",
         optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
-        selectedProgram: "",
-        selectedUnit: [{ value: "", label: "Pilih Unit" }],
+        selectedProgram: initial.program || "",
+        selectedUnit: initial.unit || "",
         get filteredPrograms() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];

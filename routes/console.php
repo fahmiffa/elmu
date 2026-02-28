@@ -13,7 +13,6 @@ Schedule::call(function () {
 })->everyMinute();
 
 Schedule::call(function () {
-      Log::info('Scheduler jalan tanggal 2 jam 8 pagi!');
       $head = Head::select('id', 'old')
             ->whereHas('kontrak',function($q){
                   $q->where('month',1);
