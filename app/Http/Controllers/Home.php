@@ -351,9 +351,15 @@ class Home extends Controller
 
     public function bill(Request $request)
     {
+        $request->validate([
+            'bulan' => 'required|numeric|between:1,12',
+        ], [
+            'bulan.required' => 'Pilih bulan terlebih dahulu',
+        ]);
 
         $bulan = $request->input('bulan');
         $da    = [];
+        $now   = now();
 
         $head = Head::select('id', 'old')
             // ->whereHas('kontrak',function($q){
@@ -362,9 +368,20 @@ class Home extends Controller
             ->where("done", 0)->get();
 
         foreach ($head as $val) {
-            $paid = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
-            if ($paid == false) {
-                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0];
+            $paid = Paid::where('bulan', $bulan)
+                ->where('tahun', date("Y"))
+                ->where('head', $val->id)
+                ->exists();
+
+            if (!$paid) {
+                $da[] = [
+                    'head'       => $val->id,
+                    'bulan'      => $bulan,
+                    'tahun'      => date("Y"),
+                    'first'      => $val->old == 0 ? 1 : 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
 
@@ -372,7 +389,7 @@ class Home extends Controller
             BulkInsertJob::dispatch($da);
         }
 
-        return back();
+        return back()->with('status', 'Tagihan berhasil dibuat');
     }
 
     public function index()
@@ -818,7 +835,8 @@ class Home extends Controller
         $unit  = Unit::count();
         $murid = Student::count();
         $guru  = Teach::count();
-        return view('master.index', compact('kelas', 'unit', 'murid', 'guru'));
+        $logs  = \App\Models\ActivityLog::count();
+        return view('master.index', compact('kelas', 'unit', 'murid', 'guru', 'logs'));
     }
 
     public function reportUnit(Request $request)

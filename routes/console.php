@@ -9,33 +9,46 @@ use App\Jobs\SendFcm;
 use App\Models\Head;
 use App\Models\Paid;
 
-Schedule::call(function () {
-})->everyMinute();
+Schedule::call(function () {})->everyMinute();
 
 Schedule::call(function () {
       $head = Head::select('id', 'old')
-            ->whereHas('kontrak',function($q){
-                  $q->where('month',1);
+            ->whereHas('kontrak', function ($q) {
+                  $q->where('month', 1);
             })
+            ->with('murid.users')
             ->where("done", 0)->get();
+
+      $da  = [];
+      $now = now();
+      $month = date("m");
+      $year  = date("Y");
+
       foreach ($head as $val) {
-            $paid = Paid::where('bulan', date("m"))->where('tahun', date("Y"))->where('head', $val->id)->exists();
+            $paid = Paid::where('bulan', $month)->where('tahun', $year)->where('head', $val->id)->exists();
             if ($paid == false) {
-                  $da[] = ['head' => $val->id, 'bulan' => date("m"), 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0,'created_at'=> date('Y-m-d H:i:s')];
+                  $da[] = [
+                        'head'       => $val->id,
+                        'bulan'      => $month,
+                        'tahun'      => $year,
+                        'first'      => $val->old == 0 ? 1 : 0,
+                        'created_at' => $now,
+                        'updated_at' => $now
+                  ];
+
                   $fcm = $val->murid->users->fcm ?? null;
-                  if($fcm)
-                  {
+                  if ($fcm) {
                         $message = [
                               "message" => [
                                     "token"        => $fcm,
                                     "notification" => [
-                                    "title" => "Tagihan",
-                                    "body"  => "Anda punya tagihan bulan" . date("m"),
+                                          "title" => "Tagihan",
+                                          "body"  => "Anda punya tagihan bulan" . $month,
                                     ],
                               ],
                         ];
-                  
-                        Log::info('Send fcm');
+
+                        Log::info('Send fcm for head ' . $val->id);
                         SendFcm::dispatch($message);
                   }
             }

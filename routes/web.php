@@ -18,6 +18,9 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 
 // Route::any('{any}', function () {
@@ -115,6 +118,9 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::get('stater-kit/create', [AddonController::class, 'kit'])->name('kit.create');
         Route::post('stater-kit', [AddonController::class, 'kit'])->name('kit.store');
         Route::resource('grade', GradeController::class);
+        Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('log.index');
+        Route::delete('/activity-log/{id}', [\App\Http\Controllers\ActivityLogController::class, 'destroy'])->name('log.destroy');
+        Route::post('/activity-log/clear', [\App\Http\Controllers\ActivityLogController::class, 'clear'])->name('log.clear');
         Route::get('/unit-jadwal', [UnitController::class, 'jadwal'])->name('jadwal.index');
         Route::get('/unit-jadwal/create', [UnitController::class, 'jadwalCreate'])->name('jadwal.create');
         Route::get('/unit-jadwal/{id}/edit', [UnitController::class, 'jadwalEdit'])->name('jadwal.edit');

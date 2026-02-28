@@ -1,7 +1,7 @@
 @extends('base.layout')
 @section('title', 'Dashboard')
 @section('content')
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 p-4">
     <div class="bg-white rounded-lg shadow-md p-4 text-center">
         <div class="w-10 h-10 mx-auto mb-2 bg-orange-500 text-white rounded-lg flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -21,7 +21,6 @@
     </div>
     <div class="bg-white rounded-lg shadow-md p-4 text-center">
         <div class="w-10 h-10 mx-auto mb-2 bg-orange-500 text-white rounded-lg flex items-center justify-center">
-            <!-- User Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="lucide lucide-layout-grid-icon lucide-layout-grid">
@@ -36,7 +35,6 @@
     </div>
     <div class="bg-white rounded-lg shadow-md p-4 text-center">
         <div class="w-10 h-10 mx-auto mb-2 bg-orange-500 text-white rounded-lg flex items-center justify-center">
-            <!-- User Plus Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="lucide lucide-graduation-cap-icon lucide-graduation-cap">
@@ -51,7 +49,6 @@
     </div>
     <div class="bg-white rounded-lg shadow-md p-4 text-center">
         <div class="w-10 h-10 mx-auto mb-2 bg-orange-500 text-white rounded-lg flex items-center justify-center">
-            <!-- Bookmark Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="lucide lucide-gpu-icon lucide-gpu">
@@ -64,6 +61,19 @@
         </div>
         <p class="text-gray-500 text-sm">Guru</p>
         <p class="text-blue-900 font-bold text-lg">{{ number_format($guru, 0, ',', '.') }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-4 text-center">
+        <div class="w-10 h-10 mx-auto mb-2 bg-orange-500 text-white rounded-lg flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-history-icon lucide-history">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+            </svg>
+        </div>
+        <p class="text-gray-500 text-sm">Log Aktivitas</p>
+        <p class="text-blue-900 font-bold text-lg">{{ number_format($logs, 0, ',', '.') }}</p>
     </div>
 </div>
 @endsection
