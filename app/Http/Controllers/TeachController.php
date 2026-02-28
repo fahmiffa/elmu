@@ -1,10 +1,13 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class TeachController extends Controller
 {
@@ -13,7 +16,7 @@ class TeachController extends Controller
      */
     public function index()
     {
-        $items = Teach::with('akun','unit')->get();
+        $items = Teach::with('akun', 'unit')->get();
         return view('master.teach.index', compact('items'));
     }
 
@@ -32,7 +35,7 @@ class TeachController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'  => 'required',
             'birth' => 'required',
             'email' => 'required|unique:users,email',
@@ -51,6 +54,13 @@ class TeachController extends Controller
             'study.required' => 'Pendidikan Terakhir wajib diisi.',
             'required'       => 'Field wajib diisi.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $path = null;
         if ($request->hasFile('image')) {
@@ -77,7 +87,11 @@ class TeachController extends Controller
         $item->user    = $user->id;
         $item->save();
 
-        return redirect()->route('dashboard.master.teach.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Guru berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.teach.index')->with('status', 'Guru berhasil disimpan!');
     }
 
     /**
@@ -106,7 +120,7 @@ class TeachController extends Controller
     {
         $teach->load('akun');
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'  => 'required',
             'birth' => 'required',
             'hp'    => 'required',
@@ -126,10 +140,17 @@ class TeachController extends Controller
             'image.mimes'    => 'Gambar harus berformat jpeg, png, atau jpg.',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         // Update image if present
         if ($request->hasFile('image')) {
-            if ($teach->img && \Storage::disk('public')->exists($teach->img)) {
-                \Storage::disk('public')->delete($teach->img);
+            if ($teach->img && Storage::disk('public')->exists($teach->img)) {
+                Storage::disk('public')->delete($teach->img);
             }
 
             $path       = $request->file('image')->store('images/teach', 'public');
@@ -147,7 +168,11 @@ class TeachController extends Controller
         // Save updated model
         $teach->save();
 
-        return redirect()->route('dashboard.master.teach.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Data Guru berhasil diperbarui.']);
+        }
+
+        return redirect()->route('dashboard.master.teach.index')->with('status', 'Data Guru berhasil diperbarui.');
     }
 
     /**
@@ -155,8 +180,15 @@ class TeachController extends Controller
      */
     public function destroy(Teach $teach)
     {
-        $teach->akun->delete();
+        if ($teach->akun) {
+            $teach->akun->delete();
+        }
         $teach->delete();
-        return redirect()->route('dashboard.master.teach.index');
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Data Guru berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.teach.index')->with('status', 'Data Guru berhasil dihapus!');
     }
 }

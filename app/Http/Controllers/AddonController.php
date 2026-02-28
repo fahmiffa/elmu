@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Addon;
@@ -7,6 +8,7 @@ use App\Models\Price;
 use App\Models\Program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class AddonController extends Controller
 {
@@ -40,7 +42,7 @@ class AddonController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'    => 'required|string',
             'des'     => 'nullable|string',
             'price'   => 'required',
@@ -48,6 +50,13 @@ class AddonController extends Controller
             'required' => "Field Wajib disi",
             'unique'   => "Data Program sudah ada",
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $item          = new Addon;
         $item->name    = $request->name;
@@ -60,7 +69,11 @@ class AddonController extends Controller
         $price->harga   = $request->price;
         $price->save();
 
-        return redirect()->route('dashboard.master.layanan.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Layanan berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.layanan.index')->with('status', 'Layanan berhasil disimpan!');
     }
 
     /**
@@ -76,7 +89,6 @@ class AddonController extends Controller
      */
     public function edit(Addon $layanan)
     {
-
         $items  = $layanan->load('price');
         $action = "Edit Layanan";
 
@@ -88,11 +100,20 @@ class AddonController extends Controller
      */
     public function update(Request $request, Addon $layanan)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'    => 'required|string',
             'des'     => 'nullable|string',
             'price'   => 'required|numeric',
+        ], [
+            'required' => "Field Wajib disi",
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $item       = $layanan;
         $item->name = $request->name;
@@ -102,7 +123,12 @@ class AddonController extends Controller
         $price        = $layanan->price;
         $price->harga = $request->price;
         $price->save();
-        return redirect()->route('dashboard.master.layanan.index');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Layanan berhasil diperbarui!']);
+        }
+
+        return redirect()->route('dashboard.master.layanan.index')->with('status', 'Layanan berhasil diperbarui!');
     }
 
     /**
@@ -110,8 +136,13 @@ class AddonController extends Controller
      */
     public function destroy(Addon $layanan)
     {
-        $layanan->delete();
         $layanan->price->delete();
-        return back();
+        $layanan->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Layanan berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.layanan.index')->with('status', 'Layanan berhasil dihapus!');
     }
 }

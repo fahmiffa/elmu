@@ -1,71 +1,72 @@
 @extends('base.layout')
 @section('title', 'Dashboard')
 @section('content')
-    <div class="flex flex-col bg-white rounded-lg shadow-md p-6">
-        <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
-        <form method="POST"
-            action="{{ isset($items) ? route('dashboard.master.layanan.update', ['layanan' => $items->id]) : route('dashboard.master.layanan.store') }}"
-            enctype="multipart/form-data">
-            @isset($items)
-                @method('PUT')
-            @endisset
-            @csrf
-            <div class="grid grid-cols-2 gap-2">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
-                    <div class="relative">
-                        <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
-                            class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                    </div>
-                    @error('name')
-                        <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                    @enderror
+<div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="formHandler('{{ route('dashboard.master.layanan.index') }}')">
+    <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
+    <form method="POST"
+        action="{{ isset($items) ? route('dashboard.master.layanan.update', ['layanan' => $items->id]) : route('dashboard.master.layanan.store') }}"
+        enctype="multipart/form-data" @submit.prevent="submit">
+        @isset($items)
+        @method('PUT')
+        @endisset
+        @csrf
+        <div class="grid grid-cols-2 gap-2">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama</label>
+                <div class="relative">
+                    <input type="text" name="name" value="{{ old('name', $items->name ?? '') }}"
+                        class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                 </div>
-
-                <div class="mb-4">
-                </div>
-
-                <div class="mb-4" x-data="currencyInput('{{ old('nominal', isset($items) ? $items->price->harga : '') }}')">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Harga</label>
-                    <div class="relative">
-                        <input type="text" x-model="display" @input="formatInput"
-                            class="border border-gray-300 ring-0 rounded-xl px-3 py-2 w-full md:w-1/2 focus:outline-[#FF9966]">
-                        <input type="hidden" name="price" :value="raw">
-                    </div>
-                    @error('price')
-                        <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div></div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Deskripsi</label>
-                    <textarea name="des" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('des', $items->des ?? '') }}</textarea>
-                    @error('des')
-                        <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
-
+                @error('name')
+                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div class="flex items-center">
-                <button type="submit"
-                    class="cursor-pointer bg-orange-500 text-sm hover:bg-orange-700 text-white font-bold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
-                    Simpan
-                </button>
+            <div class="mb-4">
             </div>
-        </form>
-    </div>
+
+            <div class="mb-4" x-data="currencyInput('{{ old('nominal', isset($items) ? $items->price->harga : '') }}')">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Harga</label>
+                <div class="relative">
+                    <input type="text" x-model="display" @input="formatInput"
+                        class="border border-gray-300 ring-0 rounded-xl px-3 py-2 w-full md:w-1/2 focus:outline-[#FF9966]">
+                    <input type="hidden" name="price" :value="raw">
+                </div>
+                @error('price')
+                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div></div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Deskripsi</label>
+                <textarea name="des" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('des', $items->des ?? '') }}</textarea>
+                @error('des')
+                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                @enderror
+            </div>
+
+        </div>
+
+        <div class="flex items-center">
+            <button type="submit" :disabled="loading"
+                class="cursor-pointer bg-orange-500 text-sm hover:bg-orange-700 text-white font-bold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
+                <span x-show="!loading">Simpan</span>
+                <span x-show="loading">Mohon Tunggu...</span>
+            </button>
+        </div>
+    </form>
+</div>
 @endsection
 @push('script')
-    <script>
-        const eyeIcon = `
+<script>
+    const eyeIcon = `
         <svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
             <path fill-rule="evenodd" d="M1.32 11.45C2.81 6.98 7.03 3.75 12 3.75c4.97 0 9.19 3.22 10.68 7.69.12.36.12.75 0 1.11C21.19 17.02 16.97 20.25 12 20.25c-4.97 0-9.19-3.22-10.68-7.69a1.76 1.76 0 0 1 0-1.11ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clip-rule="evenodd" />
         </svg>`;
 
-        const eyeOffIcon = `
+    const eyeOffIcon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
             <path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
             <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
@@ -73,12 +74,12 @@
         </svg>
         `;
 
-        function show(e) {
-            const input = e.parentElement.querySelector('input[type="password"], input[type="text"]');
-            if (input) {
-                input.type = input.type === 'password' ? 'text' : 'password';
-                e.innerHTML = input.type === 'password' ? eyeIcon : eyeOffIcon;
-            }
+    function show(e) {
+        const input = e.parentElement.querySelector('input[type="password"], input[type="text"]');
+        if (input) {
+            input.type = input.type === 'password' ? 'text' : 'password';
+            e.innerHTML = input.type === 'password' ? eyeIcon : eyeOffIcon;
         }
-    </script>
+    }
+</script>
 @endpush

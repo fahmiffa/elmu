@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Materi;
 use App\Models\Program;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class MateriController extends Controller
 {
@@ -31,12 +34,23 @@ class MateriController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'program' => 'required',
             'materi'  => 'required|mimes:pdf|max:20480',
-        ], ['required' => 'Feild Wajib diisi',
+        ], [
+            'required' => 'Feild Wajib diisi',
+            'mimes' => 'File harus berupa PDF',
+            'max' => 'Ukuran file maksimal 20MB',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $path = null;
         if ($request->hasFile('materi')) {
             $path = $request->file('materi')->store('materi', 'public');
         }
@@ -46,7 +60,11 @@ class MateriController extends Controller
         $item->program_id = $request->program;
         $item->save();
 
-        return redirect()->route('dashboard.master.materi.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Materi berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.materi.index')->with('status', 'Materi berhasil disimpan!');
     }
 
     /**
@@ -78,7 +96,15 @@ class MateriController extends Controller
      */
     public function destroy(Materi $materi)
     {
+        if ($materi->pile && Storage::disk('public')->exists($materi->pile)) {
+            Storage::disk('public')->delete($materi->pile);
+        }
         $materi->delete();
-        return back();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Materi berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.materi.index')->with('status', 'Materi berhasil dihapus!');
     }
 }

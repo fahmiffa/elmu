@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\Price;
 use App\Models\Program;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProgramController extends Controller
 {
@@ -33,40 +35,63 @@ class ProgramController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'    => 'required',
             'nominal' => 'required',
             'kode'    => 'required',
             'des'     => 'required',
             'level'   => 'required',
-            'harga'   => 'required',
+            'harga'   => 'required|array',
             'harga.*' => 'required',
-            'kelas'   => 'required',
-            'kelas.*' => 'required',
+            'id'      => 'required|array',
+            'id.*'    => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $kelas = $request->id;
         $harga = $request->harga;
 
-        $item          = new Program;
-        $item->name    = $request->name;
-        $item->kode    = $request->kode;
-        $item->des     = $request->des;
-        $item->level   = $request->level;
-        $item->kit     = $request->nominal;
-        $item->kit_des = $request->kit_des;
-        $item->save();
+        DB::beginTransaction();
+        try {
+            $item          = new Program;
+            $item->name    = $request->name;
+            $item->kode    = $request->kode;
+            $item->des     = $request->des;
+            $item->level   = $request->level;
+            $item->kit     = $request->nominal;
+            $item->kit_des = $request->kit_des;
+            $item->save();
 
-        for ($i = 0; $i < count($kelas); $i++) {
-            $price          = new Price;
-            $price->product = $item->id;
-            $price->kelas   = $kelas[$i];
-            $price->harga   = str_replace(".", null, $harga[$i]);
-            $price->save();
+            for ($i = 0; $i < count($kelas); $i++) {
+                $price          = new Price;
+                $price->product = $item->id;
+                $price->kelas   = $kelas[$i];
+                $price->harga   = str_replace(".", "", $harga[$i]);
+                $price->save();
+            }
+
+            DB::commit();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Program berhasil disimpan!']);
+            }
+
+            return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil disimpan!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
-
-        return redirect()->route('dashboard.master.program.index');
     }
 
     /**
@@ -104,7 +129,7 @@ class ProgramController extends Controller
      */
     public function update(Request $request, Program $program)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'  => 'required',
             'kode'  => 'required',
             'des'   => 'required',
@@ -114,6 +139,14 @@ class ProgramController extends Controller
         ], [
             'required' => 'Field wajib diisi.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         DB::beginTransaction();
         try {
             $kelas   = $request->id;
@@ -130,31 +163,40 @@ class ProgramController extends Controller
             $item->save();
 
             $existingIds = Price::where('product', $item->id)->pluck('id')->toArray();
-            $incomingIds = array_map('intval', $idPrice);
+            $incomingIds = array_map('intval', (array)$idPrice);
             $toDelete    = array_diff($existingIds, $incomingIds);
             if (! empty($toDelete)) {
                 Price::whereIn('id', $toDelete)->delete();
             }
 
-            for ($i = 0; $i < count($kelas); $i++) {
-                $par = Price::where('id', $idPrice[$i])->first();
-                if ($par) {
-                    $par->harga = str_replace(".", null, $harga[$i]);
-                    $par->save();
-                } else {
-                    $price          = new Price;
-                    $price->product = $item->id;
-                    $price->kelas   = $kelas[$i];
-                    $price->harga   = str_replace(".", null, $harga[$i]);
-                    $price->save();
+            if ($kelas) {
+                for ($i = 0; $i < count($kelas); $i++) {
+                    $par = Price::where('id', ($idPrice[$i] ?? 0))->first();
+                    if ($par) {
+                        $par->harga = str_replace(".", "", $harga[$i]);
+                        $par->save();
+                    } else {
+                        $price          = new Price;
+                        $price->product = $item->id;
+                        $price->kelas   = $kelas[$i];
+                        $price->harga   = str_replace(".", "", $harga[$i]);
+                        $price->save();
+                    }
                 }
             }
 
             DB::commit();
-            return redirect()->route('dashboard.master.program.index');
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Program berhasil diperbarui!']);
+            }
+
+            return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
+            }
             return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
     }
@@ -165,6 +207,11 @@ class ProgramController extends Controller
     public function destroy(Program $program)
     {
         $program->delete();
-        return redirect()->route('dashboard.master.program.index');
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Program berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil dihapus!');
     }
 }

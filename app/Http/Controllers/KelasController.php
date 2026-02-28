@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
@@ -39,7 +40,15 @@ class KelasController extends Controller
         $item->name = $request->name;
         $item->save();
 
-        return redirect()->route('dashboard.master.kelas.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kelas berhasil disimpan!',
+                'data' => $item
+            ]);
+        }
+
+        return redirect()->route('dashboard.master.kelas.index')->with('status', 'Kelas berhasil disimpan!');
     }
 
     /**
@@ -75,7 +84,15 @@ class KelasController extends Controller
         $item->name = $request->name;
         $item->save();
 
-        return redirect()->route('dashboard.master.kelas.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kelas berhasil diperbarui!',
+                'data' => $item
+            ]);
+        }
+
+        return redirect()->route('dashboard.master.kelas.index')->with('status', 'Kelas berhasil diperbarui!');
     }
 
     /**
@@ -84,6 +101,14 @@ class KelasController extends Controller
     public function destroy(Kelas $kela)
     {
         $kela->delete();
-        return redirect()->route('dashboard.master.kelas.index');
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kelas berhasil dihapus!'
+            ]);
+        }
+
+        return redirect()->route('dashboard.master.kelas.index')->with('status', 'Kelas berhasil dihapus!');
     }
 }

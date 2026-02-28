@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Unit;
 use App\Models\Zone;
 use App\Models\Zone_units;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ZoneController extends Controller
 {
@@ -32,7 +34,7 @@ class ZoneController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'   => 'required',
             'hp'     => 'required',
             'pic'    => 'required',
@@ -40,7 +42,15 @@ class ZoneController extends Controller
             'unit.*' => 'exists:units,id',
         ], [
             'required' => 'Field wajib diisi.',
+            'unit.required' => 'Pilih setidaknya satu unit.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $item       = new Zone;
         $item->name = $request->name;
@@ -56,7 +66,11 @@ class ZoneController extends Controller
             $zones_unit->save();
         }
 
-        return redirect()->route('dashboard.master.zone.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Zona berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.zone.index')->with('status', 'Zona berhasil disimpan!');
     }
 
     /**
@@ -83,7 +97,7 @@ class ZoneController extends Controller
      */
     public function update(Request $request, Zone $zone)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'   => 'required',
             'hp'     => 'required',
             'pic'    => 'required',
@@ -91,22 +105,40 @@ class ZoneController extends Controller
             'unit.*' => 'exists:units,id',
         ], [
             'required' => 'Field wajib diisi.',
+            'unit.required' => 'Pilih setidaknya satu unit.',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $zone->update($request->only('name', 'hp', 'pic'));
 
         $unit = $request->input('unit', []);
         $zone->unit()->sync($unit);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Data Zona berhasil diperbarui.']);
+        }
+
         return redirect()->route('dashboard.master.zone.index')
-            ->with('success', 'Data Zona berhasil diperbarui.');
+            ->with('status', 'Data Zona berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Zone $zone)
     {
-        //
+        $zone->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Zona berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.zone.index')->with('status', 'Zona berhasil dihapus!');
     }
 }

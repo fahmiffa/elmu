@@ -1,4 +1,5 @@
 import md5 from "blueimp-md5";
+import Swal from "sweetalert2";
 
 export function trixEditor() {
     return {
@@ -160,8 +161,8 @@ export function materiForm({ initialRole }) {
             const file = event.target.files[0];
             if (!file) return;
 
-            if (file.size > 2 * 1024 * 1024) {
-                this.error = "File maksimal 2MB";
+            if (file.size > 20 * 1024 * 1024) {
+                this.error = "File maksimal 20MB";
                 event.target.value = "";
                 return;
             }
@@ -182,6 +183,13 @@ export function materiForm({ initialRole }) {
 
             const xhr = new XMLHttpRequest();
             xhr.open(form.method, form.action);
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.setRequestHeader(
+                "X-CSRF-TOKEN",
+                document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute("content"),
+            );
 
             xhr.upload.addEventListener("progress", (evt) => {
                 if (evt.lengthComputable) {
@@ -191,21 +199,37 @@ export function materiForm({ initialRole }) {
 
             xhr.onload = () => {
                 this.uploading = false;
+                const data = JSON.parse(xhr.responseText);
 
                 if (xhr.status >= 200 && xhr.status < 300) {
                     this.success = true;
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: "top-end",
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+                    Toast.fire({
+                        icon: "success",
+                        title: data.message || "Materi berhasil disimpan!",
+                    });
 
                     setTimeout(() => {
                         window.location.href = "/dashboard/master/materi";
                     }, 1500);
                 } else {
-                    this.error = "Upload gagal.";
+                    let errorMessage = data.message || "Upload gagal.";
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors)[0][0];
+                    }
+                    Swal.fire("Error", errorMessage, "error");
                 }
             };
 
             xhr.onerror = () => {
                 this.uploading = false;
-                this.error = "Terjadi error saat upload.";
+                Swal.fire("Error", "Terjadi error saat upload.", "error");
             };
 
             xhr.send(formData);
@@ -365,10 +389,71 @@ export const dataTable = (data) => {
         },
 
         deleteRow(e, id) {
-            if (confirm("Yakin ingin menghapus data?")) {
-                this.deletingId = id;
-                e.target.submit();
-            }
+            Swal.fire({
+                title: "Apakah anda yakin?",
+                text: "Data ini akan dihapus secara permanen!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Mohon Tunggu...",
+                        text: "Sedang menghapus data...",
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                    });
+
+                    const form = e.target;
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            Accept: "application/json",
+                            "X-CSRF-TOKEN": document
+                                .querySelector('meta[name="csrf-token"]')
+                                .getAttribute("content"),
+                        },
+                    })
+                        .then(async (res) => {
+                            const data = await res.json();
+                            if (res.ok) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Berhasil!",
+                                    text:
+                                        data.message ||
+                                        "Data berhasil dihapus.",
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    "Error",
+                                    data.message || "Gagal menghapus data",
+                                    "error",
+                                );
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            Swal.fire(
+                                "Error",
+                                "Gagal menghubungi server",
+                                "error",
+                            );
+                        });
+                }
+            });
         },
         formatNumber(number) {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -488,9 +573,70 @@ export const dataTableReg = (data) => {
         },
 
         deleteRow(e) {
-            if (confirm("Yakin ingin menghapus data?")) {
-                e.target.submit();
-            }
+            Swal.fire({
+                title: "Apakah anda yakin?",
+                text: "Data ini akan dihapus secara permanen!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Mohon Tunggu...",
+                        text: "Sedang menghapus data...",
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                    });
+                    const form = e.target;
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            Accept: "application/json",
+                            "X-CSRF-TOKEN": document
+                                .querySelector('meta[name="csrf-token"]')
+                                .getAttribute("content"),
+                        },
+                    })
+                        .then(async (res) => {
+                            const data = await res.json();
+                            if (res.ok) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Berhasil!",
+                                    text:
+                                        data.message ||
+                                        "Data berhasil dihapus.",
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    "Error",
+                                    data.message || "Gagal menghapus data",
+                                    "error",
+                                );
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            Swal.fire(
+                                "Error",
+                                "Gagal menghubungi server",
+                                "error",
+                            );
+                        });
+                }
+            });
         },
 
         formatNumber(number) {
@@ -628,9 +774,70 @@ export const dataTablePay = (data) => {
         },
 
         deleteRow(e) {
-            if (confirm("Yakin ingin menghapus data?")) {
-                e.target.submit();
-            }
+            Swal.fire({
+                title: "Apakah anda yakin?",
+                text: "Data ini akan dihapus secara permanen!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Mohon Tunggu...",
+                        text: "Sedang menghapus data...",
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                    });
+                    const form = e.target;
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            Accept: "application/json",
+                            "X-CSRF-TOKEN": document
+                                .querySelector('meta[name="csrf-token"]')
+                                .getAttribute("content"),
+                        },
+                    })
+                        .then(async (res) => {
+                            const data = await res.json();
+                            if (res.ok) {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Berhasil!",
+                                    text:
+                                        data.message ||
+                                        "Data berhasil dihapus.",
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    "Error",
+                                    data.message || "Gagal menghapus data",
+                                    "error",
+                                );
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(err);
+                            Swal.fire(
+                                "Error",
+                                "Gagal menghubungi server",
+                                "error",
+                            );
+                        });
+                }
+            });
         },
         formatNumber(number) {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -1275,6 +1482,118 @@ export function jadwalForm(initialJadwals = null) {
 
         removeJadwal(index) {
             this.jadwals.splice(index, 1);
+        },
+    };
+}
+
+export function sweetAlert() {
+    return {
+        init() {
+            // Can be used for auto-show from window events or session data
+        },
+        fire(options) {
+            Swal.fire(options);
+        },
+        toast(message, icon = "success", title = "") {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                },
+            });
+
+            Toast.fire({
+                icon: icon,
+                title: title || message,
+            });
+        },
+        confirm(message, callback) {
+            Swal.fire({
+                title: "Apakah anda yakin?",
+                text: message,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    callback();
+                }
+            });
+        },
+    };
+}
+
+export function formHandler(redirectUrl = null) {
+    return {
+        loading: false,
+        submit(e) {
+            this.loading = true;
+            const form = e.target;
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: "POST", // Handle mapping methods via _method in formData
+                body: formData,
+                headers: {
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content"),
+                    Accept: "application/json",
+                },
+            })
+                .then(async (res) => {
+                    const data = await res.json();
+                    if (res.ok) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        Toast.fire({
+                            icon: "success",
+                            title: data.message || "Berhasil disimpan",
+                        });
+
+                        if (redirectUrl) {
+                            setTimeout(() => {
+                                window.location.href = redirectUrl;
+                            }, 1500);
+                        }
+                    } else {
+                        let errorMessage = data.message || "Terjadi kesalahan";
+                        if (data.errors) {
+                            errorMessage = Object.values(data.errors)[0][0];
+                        }
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        Toast.fire({
+                            icon: "error",
+                            title: errorMessage,
+                        });
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    Swal.fire("Error", "Gagal menghubungi server", "error");
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
         },
     };
 }

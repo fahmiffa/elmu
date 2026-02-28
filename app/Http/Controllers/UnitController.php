@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
@@ -31,18 +32,23 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'    => ['required', 'regex:/^\S*$/'],
             'addr'    => 'required',
             'kelas'   => 'array',
             'kelas.*' => 'exists:kelas,id',
         ], [
             'name.required' => 'Nama sekarang wajib diisi.',
-            'pic.required'  => 'PIC wajib diisi.',
             'addr.required' => 'Alamat wajib diisi.',
-            'hp.required'   => 'Nomor HP wajib diisi.',
             'regex'         => 'Tidak boleh memakai spasi',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $item       = new Unit;
         $item->name = $request->name;
@@ -50,14 +56,20 @@ class UnitController extends Controller
         $item->save();
 
         $class = $request->kelas;
-        for ($i = 0; $i < count($class); $i++) {
-            $kelas           = new UnitKelas;
-            $kelas->kelas_id = $class[$i];
-            $kelas->unit_id  = $item->id;
-            $kelas->save();
+        if ($class) {
+            for ($i = 0; $i < count($class); $i++) {
+                $kelas           = new UnitKelas;
+                $kelas->kelas_id = $class[$i];
+                $kelas->unit_id  = $item->id;
+                $kelas->save();
+            }
         }
 
-        return redirect()->route('dashboard.master.unit.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Unit berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.unit.index')->with('status', 'Unit berhasil disimpan!');
     }
 
     /**
@@ -80,12 +92,23 @@ class UnitController extends Controller
      */
     public function update(Request $request, Unit $unit)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name'    => ['required', 'regex:/^\S*$/'],
             'addr'    => 'required',
             'kelas'   => 'array',
             'kelas.*' => 'exists:kelas,id',
+        ], [
+            'name.required' => 'Nama sekarang wajib diisi.',
+            'addr.required' => 'Alamat wajib diisi.',
+            'regex'         => 'Tidak boleh memakai spasi',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $unit->update($request->only('name', 'addr', 'center'));
 
@@ -93,8 +116,12 @@ class UnitController extends Controller
         $kelas = $request->input('kelas', []);
         $unit->kelas()->sync($kelas);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Data unit berhasil diperbarui.']);
+        }
+
         return redirect()->route('dashboard.master.unit.index')
-            ->with('success', 'Data unit berhasil diperbarui.');
+            ->with('status', 'Data unit berhasil diperbarui.');
     }
 
     /**
@@ -103,7 +130,12 @@ class UnitController extends Controller
     public function destroy(Unit $unit)
     {
         $unit->delete();
-        return redirect()->route('dashboard.master.unit.index');
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Unit berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.unit.index')->with('status', 'Unit berhasil dihapus!');
     }
 
     public function jadwal()
@@ -183,12 +215,9 @@ class UnitController extends Controller
 
         if (count($diff) > 0) {
             $be = UnitSchedule::whereIn('id', $diff)->has('set')->exists();
-            if($be)
-            {
+            if ($be) {
                 return back()->with('err', 'Jadwal sudah di pakai, tidak bisa di hapus');
-            }
-            else
-            {
+            } else {
                 UnitSchedule::whereIn('id', $diff)->delete();
             }
         }
@@ -204,7 +233,6 @@ class UnitController extends Controller
             $sch->start   = $jadwal['start_time'];
             $sch->end     = $jadwal['end_time'];
             $sch->save();
-
         }
 
         return redirect()->route('dashboard.master.jadwal.index')
@@ -280,7 +308,6 @@ class UnitController extends Controller
 
         return redirect()->route('dashboard.master.jadwal.index')
             ->with('success', 'Data Jadwal Unit berhasil diinput.');
-
     }
 
     private function convertHari($number)

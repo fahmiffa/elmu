@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class GradeController extends Controller
 {
@@ -11,7 +13,6 @@ class GradeController extends Controller
      */
     public function index()
     {
-
         $items = Grade::all();
         return view('master.grade.index', compact('items'));
     }
@@ -30,17 +31,28 @@ class GradeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
         ], [
             'name.required' => 'Nama sekarang wajib diisi.',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $item       = new Grade;
         $item->name = $request->name;
         $item->save();
 
-        return redirect()->route('dashboard.master.grade.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Jenjang berhasil disimpan!']);
+        }
+
+        return redirect()->route('dashboard.master.grade.index')->with('status', 'Jenjang berhasil disimpan!');
     }
 
     /**
@@ -66,17 +78,28 @@ class GradeController extends Controller
      */
     public function update(Request $request, Grade $grade)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
         ], [
             'name.required' => 'Nama sekarang wajib diisi.',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $item       = $grade;
         $item->name = $request->name;
         $item->save();
 
-        return redirect()->route('dashboard.master.grade.index');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Jenjang berhasil diperbarui!']);
+        }
+
+        return redirect()->route('dashboard.master.grade.index')->with('status', 'Jenjang berhasil diperbarui!');
     }
 
     /**
@@ -85,6 +108,11 @@ class GradeController extends Controller
     public function destroy(Grade $grade)
     {
         $grade->delete();
-        return redirect()->route('dashboard.master.grade.index');
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Jenjang berhasil dihapus!']);
+        }
+
+        return redirect()->route('dashboard.master.grade.index')->with('status', 'Jenjang berhasil dihapus!');
     }
 }

@@ -34,25 +34,10 @@
 </head>
 
 <body class="bg-gray-100" x-data="layout()" x-init="init()">
-    @if (session('status'))
-    <div x-data="{ show: false, message: '' }" x-init="message = '{{ session('status') }}';
-        show = true;
-        setTimeout(() => show = false, 3000);" class="fixed top-4 right-10 z-[100]">
-        <div x-show="show" x-transition class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            <span x-text="message"></span>
-        </div>
-    </div>
-    @endif
-
-    @if (session('err'))
-    <div x-data="{ show: false, message: '' }" x-init="message = '{{ session('err') }}';
-        show = true;
-        setTimeout(() => show = false, 3000);" class="fixed top-4 right-10 z-[100]">
-        <div x-show="show" x-transition class="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            <span x-text="message"></span>
-        </div>
-    </div>
-    @endif
+    <div x-data="sweetAlert()" x-init="
+        @if (session('status')) toast('{{ session('status') }}', 'success'); @endif
+        @if (session('err')) toast('{{ session('err') }}', 'error'); @endif
+    "></div>
 
     @if (Route::is('dashboard.*'))
     <!-- HEADER -->

@@ -1,7 +1,7 @@
 @extends('base.layout')
 @section('title', 'Dashboard')
 @section('content')
-<div class="flex flex-col bg-white rounded-lg shadow-md p-6">
+<div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="formHandler('{{ route('dashboard.master.teach.index') }}')">
     <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
 
     {{-- @if ($errors->any())
@@ -15,7 +15,7 @@
 @endif --}}
 <form method="POST"
     action="{{ isset($items) ? route('dashboard.master.teach.update', $items->id) : route('dashboard.master.teach.store') }}"
-    class="flex flex-col" enctype="multipart/form-data">
+    class="flex flex-col" enctype="multipart/form-data" @submit.prevent="submit">
     @isset($items)
     @method('PUT')
     @endisset
@@ -123,9 +123,10 @@
     </div>
 
     <div class="flex items-center">
-        <button type="submit"
+        <button type="submit" :disabled="loading"
             class="cursor-pointer bg-orange-500 text-sm hover:bg-orange-700 text-white font-bold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
-            Simpan
+            <span x-show="!loading">Simpan</span>
+            <span x-show="loading">Mohon Tunggu...</span>
         </button>
     </div>
 </form>
