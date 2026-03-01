@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Head;
 use App\Models\Schedules_students;
 use App\Services\Firebase\FirebaseMessage;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
@@ -14,7 +15,7 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $items = Head::has('jadwal')->with('jadwal', 'murid','class')->get();
+        $items = Head::has('jadwal')->with('jadwal', 'murid', 'class')->get();
         return view('home.schedule.index', compact('items'));
     }
 
@@ -82,29 +83,30 @@ class ScheduleController extends Controller
             DB::rollback();
             return back()->with('err', 'Terjadi Kesalahan Proses Input');
         }
-
     }
 
     private function send($students, $msg)
     {
-        $fcm     = $students->reg->murid->users->fcm;
-        $message = [
-            "message" => [
-                "token"        => $fcm,
-                "notification" => [
-                    "title" => "Jadwal",
-                    "body"  => $msg,
+        $fcm     = $students->reg?->murid?->users?->fcm;
+        if ($fcm) {
+            $message = [
+                "message" => [
+                    "token"        => $fcm,
+                    "notification" => [
+                        "title" => "Jadwal",
+                        "body"  => $msg,
+                    ],
                 ],
-            ],
-        ];
+            ];
 
-        FirebaseMessage::sendFCMMessage($message);
+            FirebaseMessage::sendFCMMessage($message);
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Schedule $schedule)
+    public function show($id)
     {
         //
     }
@@ -114,31 +116,29 @@ class ScheduleController extends Controller
      */
     public function edit($id)
     {
-        $items  = Head::where('id', $id)->with('jadwal', 'murid')->first();
+        $items = Head::where('id', $id)
+            ->with('jadwal', 'murid', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name')
+            ->firstOrFail();
+
         $action = "Edit Jadwal";
-        $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students')
+
+        // Hanya load Head yang sedang diedit, tanpa filter bill
+        $murid = Head::select('id', 'kelas', 'unit', 'program', 'students')
             ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name')
-            ->whereHas('bill', function ($q) {
-                $q->where('first', 1)
-                    ->where('status', 1);
-            })
             ->where('id', $id)
-            ->whereHas('units.jadwal')
             ->get();
 
-        $unit = $murid->pluck('units')
-            ->unique('id')
-            ->map(function ($unit) {
-                return [
-                    'id'   => $unit->id,
-                    'name' => $unit->name,
-                ];
-            })
-            ->values();
+        $unit = collect();
+        if ($items->units) {
+            $unit = collect([[
+                'id'   => $items->units->id,
+                'name' => $items->units->name,
+            ]]);
+        }
 
         $selected = [
             'unit'   => $items->unit,
-            'murid'  => $items->murid->pluck('id')->toArray(),
+            'murid'  => [$items->id],
             'jadwal' => $items->jadwal->pluck('id')->toArray(),
         ];
 
@@ -195,8 +195,19 @@ class ScheduleController extends Controller
      */
     public function hapus(Request $request, $id)
     {
-        Schedules_students::where('head', $id)->whereIn('unit_schedules_id', $request->par)->delete();
-        return redirect()->route('dashboard.jadwal.index')->with('status', 'Hapus Jadwal berhasil');
-    }
+        try {
+            Schedules_students::where('head', $id)->whereIn('unit_schedules_id', $request->par)->delete();
 
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Hapus Jadwal berhasil']);
+            }
+
+            return redirect()->route('dashboard.jadwal.index')->with('status', 'Hapus Jadwal berhasil');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus jadwal: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus jadwal: ' . $e->getMessage());
+        }
+    }
 }

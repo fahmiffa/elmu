@@ -13,10 +13,15 @@ use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
+use App\Models\Raport;
+use App\Models\Report;
+use App\Models\Schedules_students;
 use App\Models\Student;
+use App\Models\StudentPresent;
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Vidoes;
 use App\Models\Zone;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
@@ -506,7 +511,8 @@ class Home extends Controller
 
     public function regStore(Request $request)
     {
-        $validated = $request->validate(
+        $validator = Validator::make(
+            $request->all(),
             [
                 // Wajib diisi
                 'murid'                 => "required_if:option,2",
@@ -545,9 +551,15 @@ class Home extends Controller
             [
                 'required'    => 'Field Wajib disi',
                 'required_if' => 'Field Wajib disi',
-
             ]
         );
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
 
         DB::beginTransaction();
 
@@ -556,7 +568,42 @@ class Home extends Controller
 
                 $path = null;
                 if ($request->hasFile('image')) {
-                    $path = $request->file('image')->store('images', 'public');
+                    $image = $request->file('image');
+                    $filename = 'student_' . time() . '_' . uniqid() . '.jpg';
+                    $subPath = 'images/' . $filename;
+                    $targetPath = storage_path('app/public/' . $subPath);
+
+                    $dir = dirname($targetPath);
+                    if (!file_exists($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+
+                    $source = $image->getRealPath();
+                    $info = getimagesize($source);
+
+                    $img = null;
+                    if (function_exists('imagecreatefromjpeg')) {
+                        if ($info['mime'] == 'image/jpeg') {
+                            $img = imagecreatefromjpeg($source);
+                        } elseif ($info['mime'] == 'image/png' && function_exists('imagecreatefrompng')) {
+                            $img = imagecreatefrompng($source);
+                            $bg = imagecreatetruecolor(imagesx($img), imagesy($img));
+                            imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
+                            imagecopy($bg, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+                            imagedestroy($img);
+                            $img = $bg;
+                        } elseif ($info['mime'] == 'image/gif' && function_exists('imagecreatefromgif')) {
+                            $img = imagecreatefromgif($source);
+                        }
+                    }
+
+                    if ($img && function_exists('imagejpeg')) {
+                        imagejpeg($img, $targetPath, 60);
+                        imagedestroy($img);
+                        $path = $subPath;
+                    } else {
+                        $path = $request->file('image')->store('images', 'public');
+                    }
                 }
 
                 $user           = new User;
@@ -657,12 +704,20 @@ class Home extends Controller
 
             DB::commit();
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil disimpan!']);
+            }
+
             return redirect()->route('dashboard.reg');
         } catch (\Exception $e) {
             DB::rollback();
 
             if (isset($path)) {
                 Storage::disk('public')->delete($path);
+            }
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
             }
 
             return back()->withErrors('Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
@@ -683,17 +738,37 @@ class Home extends Controller
 
     public function regUpdate(Request $request, $id)
     {
-        $headItem = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
-        $siswa = $headItem->murid;
+        $headItem  = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $headId    = $headItem->id;
+        $studentId = $headItem->students;
+        $siswa     = $headItem->murid;
+
+        // Cek apakah data sudah memiliki aktivitas/pembayaran yang mengunci edit
+        $hasPaid          = Paid::where('head', $headId)->where('status', 1)->exists();
+        $hasOrder         = Order::where('head', $headId)->where('status', 1)->exists();
+        $hasPresent       = $studentId ? StudentPresent::where('student_id', $studentId)->exists() : false;
+        $hasSchedules     = Schedules_students::where('head', $headId)->exists();
+        $hasVidoes        = $studentId ? Vidoes::where('student_id', $studentId)->exists() : false;
+        $hasRaport        = $studentId && $siswa?->user ? Raport::where('student_id', $siswa->user)->exists() : false;
+        $hasReport        = $studentId && $siswa?->user ? Report::where('user', $siswa->user)->exists() : false;
+
+        if ($hasPaid || $hasOrder || $hasPresent || $hasSchedules || $hasVidoes || $hasRaport || $hasReport) {
+            $message = 'Data tidak dapat diubah karena sudah memiliki riwayat pembayaran atau aktivitas belajar.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+            return back()->with('err', $message);
+        }
 
         $validator = Validator::make($request->all(), [
-            'grade' => 'required',
-            'kelas' => 'required',
+            'grade'   => 'required',
+            'kelas'   => 'required',
             'kontrak' => 'required',
             'program' => 'required',
-            'unit' => 'required',
-            'name' => 'required',
-            'email' => $siswa->user ? 'required|email|unique:users,email,' . $siswa->user : 'nullable',
+            'unit'    => 'required',
+            'name'    => 'required',
+            'image'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'email'   => $siswa?->user ? 'required|email|unique:users,email,' . $siswa->user : 'nullable',
         ], [
             'required' => 'Field Wajib diisi',
         ]);
@@ -709,6 +784,55 @@ class Home extends Controller
         try {
             // Update Student
             if ($siswa) {
+                // Image handling
+                if ($request->hasFile('image')) {
+                    $imageFile = $request->file('image');
+                    $filename = 'student_' . time() . '_' . uniqid() . '.jpg';
+                    $subPath = 'images/' . $filename;
+                    $targetPath = storage_path('app/public/' . $subPath);
+
+                    $dir = dirname($targetPath);
+                    if (!file_exists($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+
+                    $source = $imageFile->getRealPath();
+                    $info = getimagesize($source);
+
+                    $img = null;
+                    if (function_exists('imagecreatefromjpeg')) {
+                        if ($info['mime'] == 'image/jpeg') {
+                            $img = imagecreatefromjpeg($source);
+                        } elseif ($info['mime'] == 'image/png' && function_exists('imagecreatefrompng')) {
+                            $img = imagecreatefrompng($source);
+                            $bg = imagecreatetruecolor(imagesx($img), imagesy($img));
+                            imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
+                            imagecopy($bg, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+                            imagedestroy($img);
+                            $img = $bg;
+                        } elseif ($info['mime'] == 'image/gif' && function_exists('imagecreatefromgif')) {
+                            $img = imagecreatefromgif($source);
+                        }
+                    }
+
+                    if ($img && function_exists('imagejpeg')) {
+                        imagejpeg($img, $targetPath, 60);
+                        imagedestroy($img);
+
+                        // Delete old image
+                        if ($siswa->img) {
+                            Storage::disk('public')->delete($siswa->img);
+                        }
+                        $siswa->img = $subPath;
+                    } else {
+                        $path = $imageFile->store('images', 'public');
+                        if ($siswa->img) {
+                            Storage::disk('public')->delete($siswa->img);
+                        }
+                        $siswa->img = $path;
+                    }
+                }
+
                 $siswa->name = $request->name;
                 $siswa->nama_panggilan = $request->panggilan;
                 $siswa->grade_id = $request->grade;
@@ -758,9 +882,61 @@ class Home extends Controller
 
     public function regDestroy($id)
     {
+        DB::beginTransaction();
         try {
             $head = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+            $headId = $head->id;
+            $studentId = $head->students;
+
+            // Cek riwayat pembayaran yang sudah lunas (status = 1)
+            $hasPaid  = Paid::where('head', $headId)->where('status', 1)->exists();
+            $hasOrder = Order::where('head', $headId)->where('status', 1)->exists();
+
+            if ($hasPaid || $hasOrder) {
+                $message = 'Data tidak dapat dihapus karena sudah memiliki riwayat pembayaran yang lunas.';
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['status' => 'error', 'message' => $message], 422);
+                }
+                return back()->with('err', $message);
+            }
+
+            // Hapus relasi Head
+            Schedules_students::where('head', $headId)->delete();
+            Level::where('head', $headId)->delete();
+            Paid::where('head', $headId)->delete();
+            Order::where('head', $headId)->delete();
+
+            // Hapus relasi Student
+            if ($studentId) {
+                StudentPresent::where('student_id', $studentId)->delete();
+                Vidoes::where('student_id', $studentId)->delete();
+
+                $student = Student::find($studentId);
+                if ($student) {
+                    $userId = $student->user;
+
+                    // Hapus foto jika ada
+                    if ($student->img) {
+                        Storage::disk('public')->delete($student->img);
+                    }
+
+                    if ($userId) {
+                        Raport::where('student_id', $userId)->delete();
+                        Report::where('user', $userId)->delete();
+                    }
+
+                    $student->delete();
+
+                    if ($userId) {
+                        User::where('id', $userId)->where('role', 2)->delete();
+                    }
+                }
+            }
+
+            // Hapus Head
             $head->delete();
+
+            DB::commit();
 
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil dihapus!']);
@@ -768,10 +944,11 @@ class Home extends Controller
 
             return redirect()->route('dashboard.reg.index')->with('status', 'Pendaftaran berhasil dihapus!');
         } catch (\Exception $e) {
+            DB::rollback();
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json(['status' => 'error', 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
             }
-            return back()->with('err', 'Gagal menghapus data');
+            return back()->with('err', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 

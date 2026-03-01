@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Head;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 
@@ -100,15 +101,30 @@ class KelasController extends Controller
      */
     public function destroy(Kelas $kela)
     {
-        $kela->delete();
+        // Cek apakah kelas sudah digunakan di data murid (Head)
+        $used = Head::where('kelas', $kela->id)->exists();
 
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Kelas berhasil dihapus!'
-            ]);
+        if ($used) {
+            $message = 'Kelas tidak dapat dihapus karena sudah digunakan oleh murid.';
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+            return back()->with('err', $message);
         }
 
-        return redirect()->route('dashboard.master.kelas.index')->with('status', 'Kelas berhasil dihapus!');
+        try {
+            $kela->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Kelas berhasil dihapus!']);
+            }
+
+            return redirect()->route('dashboard.master.kelas.index')->with('status', 'Kelas berhasil dihapus!');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus kelas: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus kelas: ' . $e->getMessage());
+        }
     }
 }

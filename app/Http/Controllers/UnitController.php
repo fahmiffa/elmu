@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Head;
 use App\Models\Kelas;
+use App\Models\Schedules_students;
 use App\Models\Unit;
 use App\Models\UnitKelas;
 use App\Models\UnitSchedule;
@@ -129,13 +131,31 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        $unit->delete();
+        // Cek apakah unit sudah digunakan di data murid (Head)
+        $used = Head::where('unit', $unit->id)->exists();
 
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json(['status' => 'success', 'message' => 'Unit berhasil dihapus!']);
+        if ($used) {
+            $message = 'Unit tidak dapat dihapus karena sudah digunakan oleh murid.';
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+            return back()->with('err', $message);
         }
 
-        return redirect()->route('dashboard.master.unit.index')->with('status', 'Unit berhasil dihapus!');
+        try {
+            $unit->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Unit berhasil dihapus!']);
+            }
+
+            return redirect()->route('dashboard.master.unit.index')->with('status', 'Unit berhasil dihapus!');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus unit: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus unit: ' . $e->getMessage());
+        }
     }
 
     public function jadwal()
@@ -330,9 +350,32 @@ class UnitController extends Controller
 
     public function jadwalDestroy(Request $request, $id)
     {
-        $sch = UnitSchedule::where('unit_id', $id)->delete();
+        try {
+            // Cek apakah jadwal unit ini sudah digunakan oleh murid
+            $scheduleIds = UnitSchedule::where('unit_id', $id)->pluck('id');
+            $used = Schedules_students::whereIn('unit_schedules_id', $scheduleIds)->exists();
 
-        return redirect()->route('dashboard.master.jadwal.index')
-            ->with('success', 'Data Jadwal Unit berhasil dihapus.');
+            if ($used) {
+                $message = 'Jadwal tidak dapat dihapus karena sudah digunakan oleh murid.';
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['status' => 'error', 'message' => $message], 422);
+                }
+                return back()->with('err', $message);
+            }
+
+            UnitSchedule::where('unit_id', $id)->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Data Jadwal Unit berhasil dihapus.']);
+            }
+
+            return redirect()->route('dashboard.master.jadwal.index')
+                ->with('success', 'Data Jadwal Unit berhasil dihapus.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus jadwal unit: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus jadwal unit: ' . $e->getMessage());
+        }
     }
 }

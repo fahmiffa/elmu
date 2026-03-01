@@ -15,6 +15,10 @@
     </div>
     @endif
 
+    <script>
+        window.kelasData = @json($kelas);
+    </script>
+
     <form method="POST" action="{{ isset($edit) ? route('dashboard.reg.update', md5($items->id)) : route('dashboard.reg.store') }}"
         class="flex flex-col" id="formReg" enctype="multipart/form-data" x-data="formHandler('{{ route('dashboard.reg.index') }}')"
         @submit.prevent="submit">
@@ -22,11 +26,11 @@
         @if(isset($edit)) @method('PUT') @endif
         <div x-data="{ jenis: '{{ old('option', isset($edit) ? '1' : '1') }}' }">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2"
-                x-data="reg(kelasData, { 
+                x-data="reg(window.kelasData, { 
                     kelas: '{{ old('kelas', $items->kelas ?? '') }}', 
                     program: '{{ old('program', $items->program ?? '') }}', 
                     unit: '{{ old('unit', $items->unit ?? '') }}' 
-                })">
+                })" x-init="init()">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Jenjang</label>
                     <select name="grade" required
@@ -45,7 +49,7 @@
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Kelas</label>
                     <select x-model="selectedKelas" name="kelas"
                         class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
-                        <template x-for="(option, index) in optionsKelas" :key="index">
+                        <template x-for="option in optionsKelas" :key="option.value">
                             <option :value="option.value" x-text="option.label"></option>
                         </template>
                     </select>
@@ -166,10 +170,28 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="mb-4" x-data="{ imagePreview: '{{ $items->murid->img ?? '' ? asset('storage/'.$items->murid->img) : '' }}' }">
+                    <div class="mb-4" x-data="{ 
+                        imagePreview: '{{ $items->murid->img ?? '' ? asset('storage/'.$items->murid->img) : '' }}',
+                        async handleImage(e) {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            
+                            // Show preview immediately
+                            this.imagePreview = URL.createObjectURL(file);
+                            
+                            try {
+                                const compressedFile = await window.compressImage(file);
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(compressedFile);
+                                e.target.files = dataTransfer.files;
+                            } catch (error) {
+                                console.error('Compression failed:', error);
+                            }
+                        }
+                    }">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Photo</label>
                         <input type="file" name="image" accept="image/*"
-                            @change="let file = $event.target.files[0]; imagePreview = URL.createObjectURL(file)"
+                            @change="handleImage"
                             class="block w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0
                            file:text-sm file:font-semibold file:bg-blue-50 file:text-orange-700 
                            hover:file:bg-blue-100 cursor-pointer" />
@@ -333,7 +355,7 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Peringkat</label>
                         <div class="flex items-center gap-2">
-                            <input type="number" name="rank" value="{{ old('rank', $items->murid->rank ?? '') }}" `
+                            <input type="number" name="rank" value="{{ old('rank', $items->murid->rank ?? '') }}"
                                 class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         </div>
                     </div>
@@ -383,6 +405,64 @@
 
 @push('script')
 <script>
-    window.kelasData = @json($kelas);
+    window.compressImage = function(file, {
+        quality = 0.6,
+        maxWidth = 800,
+        maxHeight = 800
+    } = {}) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            reject(new Error('Canvas to Blob failed'));
+                            return;
+                        }
+                        resolve(new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        }));
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
+    }
+
+    // Pre-fill Trix editors from hidden input values
+    document.addEventListener('trix-initialize', function(e) {
+        const editor = e.target;
+        const input = editor.inputElement;
+        if (input && input.value && input.value.trim() !== '') {
+            editor.editor.loadHTML(input.value);
+        }
+    });
 </script>
 @endpush

@@ -126,6 +126,6 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::get('/unit-jadwal/{id}/edit', [UnitController::class, 'jadwalEdit'])->name('jadwal.edit');
         Route::put('/unit-jadwal/{jadwal}', [UnitController::class, 'jadwalUpdate'])->name('jadwal.update');
         Route::post('/unit-jadwal', [UnitController::class, 'jadwalStore'])->name('jadwal.store');
-        Route::post('/unit-jadwal/{id}/hapus', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
+        Route::delete('/unit-jadwal/{id}', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
     });
 });

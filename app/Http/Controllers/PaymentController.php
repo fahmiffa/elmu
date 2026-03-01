@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Head;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
@@ -47,10 +49,7 @@ class PaymentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Payment $payment)
-    {
-
-    }
+    public function show(Payment $payment) {}
 
     /**
      * Show the form for editing the specified resource.
@@ -87,7 +86,30 @@ class PaymentController extends Controller
      */
     public function destroy(Payment $payment)
     {
-        $payment->delete();
-        return redirect()->route('dashboard.master.payment.index');
+        try {
+            // Cek apakah payment sudah digunakan di data murid (Head)
+            $used = Head::where('payment', $payment->id)->exists();
+
+            if ($used) {
+                $message = 'Kontrak tidak dapat dihapus karena sudah digunakan oleh murid.';
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['status' => 'error', 'message' => $message], 422);
+                }
+                return back()->with('err', $message);
+            }
+
+            $payment->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Data pembayaran berhasil dihapus.']);
+            }
+
+            return redirect()->route('dashboard.master.payment.index')->with('status', 'Data pembayaran berhasil dihapus.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus data: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 }

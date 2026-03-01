@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Price;
 use App\Models\Program;
@@ -206,12 +207,30 @@ class ProgramController extends Controller
      */
     public function destroy(Program $program)
     {
-        $program->delete();
+        // Cek apakah program sudah digunakan di data murid (Head)
+        $used = Head::where('program', $program->id)->exists();
 
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json(['status' => 'success', 'message' => 'Program berhasil dihapus!']);
+        if ($used) {
+            $message = 'Program tidak dapat dihapus karena sudah digunakan oleh murid.';
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+            return back()->with('err', $message);
         }
 
-        return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil dihapus!');
+        try {
+            $program->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Program berhasil dihapus!']);
+            }
+
+            return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil dihapus!');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus program: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus program: ' . $e->getMessage());
+        }
     }
 }

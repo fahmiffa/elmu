@@ -1005,51 +1005,64 @@ export function currencyInput(initialValue = "") {
 }
 
 export function reg(kelas, initial = {}) {
-    const val = kelas.map((e) => ({ value: e.id, label: e.name }));
+    const val = kelas
+        ? kelas.map((e) => ({ value: String(e.id), label: e.name }))
+        : [];
     return {
-        selectedKelas: initial.kelas || "",
+        selectedKelas: "",
+        selectedProgram: "",
+        selectedUnit: "",
         optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
-        selectedProgram: initial.program || "",
-        selectedUnit: initial.unit || "",
+
+        init() {
+            // Wait for DOM and template to render options before setting values
+            this.$nextTick(() => {
+                this.selectedKelas = initial.kelas ? String(initial.kelas) : "";
+
+                // Wait AGAIN for dependants (Unit/Program lists) to render
+                this.$nextTick(() => {
+                    this.selectedProgram = initial.program
+                        ? String(initial.program)
+                        : "";
+                    this.selectedUnit = initial.unit
+                        ? String(initial.unit)
+                        : "";
+                });
+            });
+        },
+
         get filteredPrograms() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];
 
-            var program = kelas
-                .filter(
-                    function (p) {
-                        return p.id == Number(this.selectedKelas);
-                    }.bind(this),
-                )
-                .flatMap(function (e) {
-                    return e.program.map(function (unit) {
-                        return {
-                            value: unit.id,
-                            label: unit.name,
-                        };
-                    });
-                });
+            const found = (kelas || []).find(
+                (p) => String(p.id) === String(this.selectedKelas),
+            );
+            const programs =
+                found && found.program
+                    ? found.program.map((p) => ({
+                          value: String(p.id),
+                          label: p.name,
+                      }))
+                    : [];
 
-            return [{ value: "", label: "Pilih Program" }, ...program];
+            return [{ value: "", label: "Pilih Program" }, ...programs];
         },
+
         get filteredUnits() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Unit" }];
 
-            var units = kelas
-                .filter(
-                    function (p) {
-                        return p.id == Number(this.selectedKelas);
-                    }.bind(this),
-                )
-                .flatMap(function (e) {
-                    return e.units.map(function (unit) {
-                        return {
-                            value: unit.id,
-                            label: unit.name,
-                        };
-                    });
-                });
+            const found = (kelas || []).find(
+                (p) => String(p.id) === String(this.selectedKelas),
+            );
+            const units =
+                found && found.units
+                    ? found.units.map((u) => ({
+                          value: String(u.id),
+                          label: u.name,
+                      }))
+                    : [];
 
             return [{ value: "", label: "Pilih Unit" }, ...units];
         },
@@ -1058,9 +1071,9 @@ export function reg(kelas, initial = {}) {
 
 export function schedule(data, initial = {}) {
     return {
-        selectedUnit: initial.unit || "",
-        selectedJadwal: initial.jadwal || "",
-        selectedMurid: initial.murid || [],
+        selectedUnit: initial.unit ? String(initial.unit) : "",
+        selectedJadwal: initial.jadwal ? initial.jadwal.map(String) : [],
+        selectedMurid: initial.murid ? initial.murid.map(String) : [],
         tom: null,
         tomJadwal: null,
 
@@ -1068,14 +1081,16 @@ export function schedule(data, initial = {}) {
             if (!this.selectedUnit)
                 return [{ value: "", label: "Pilih Jadwal" }];
 
-            const found = data.find((p) => p.unit == this.selectedUnit);
+            const found = data.find(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
 
             if (!found || !found.units || !Array.isArray(found.units.jadwal)) {
                 return [{ value: "", label: "Pilih Jadwal" }];
             }
 
             const jadwalList = found.units.jadwal.map((j) => ({
-                value: j.id,
+                value: String(j.id),
                 label: `${j.parse} - ${j.name} (${j.start.slice(
                     0,
                     5,
@@ -1089,9 +1104,22 @@ export function schedule(data, initial = {}) {
             this.$nextTick(() => {
                 this.initTomSelect();
 
-                this.$watch("selectedUnit", () => {
-                    this.selectedJadwal = initial.jadwal;
-                    this.updateOptions();
+                this.$watch("selectedUnit", (value) => {
+                    if (this.tom) {
+                        this.tom.clear();
+                        this.tom.clearOptions();
+                        const newMuridOptions = this.getFilteredMurid();
+                        this.tom.addOptions(newMuridOptions);
+                        this.tom.setValue(this.selectedMurid);
+                    }
+
+                    if (this.tomJadwal) {
+                        this.tomJadwal.clear();
+                        this.tomJadwal.clearOptions();
+                        const newJadwalOptions = this.getFilteredJadwal();
+                        this.tomJadwal.addOptions(newJadwalOptions);
+                        this.tomJadwal.setValue(this.selectedJadwal);
+                    }
                 });
             });
         },
@@ -1099,18 +1127,31 @@ export function schedule(data, initial = {}) {
         getFilteredJadwal() {
             if (!this.selectedUnit) return [];
 
-            const found = data.find((p) => p.unit == this.selectedUnit);
+            const found = data.find(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
 
             if (!found || !found.units || !Array.isArray(found.units.jadwal))
                 return [];
 
             return found.units.jadwal.map((j) => ({
-                value: j.id,
+                value: String(j.id),
                 text: `${j.parse} - ${j.name} (${j.start.slice(
                     0,
                     5,
                 )} - ${j.end.slice(0, 5)})`,
             }));
+        },
+
+        getFilteredMurid() {
+            if (!this.selectedUnit) return [];
+
+            return data
+                .filter((p) => String(p.unit) === String(this.selectedUnit))
+                .map((p) => ({
+                    value: String(p.id),
+                    text: `${p.murid.name} (${p.programs.name})`,
+                }));
         },
 
         initTomSelect() {
@@ -1137,43 +1178,6 @@ export function schedule(data, initial = {}) {
                     options: this.getFilteredJadwal(),
                     items: this.selectedJadwal,
                 });
-            }
-        },
-
-        getFilteredMurid() {
-            if (!this.selectedUnit) return [];
-
-            return data
-                .filter((p) => p.unit == this.selectedUnit)
-                .map((p) => ({
-                    value: p.id,
-                    text: `${p.murid.name} (${p.programs.name})`,
-                }));
-        },
-
-        updateOptions() {
-            if (this.tom) {
-                this.tom.clear();
-                const newMuridOptions = this.getFilteredMurid();
-                this.tom.clearOptions();
-                this.tom.addOptions(newMuridOptions);
-
-                if (this.selectedMurid.length) {
-                    this.tom.setValue(this.selectedMurid);
-                }
-                this.tom.refreshOptions(false);
-            }
-
-            if (this.tomJadwal) {
-                this.tomJadwal.clear();
-                const newJadwalOptions = this.getFilteredJadwal();
-                this.tomJadwal.clearOptions();
-                this.tomJadwal.addOptions(newJadwalOptions);
-
-                if (this.selectedJadwal && this.selectedJadwal.length) {
-                    this.tomJadwal.setValue(this.selectedJadwal);
-                }
-                this.tomJadwal.refreshOptions(false);
             }
         },
     };
