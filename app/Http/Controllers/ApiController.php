@@ -519,7 +519,7 @@ class ApiController extends Controller
     public function program()
     {
         $role     = JWTAuth::user()->role;
-        $products = Program::select('id', 'name', 'des', 'level')->get();
+        $products = Program::select('id', 'name', 'des', 'level')->whereNull('extend')->get();
         if ($role == 3) {
             $products = $products->map(function ($item) {
                 $item->aktif = 0;
@@ -546,7 +546,6 @@ class ApiController extends Controller
 
     public function unit()
     {
-        $id       = JWTAuth::user()->id;
         $products = Unit::select('id', 'name')->get();
         return response()->json(['items' => $products]);
     }

@@ -67,6 +67,7 @@ class ProgramController extends Controller
             $item->kode    = $request->kode;
             $item->des     = $request->des;
             $item->level   = $request->level;
+            $item->extend  = $request->tipe === 'extend' ? true : null;
             $item->kit     = $request->nominal;
             $item->kit_des = $request->kit_des;
             $item->save();
@@ -159,6 +160,7 @@ class ProgramController extends Controller
             $item->kode    = $request->kode;
             $item->des     = $request->des;
             $item->level   = $request->level;
+            $item->extend  = $request->tipe === 'extend' ? true : null;
             $item->kit     = $request->nominal;
             $item->kit_des = $request->kit_des;
             $item->save();
