@@ -51,7 +51,14 @@ class AcademicController extends Controller
     public function kelas()
     {
         $products = Kelas::select('id', 'name')
-            ->with('units:id,name', 'program:id,name')
+            ->with([
+                'units:id,name',
+                'program' => function ($q) {
+                    $q->select('id', 'name')->where(function ($query) {
+                        $query->whereNull('extend')->orWhere('extend', 0)->orWhere('extend', false);
+                    });
+                }
+            ])
             ->get()
             ->each(function ($items) {
                 $items->units->each->makeHidden('pivot');
