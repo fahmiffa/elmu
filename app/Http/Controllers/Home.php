@@ -272,7 +272,19 @@ class Home extends Controller
 
     public function userEdit($id)
     {
-        $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $user = User::with([
+            'data.reg.level',
+            'data.reg.bill.reg.units',
+            'data.reg.bill.reg.programs',
+            'data.reg.bill.reg.class',
+            'data.reg.lay.product.item',
+            'data.reg.units',
+            'data.reg.programs',
+            'data.reg.class'
+        ])
+            ->where(DB::raw('md5(id)'), $id)
+            ->firstOrFail();
+
         if ($user->role != 0) {
             return view('master.user.detail', compact('user'));
         } else {
@@ -411,9 +423,13 @@ class Home extends Controller
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
+        } else {
+            $units = Unit::all();
         }
         $items = $query->get();
-        return view('home.reg.index', compact('items'));
+        $pro = Program::all();
+        return view('home.reg.index', compact('items', 'units', 'pro'));
     }
 
     public function akademik()
@@ -422,9 +438,13 @@ class Home extends Controller
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
+        } else {
+            $units = Unit::all();
         }
         $items = $query->get();
-        return view('home.reg.list', compact('items'));
+        $pro = Program::all();
+        return view('home.reg.list', compact('items', 'units', 'pro'));
     }
 
     public function invoice($id)

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Intervention\Image\Laravel\Facades\Image;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class StudentController extends Controller
@@ -288,5 +289,69 @@ class StudentController extends Controller
             }
             return response()->json(['error' => $e], 500);
         }
+    }
+    public function Upavatar(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $user = JWTAuth::user();
+        $data = $user->data; // Student or Teach model
+
+        if ($request->hasFile('image')) {
+            $imageFile = $request->file('image');
+            $filename  = time() . '.webp'; // Standardize to webp for common compression
+            $path      = 'images/' . $filename;
+
+            try {
+                // Resize and compress using Intervention Image (v3)
+                $image = Image::read($imageFile->getRealPath());
+
+                // Scale to max width 800px
+                $image->scaleDown(width: 800);
+
+                // Encode to webp with 70% quality
+                $encoded = $image->toWebp(70);
+
+                // Store using Laravel Storage
+                Storage::disk('public')->put($path, (string) $encoded);
+
+                if ($data) {
+                    if ($data->img && Storage::disk('public')->exists($data->img)) {
+                        Storage::disk('public')->delete($data->img);
+                    }
+                    $data->img = $path;
+                    $data->save();
+
+                    return response()->json([
+                        'status' => true,
+                        'img'    => $path,
+                    ], 200);
+                }
+            } catch (\Exception $e) {
+                // Fallback to basic storage if intervention fails
+                $path = $imageFile->store('images', 'public');
+                if ($data) {
+                    if ($data->img && Storage::disk('public')->exists($data->img)) {
+                        Storage::disk('public')->delete($data->img);
+                    }
+                    $data->img = $path;
+                    $data->save();
+                    return response()->json([
+                        'status' => true,
+                        'img'    => $path,
+                    ], 200);
+                }
+            }
+        }
+
+        return response()->json(['status' => false, 'message' => 'Gagal mengunggah foto profil.'], 400);
     }
 }

@@ -37,6 +37,7 @@ Route::middleware('jwt')->group(function () {
     Route::get('/materi', [AcademicController::class, 'materi']);
     Route::get('/campaign', [ContentController::class, 'campaign']);
     Route::get('/miska', [ContentController::class, 'miska']);
+    Route::post('/data/avatar', [StudentController::class, 'Upavatar']);
     Route::post('/data/{par}', [StudentController::class, 'Updata']);
     Route::get('/program', [AcademicController::class, 'program']);
     Route::get('/unit', [AcademicController::class, 'unit']);
