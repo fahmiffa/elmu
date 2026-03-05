@@ -8,7 +8,8 @@ use App\Models\Level;
 use App\Models\Student;
 use App\Models\User;
 use App\Rules\NumberWa;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -184,6 +185,15 @@ class StudentController extends Controller
             ], 400);
         }
 
+        $programCheck = \App\Models\Program::find($request->program);
+        if ($programCheck && ($programCheck->extend == 1 || $programCheck->extend == true)) {
+            return response()->json([
+                'errors' => [
+                    'program' => ['Program ini hanya tersedia untuk upgrade, tidak untuk pendaftaran baru.']
+                ]
+            ], 400);
+        }
+
         DB::beginTransaction();
         try {
             $path = null;
@@ -274,7 +284,7 @@ class StudentController extends Controller
         } catch (\Throwable $e) {
             DB::rollback();
             if (isset($path)) {
-                \Storage::disk('public')->delete($path);
+                Storage::disk('public')->delete($path);
             }
             return response()->json(['error' => $e], 500);
         }
