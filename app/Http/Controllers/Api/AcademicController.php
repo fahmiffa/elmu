@@ -54,7 +54,7 @@ class AcademicController extends Controller
             ->with([
                 'units:id,name',
                 'program' => function ($q) {
-                    $q->select('id', 'name')->where(function ($query) {
+                    $q->where(function ($query) {
                         $query->whereNull('extend')->orWhere('extend', 0)->orWhere('extend', false);
                     });
                 }
@@ -62,7 +62,7 @@ class AcademicController extends Controller
             ->get()
             ->each(function ($items) {
                 $items->units->each->makeHidden('pivot');
-                $items->program->each->makeHidden('pivot');
+                $items->program->each->makeHidden(['pivot', 'created_at', 'updated_at', 'deleted_at', 'des', 'level', 'extend']);
             });
         $grades = Grade::select('id', 'name')->get();
         return response()->json(['items' => $products, 'grade' => $grades]);
