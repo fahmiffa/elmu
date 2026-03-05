@@ -14,6 +14,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
+use App\Http\Controllers\TataTertibController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
@@ -127,5 +128,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::put('/unit-jadwal/{jadwal}', [UnitController::class, 'jadwalUpdate'])->name('jadwal.update');
         Route::post('/unit-jadwal', [UnitController::class, 'jadwalStore'])->name('jadwal.store');
         Route::delete('/unit-jadwal/{id}', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
+        Route::get('/tata-tertib', [TataTertibController::class, 'index'])->name('tata-tertib.index');
+        Route::put('/tata-tertib', [TataTertibController::class, 'update'])->name('tata-tertib.update');
     });
 });
