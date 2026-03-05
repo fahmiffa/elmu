@@ -1,5 +1,10 @@
 <?php
-use App\Http\Controllers\ApiController;
+
+use App\Http\Controllers\Api\AcademicController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\ContentController;
+use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Home;
 use Illuminate\Support\Facades\Route;
 
@@ -7,45 +12,45 @@ Route::post('/webhook', [Home::class, 'midtransHook']);
 
 Route::post('/status', function () {
     return response()->json([
-        'status' => false,
-        'versi'=> env('APP_VERSION'),
-        'message'=> 'Mohon maaf, aplikasi sedang dalam perbaikan.\nSilahkan coba lagi secara berkala'
+        'status'  => false,
+        'versi'   => env('APP_VERSION'),
+        'message' => 'Mohon maaf, aplikasi sedang dalam perbaikan.\nSilahkan coba lagi secara berkala',
     ], 200);
 });
 
 Route::prefix('fire')->group(function () {
-    Route::post('/reg', [ApiController::class, 'reg']);
-    Route::post('/refresh', [ApiController::class, 'refresh']);
-    Route::post('/login', [ApiController::class, 'login']);
-    Route::post('/logout', [ApiController::class, 'logout']);
-    Route::get('/kelas', [ApiController::class, 'kelas']);
-    Route::get('/payment', [ApiController::class, 'payment']);
-    Route::post('/forget', [ApiController::class, 'forget']);
-    Route::post('/fcm', [ApiController::class, 'fcm']);
+    Route::post('/reg', [StudentController::class, 'reg']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/kelas', [AcademicController::class, 'kelas']);
+    Route::get('/payment', [BillingController::class, 'payment']);
+    Route::post('/forget', [AuthController::class, 'forget']);
+    Route::post('/fcm', [ContentController::class, 'fcm']);
 });
 
 Route::middleware('jwt')->group(function () {
     Route::post('/pay', [Home::class, 'midtransPay']);
-    Route::get('/data', [ApiController::class, 'data']);
-    Route::get('/murid', [ApiController::class, 'murid']);
-    Route::get('/materi', [ApiController::class, 'materi']);
-    Route::get('/campaign', [ApiController::class, 'campaign']);
-    Route::get('/miska', [ApiController::class, 'miska']);
-    Route::post('/data/{par}', [ApiController::class, 'Updata']);
-    Route::get('/program', [ApiController::class, 'program']);
-    Route::get('/unit', [ApiController::class, 'unit']);
-    Route::get('/bill', [ApiController::class, 'bill']);
-    Route::get('/video', [ApiController::class, 'videos']);
-    Route::post('/video', [ApiController::class, 'video']);
-    Route::get('/level', [ApiController::class, 'level']);
-    Route::post('/level', [ApiController::class, 'Uplevel']);
-    Route::post('/pass', [ApiController::class, 'upass']);
-    Route::get('/tagihan', [ApiController::class, 'tagihan']);
-    Route::post('/bill', [ApiController::class, 'billStore']);
-    Route::get('/price/{kelas}/{product}', [ApiController::class, 'price']);
-    Route::get('/jadwal', [ApiController::class, 'jadwal']);
-    Route::post('/jadwal', [ApiController::class, 'UpJadwal']);
-    Route::post('/report', [ApiController::class, 'ureport']);
-    Route::get('/report', [ApiController::class, 'report']);
-    Route::get('/raport', [ApiController::class, 'raport']);
+    Route::get('/data', [StudentController::class, 'data']);
+    Route::get('/murid', [StudentController::class, 'murid']);
+    Route::get('/materi', [AcademicController::class, 'materi']);
+    Route::get('/campaign', [ContentController::class, 'campaign']);
+    Route::get('/miska', [ContentController::class, 'miska']);
+    Route::post('/data/{par}', [StudentController::class, 'Updata']);
+    Route::get('/program', [AcademicController::class, 'program']);
+    Route::get('/unit', [AcademicController::class, 'unit']);
+    Route::get('/bill', [BillingController::class, 'bill']);
+    Route::get('/video', [ContentController::class, 'videos']);
+    Route::post('/video', [ContentController::class, 'video']);
+    Route::get('/level', [AcademicController::class, 'level']);
+    Route::post('/level', [AcademicController::class, 'Uplevel']);
+    Route::post('/pass', [AuthController::class, 'upass']);
+    Route::get('/tagihan', [BillingController::class, 'tagihan']);
+    Route::post('/bill', [BillingController::class, 'billStore']);
+    Route::get('/price/{kelas}/{product}', [AcademicController::class, 'price']);
+    Route::get('/jadwal', [AcademicController::class, 'jadwal']);
+    Route::post('/jadwal', [AcademicController::class, 'UpJadwal']);
+    Route::post('/report', [ContentController::class, 'ureport']);
+    Route::get('/report', [ContentController::class, 'report']);
+    Route::get('/raport', [AcademicController::class, 'raport']);
 });
