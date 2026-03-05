@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Report;
 use App\Models\Teach;
+use App\Models\TataTertib;
 use App\Models\Vidoes;
 use App\Services\Firebase\FirebaseMessage;
 use Illuminate\Http\Request;
@@ -136,6 +137,15 @@ class ContentController extends Controller
             $items = $to->get();
         }
         return response()->json($items);
+    }
+
+    public function tataTertib()
+    {
+        $item = TataTertib::first();
+        return response()->json([
+            'status' => true,
+            'data' => $item ? $item->content : 'Tata Tertib belum diatur.'
+        ]);
     }
 
     private function youtubeToEmbed($url)

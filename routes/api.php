@@ -27,6 +27,7 @@ Route::prefix('fire')->group(function () {
     Route::get('/payment', [BillingController::class, 'payment']);
     Route::post('/forget', [AuthController::class, 'forget']);
     Route::post('/fcm', [ContentController::class, 'fcm']);
+    Route::get('/tata-tertib', [ContentController::class, 'tataTertib']);
 });
 
 Route::middleware('jwt')->group(function () {
