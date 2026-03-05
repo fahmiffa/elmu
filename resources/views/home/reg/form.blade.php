@@ -163,6 +163,7 @@
                     </div>
                 </div>
 
+                @if(!isset($edit))
                 <div class="flex items-center justify-center my-6">
                     <div class="flex-grow border-t border-gray-300"></div>
                     <span class="mx-4 text-gray-500 text-sm font-bold">DATA SISWA</span>
@@ -379,8 +380,8 @@
                         <trix-editor input="prestasi"
                             class="trix-content bg-transparent border rounded p-2"></trix-editor>
                     </div>
-
                 </div>
+                @endif
             </div>
         </div>
         <div class="flex items-center">

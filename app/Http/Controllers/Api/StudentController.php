@@ -230,7 +230,7 @@ class StudentController extends Controller
             $siswa->dadJob                = $request->dadJob;
             $siswa->mom                   = $request->mom;
             $siswa->momJob                = $request->momJob;
-            $siswa->hp_parent             = $request->hp_parent;
+            $siswa->hp_parent             = $request->hp;
             $siswa->study                 = $request->study;
             $siswa->rank                  = $request->rank;
             $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;

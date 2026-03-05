@@ -29,11 +29,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Barryvdh\DomPDF\Facade\Pdf;
+use PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UnitReportExport;
+use Barryvdh\DomPDF\Facade\Pdf as BarryPdf;
 use App\Models\Zone_units;
 
 class Home extends Controller
@@ -427,7 +430,7 @@ class Home extends Controller
     public function invoice($id)
     {
         $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-        $pdf  = PDF::loadView('invoice', [
+        $pdf  = BarryPdf::loadView('invoice', [
             'items' => $paid,
         ]);
 
@@ -836,17 +839,21 @@ class Home extends Controller
                 $siswa->name = $request->name;
                 $siswa->nama_panggilan = $request->panggilan;
                 $siswa->grade_id = $request->grade;
-                $siswa->alamat = $request->alamat;
-                $siswa->place = $request->place;
-                $siswa->birth = $request->birth;
-                $siswa->gender = $request->gender;
-                $siswa->hp_parent = $request->hp_parent;
-                $siswa->dad = $request->dad;
-                $siswa->mom = $request->mom;
-                $siswa->hp_siswa = $request->hp_siswa;
+
+                // Only update these if they are present in the request (not hidden in edit mode)
+                if ($request->has('alamat')) $siswa->alamat = $request->alamat;
+                if ($request->has('place')) $siswa->place = $request->place;
+                if ($request->has('birth')) $siswa->birth = $request->birth;
+                if ($request->has('gender')) $siswa->gender = $request->gender;
+                if ($request->has('hp_parent')) $siswa->hp_parent = $request->hp_parent;
+                if ($request->has('dad')) $siswa->dad = $request->dad;
+                if ($request->has('mom')) $siswa->mom = $request->mom;
+                if ($request->has('hp_siswa')) $siswa->hp_siswa = $request->hp_siswa;
+
                 $siswa->save();
 
                 if ($siswa->users && $request->email) {
+                    $siswa->users->name = UserName($request->name);
                     $siswa->users->email = $request->email;
                     $siswa->users->save();
                 }
@@ -1081,6 +1088,31 @@ class Home extends Controller
         ];
 
         return view('home.report_unit', compact('items', 'years', 'bulanMap', 'bulan', 'tahun'));
+    }
+
+    public function reportUnitExport(Request $request)
+    {
+        $bulan = $request->input('bulan', (int)date('m'));
+        $tahun = $request->input('tahun', (int)date('Y'));
+
+        $bulanMap = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        $bulanName = $bulanMap[$bulan];
+
+        return Excel::download(new UnitReportExport($bulan, $tahun, $bulanName), 'Laporan-Unit-' . $bulanName . '-' . $tahun . '.xlsx');
     }
 
     public function chart($par)

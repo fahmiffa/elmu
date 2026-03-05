@@ -57,6 +57,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
     Route::get('/laporan-unit', [Home::class, 'reportUnit'])->middleware('isRole')->name('report.unit');
+    Route::get('/laporan-unit/export', [Home::class, 'reportUnitExport'])->middleware('isRole')->name('report.unit.export');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
     Route::middleware('restrictOperator')->group(function () {
         Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
