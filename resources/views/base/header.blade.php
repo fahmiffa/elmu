@@ -40,9 +40,14 @@
             <h2 class="text-xl font-semibold">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
             </h2>
             @if (request()->segment(3))
-            <p class="text-sm opacity-80">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
+            <p class="text-sm opacity-80">
+                @hasSection('breadcrumb')
+                @yield('breadcrumb')
+                @else
+                {{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
                 >
                 {{ request()->segment(3) ? str_replace("-"," ",ucfirst(request()->segment(3))) : null }}
+                @endif
             </p>
             @endif
         </div>

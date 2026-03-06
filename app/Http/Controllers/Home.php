@@ -285,6 +285,17 @@ class Home extends Controller
             ->where(DB::raw('md5(id)'), $id)
             ->firstOrFail();
 
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('error', 'Akses ditolak. Murid tidak berada di zona Anda.');
+            }
+        }
+
         if ($user->role != 0) {
             return view('master.user.detail', compact('user'));
         } else {
@@ -362,6 +373,14 @@ class Home extends Controller
     public function status(Request $request, $id)
     {
         $head = Head::where('id', $id)->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            if (!in_array($head->unit, $unitIds->toArray())) {
+                return back()->with('error', 'Akses ditolak.');
+            }
+        }
+
         $head->note = $request->keterangan;
         $head->done = $request->status;
         $head->save();
@@ -445,6 +464,90 @@ class Home extends Controller
         $items = $query->get();
         $pro = Program::all();
         return view('home.reg.list', compact('items', 'units', 'pro'));
+    }
+
+    public function akademikDetail($id)
+    {
+        $user = User::with([
+            'data.reg.level',
+            'data.reg.bill.reg.units',
+            'data.reg.bill.reg.programs',
+            'data.reg.bill.reg.class',
+            'data.reg.lay.product.item',
+            'data.reg.units',
+            'data.reg.programs',
+            'data.reg.class'
+        ])
+            ->where(DB::raw('md5(id)'), $id)
+            ->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('error', 'Akses ditolak. Murid tidak berada di zona Anda.');
+            }
+        }
+
+        return view('home.student_detail', compact('user'));
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::with('data')->where(DB::raw('md5(id)'), $id)->firstOrFail();
+
+        // Security check for role 4 (Zone Admin)
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('err', 'Akses ditolak.');
+            }
+        }
+
+        $siswa = $user->data;
+        if (!$siswa) {
+            return back()->with('err', 'Data profil tidak ditemukan.');
+        }
+
+        $type = $request->input('type');
+
+        if ($type == 'murid') {
+            $siswa->name = $request->name;
+            $siswa->nama_panggilan = $request->nama_panggilan;
+            $siswa->alamat = $request->alamat;
+            $siswa->place = $request->place;
+            $siswa->birth = $request->birth;
+            $siswa->agama = $request->agama;
+            $siswa->gender = $request->gender;
+            $siswa->sekolah_kelas = $request->sekolah_kelas;
+            $siswa->hp_siswa = $request->hp_siswa;
+
+            // Also update user table name for consistency
+            $user->name = UserName($request->name);
+            $user->save();
+        } elseif ($type == 'ortu') {
+            $siswa->dad = $request->dad;
+            $siswa->dadJob = $request->dadJob;
+            $siswa->mom = $request->mom;
+            $siswa->momJob = $request->momJob;
+            $siswa->hp_parent = $request->hp_parent;
+        } elseif ($type == 'tambahan') {
+            $siswa->dream = $request->dream;
+            $siswa->study = $request->study;
+            $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;
+            $siswa->prestasi = $request->prestasi;
+        }
+
+        $siswa->save();
+
+        return back()->with('status', 'Profil berhasil diperbarui!');
     }
 
     public function invoice($id)
@@ -1048,7 +1151,13 @@ class Home extends Controller
         $bulan = $request->input('bulan', (int)date('m'));
         $tahun = $request->input('tahun', (int)date('Y'));
 
-        $items = Unit::get()->map(function ($unit) use ($bulan, $tahun) {
+        $query = Unit::query();
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('id', $unitIds);
+        }
+
+        $items = $query->get()->map(function ($unit) use ($bulan, $tahun) {
             $headIds = Head::where('unit', $unit->id)->where('done', 0)->pluck('id');
 
             $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {

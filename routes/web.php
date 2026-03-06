@@ -56,6 +56,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
+    Route::get('/akademik/{id}/detail', [Home::class, 'akademikDetail'])->middleware('isRole')->name('akademik.detail');
     Route::get('/laporan-unit', [Home::class, 'reportUnit'])->middleware('isRole')->name('report.unit');
     Route::get('/laporan-unit/export', [Home::class, 'reportUnitExport'])->middleware('isRole')->name('report.unit.export');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
@@ -84,6 +85,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/layanan/{id}', [Home::class, 'layanan'])->name('layanan');
     Route::post('/status/{id}', [Home::class, 'status'])->name('status');
+    Route::post('/user/{id}/update-profile', [Home::class, 'updateProfile'])->name('user.update-profile');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
     Route::resource('video', VidoesController::class);

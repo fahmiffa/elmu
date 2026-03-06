@@ -152,7 +152,7 @@
 </a>
 <a href="{{ route('dashboard.report.index') }}">
     <li
-        class="flex items-center px-4 py-3 border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.report.*') ? 'bg-orange-100' : null }}">
+        class="flex items-center px-4 py-3 border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.report.index') ? 'bg-orange-100' : null }}">
         <span class="text-orange-500 mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -166,7 +166,8 @@
         </span> Laporan
     </li>
 </a>
-@if(Auth::user()->role == 0)
+@endif
+@if(Auth::user()->role == 0 || Auth::user()->role == 4)
 <a href="{{ route('dashboard.report.unit') }}">
     <li
         class="flex items-center px-4 py-3 border-t border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.report.unit') ? 'bg-orange-100' : null }}">
@@ -183,6 +184,7 @@
     </li>
 </a>
 @endif
+@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.campaign.index') }}">
     <li
         class="flex items-center px-4 py-3 border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.campaign.*') ? 'bg-orange-100' : null }}">

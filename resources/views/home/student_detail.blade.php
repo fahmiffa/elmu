@@ -1,7 +1,7 @@
 @extends('base.layout')
-@section('title', 'Detail User - ' . ($user->data->name ?? $user->name))
+@section('title', 'Detail Murid - ' . ($user->data->name ?? $user->name))
 @section('breadcrumb')
-Master > {{ $user->data->name ?? $user->name }}
+Akademik > {{ $user->data->name ?? $user->name }}
 @endsection
 @section('content')
 <div class="bg-white rounded-lg shadow-md p-6" x-data="{ 
@@ -35,10 +35,13 @@ Master > {{ $user->data->name ?? $user->name }}
                 <span class="px-3 py-1 {{ $user->status == 1 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }} rounded-full text-xs font-bold uppercase">
                     {{ $user->status == 1 ? 'Aktif' : 'Nonaktif' }}
                 </span>
+                @if(Auth::user()->role == 4)
+                <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-bold uppercase">Akses Zona</span>
+                @endif
             </div>
         </div>
         <div class="flex-shrink-0">
-            <a href="{{ route('dashboard.master.index') }}" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold">
+            <a href="{{ route('dashboard.akademik') }}" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m15 18-6-6 6-6" />
                 </svg>

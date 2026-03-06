@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -15,9 +16,18 @@ class isRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->role != 0) {
-            return redirect()->route('dashboard.home');
+        if (Auth::user()->role == 0) {
+            return $next($request);
         }
-        return $next($request);
+
+        if (Auth::user()->role == 4 && (
+            $request->routeIs('dashboard.report.unit') ||
+            $request->routeIs('dashboard.report.unit.export') ||
+            $request->routeIs('dashboard.akademik.detail')
+        )) {
+            return $next($request);
+        }
+
+        return redirect()->route('dashboard.home');
     }
 }

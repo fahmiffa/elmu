@@ -44,6 +44,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Zone::class, 'zone_id');
     }
 
+    public function zoneUnits()
+    {
+        return $this->hasMany(Zone_units::class, 'zone_id', 'zone_id');
+    }
+
     public function data()
     {
         if ($this->role == 3) {

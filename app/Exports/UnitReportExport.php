@@ -29,7 +29,13 @@ class UnitReportExport implements FromCollection, WithHeadings, WithMapping, Sho
 
     public function collection()
     {
-        $data = Unit::get()->map(function ($unit) {
+        $query = Unit::query();
+        if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->role == 4) {
+            $unitIds = \App\Models\Zone_units::where('zone_id', \Illuminate\Support\Facades\Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('id', $unitIds);
+        }
+
+        $data = $query->get()->map(function ($unit) {
             $headIds = Head::where('unit', $unit->id)->where('done', 0)->pluck('id');
 
             $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {

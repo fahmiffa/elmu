@@ -96,7 +96,7 @@
                         </td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-center gap-2">
-                                <a :href="'/dashboard/master/user/' + md5(row.murid.user) + '/detail'"
+                                <a :href="'/dashboard/akademik/' + md5(row.murid.user) + '/detail'"
                                     class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" title="Detail Siswa">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
