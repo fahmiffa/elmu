@@ -243,6 +243,7 @@ class AcademicController extends Controller
 
         $allJadwal = collect();
         $allMurid = collect();
+        $today = now()->toDateString();
 
         foreach ($items as $head) {
             $pivotData = DB::table('schedules_students')
@@ -263,9 +264,20 @@ class AcademicController extends Controller
 
             $allJadwal = $allJadwal->merge($jadwalWithProgram);
 
-            $m = $head->murid->toArray();
-            $m['program_id'] = $head->program;
-            $allMurid->push($m);
+            if ($role == 3) {
+                $m = $head->murid->toArray();
+                $m['program_id'] = $head->program;
+
+                // Check if this student already was present TODAY for THIS HEAD (program registration)
+                $isPresent = DB::table('student_presents')
+                    ->where('student_id', $head->students)
+                    ->where('head_id', $head->id)
+                    ->whereDate('created_at', $today)
+                    ->exists();
+
+                $m['absen'] = $isPresent ? 1 : 0;
+                $allMurid->push($m);
+            }
         }
 
         if ($role == 3) {
