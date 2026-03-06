@@ -436,6 +436,18 @@ class Home extends Controller
         return view('home.index');
     }
 
+    public function notifications()
+    {
+        $notifications = Auth::user()->notifications()->latest()->paginate(20);
+        return view('home.notifications', compact('notifications'));
+    }
+
+    public function markNotificationsRead()
+    {
+        Auth::user()->unreadNotifications->markAsRead();
+        return back()->with('status', 'Semua notifikasi ditandai telah dibaca');
+    }
+
     public function reg()
     {
         $query = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level');

@@ -60,6 +60,8 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/laporan-unit', [Home::class, 'reportUnit'])->middleware('isRole')->name('report.unit');
     Route::get('/laporan-unit/export', [Home::class, 'reportUnitExport'])->middleware('isRole')->name('report.unit.export');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
+    Route::get('/notifications', [Home::class, 'notifications'])->name('notifications.index');
+    Route::post('/notifications/mark-read', [Home::class, 'markNotificationsRead'])->name('notifications.mark-read');
     Route::middleware('restrictOperator')->group(function () {
         Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
         Route::post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
