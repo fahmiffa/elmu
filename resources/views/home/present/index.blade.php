@@ -72,8 +72,8 @@
                                     <dt x-text="item.tanggal" class="font-semibold capitalize"></dt>
                                     <div class="flex items-center gap-2">
                                         <dd class="text-xs text-gray-700 font-medium" x-text="'Guru: ' + (item.guru?.name ?? '-')"></dd>
-                                        <template x-if="item.schedule?.program">
-                                            <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold" x-text="item.schedule.program.name"></span>
+                                        <template x-if="item.program">
+                                            <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold" x-text="item.program.name"></span>
                                         </template>
                                     </div>
                                     <div class="mt-1 space-y-0.5">
