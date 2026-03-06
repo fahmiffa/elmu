@@ -311,10 +311,15 @@ class AcademicController extends Controller
 
         for ($i = 0; $i < count($user); $i++) {
             // Get head_id mapping for this student and schedule combination
-            $mapping = DB::table('schedules_students')
+            $mappingQuery = DB::table('schedules_students')
                 ->where('student_id', $user[$i])
-                ->where('unit_schedules_id', $request->jadwal)
-                ->first();
+                ->where('unit_schedules_id', $request->jadwal);
+
+            if ($request->program_id) {
+                $mappingQuery->where('program_id', $request->program_id);
+            }
+
+            $mapping = $mappingQuery->first();
 
             if ($mapping) {
                 $alreadyExists = StudentPresent::where('student_id', $user[$i])
