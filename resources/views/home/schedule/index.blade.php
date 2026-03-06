@@ -59,7 +59,7 @@
                                 <dl>
                                     <dt x-text="row.units.name" class="font-semibold capitalize"></dt>
                                     <dt class="text-xs">
-                                        <span x-text="row.programs.name"></span>
+                                        <span x-text="row.present_program?.name ?? row.programs.name"></span>
                                         <span x-text="row.class.name"></span>
                                     </dt>
                                 </dl>

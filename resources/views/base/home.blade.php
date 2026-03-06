@@ -65,7 +65,7 @@
         </span> AKademik
     </li>
 </a>
-@if(Auth::user()->role != 4)
+@if(Auth::user()->role != 4 || Auth::user()->role == 4)
 <a href="{{ route('dashboard.jadwal.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.jadwal.*') ? 'bg-orange-100' : null }}">

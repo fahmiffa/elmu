@@ -17,7 +17,9 @@ class RestrictOperator
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check() && Auth::user()->role == 4) {
-            return redirect()->route('dashboard.home')->with('error', 'Akses dibatasi.');
+            if (!$request->is('dashboard/jadwal*')) {
+                return redirect()->route('dashboard.home')->with('error', 'Akses dibatasi.');
+            }
         }
         return $next($request);
     }

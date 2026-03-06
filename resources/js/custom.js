@@ -1072,32 +1072,27 @@ export function reg(kelas, initial = {}) {
 export function schedule(data, initial = {}) {
     return {
         selectedUnit: initial.unit ? String(initial.unit) : "",
+        selectedProgram: initial.program ? String(initial.program) : "",
         selectedJadwal: initial.jadwal ? initial.jadwal.map(String) : [],
         selectedMurid: initial.murid ? initial.murid.map(String) : [],
         tom: null,
         tomJadwal: null,
 
-        get jadwals() {
-            if (!this.selectedUnit)
-                return [{ value: "", label: "Pilih Jadwal" }];
-
-            const found = data.find(
+        get programs() {
+            if (!this.selectedUnit) return [];
+            const filtered = data.filter(
                 (p) => String(p.unit) === String(this.selectedUnit),
             );
-
-            if (!found || !found.units || !Array.isArray(found.units.jadwal)) {
-                return [{ value: "", label: "Pilih Jadwal" }];
-            }
-
-            const jadwalList = found.units.jadwal.map((j) => ({
-                value: String(j.id),
-                label: `${j.parse} - ${j.name} (${j.start.slice(
-                    0,
-                    5,
-                )} - ${j.end.slice(0, 5)})`,
+            const programList = filtered.map((p) => ({
+                id: String(p.programs.id),
+                name: p.programs.name,
             }));
-
-            return [{ value: "", label: "Pilih Jadwal" }, ...jadwalList];
+            // Unique by ID
+            return Array.from(new Set(programList.map((a) => a.id))).map(
+                (id) => {
+                    return programList.find((a) => a.id === id);
+                },
+            );
         },
 
         init() {
@@ -1105,23 +1100,33 @@ export function schedule(data, initial = {}) {
                 this.initTomSelect();
 
                 this.$watch("selectedUnit", (value) => {
-                    if (this.tom) {
-                        this.tom.clear();
-                        this.tom.clearOptions();
-                        const newMuridOptions = this.getFilteredMurid();
-                        this.tom.addOptions(newMuridOptions);
-                        this.tom.setValue(this.selectedMurid);
-                    }
+                    this.selectedProgram = "";
+                    this.refreshMurid();
+                    this.refreshJadwal();
+                });
 
-                    if (this.tomJadwal) {
-                        this.tomJadwal.clear();
-                        this.tomJadwal.clearOptions();
-                        const newJadwalOptions = this.getFilteredJadwal();
-                        this.tomJadwal.addOptions(newJadwalOptions);
-                        this.tomJadwal.setValue(this.selectedJadwal);
-                    }
+                this.$watch("selectedProgram", (value) => {
+                    this.refreshMurid();
                 });
             });
+        },
+
+        refreshMurid() {
+            if (this.tom) {
+                this.tom.clear();
+                this.tom.clearOptions();
+                const newMuridOptions = this.getFilteredMurid();
+                this.tom.addOptions(newMuridOptions);
+            }
+        },
+
+        refreshJadwal() {
+            if (this.tomJadwal) {
+                this.tomJadwal.clear();
+                this.tomJadwal.clearOptions();
+                const newJadwalOptions = this.getFilteredJadwal();
+                this.tomJadwal.addOptions(newJadwalOptions);
+            }
         },
 
         getFilteredJadwal() {
@@ -1146,12 +1151,20 @@ export function schedule(data, initial = {}) {
         getFilteredMurid() {
             if (!this.selectedUnit) return [];
 
-            return data
-                .filter((p) => String(p.unit) === String(this.selectedUnit))
-                .map((p) => ({
-                    value: String(p.id),
-                    text: `${p.murid.name} (${p.programs.name})`,
-                }));
+            let filtered = data.filter(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
+
+            if (this.selectedProgram) {
+                filtered = filtered.filter(
+                    (p) => String(p.program) === String(this.selectedProgram),
+                );
+            }
+
+            return filtered.map((p) => ({
+                value: String(p.id),
+                text: `${p.murid.name} (${p.programs.name}) - ${p.class.name}`,
+            }));
         },
 
         initTomSelect() {
