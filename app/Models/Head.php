@@ -1,7 +1,7 @@
 <?php
+
 namespace App\Models;
 
-use App\Models\Head;
 use App\Models\Price;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +21,12 @@ class Head extends Model
 
     public function present()
     {
-        return $this->hasMany(StudentPresent::class, 'student_id', 'students');
+        return $this->hasMany(StudentPresent::class, 'student_id', 'students')
+            ->whereIn('unit_schedules_id', function ($query) {
+                $query->select('unit_schedules_id')
+                    ->from('schedules_students')
+                    ->whereColumn('schedules_students.head', 'head.id');
+            });
     }
 
     public function level()
@@ -54,7 +59,7 @@ class Head extends Model
         return $this->belongsTo(Program::class, 'program', 'id');
     }
 
-    public function class ()
+    public function class()
     {
         return $this->belongsTo(Kelas::class, 'kelas', 'id');
     }
@@ -84,7 +89,6 @@ class Head extends Model
     {
         $date             = Carbon::parse($this->crated_at)->locale('id');
         return $formatted = $date->translatedFormat('l, d F Y');
-
     }
 
     public function getindukAttribute()
@@ -103,8 +107,7 @@ class Head extends Model
             return "Aktif";
         } else if ($this->done == 2) {
             return "Cuti";
-        } else if($this->done == 3)
-        {
+        } else if ($this->done == 3) {
             return "Keluar";
         }
     }
@@ -114,4 +117,8 @@ class Head extends Model
         return $this->belongsToMany(UnitSchedule::class, 'schedules_students', 'head', 'unit_schedules_id');
     }
 
+    public function student_presents()
+    {
+        return $this->hasMany(StudentPresent::class, 'head_id', 'id');
+    }
 }

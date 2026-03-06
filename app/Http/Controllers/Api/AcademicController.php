@@ -17,6 +17,7 @@ use App\Models\Teach;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AcademicController extends Controller
@@ -244,7 +245,7 @@ class AcademicController extends Controller
         $allMurid = collect();
 
         foreach ($items as $head) {
-            $pivotData = \DB::table('schedules_students')
+            $pivotData = DB::table('schedules_students')
                 ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
                 ->where('schedules_students.head', $head->id)
                 ->select('programs.name as program_name', 'programs.id as program_id', 'schedules_students.unit_schedules_id')
@@ -296,7 +297,7 @@ class AcademicController extends Controller
             'user'   => 'required',
         ], [
             'jadwal.required' => 'Jadwal wajib diisi.',
-            'user.required'   => 'TIdak murid yang di pilih',
+            'user.required'   => 'Tidak murid yang di pilih',
         ]);
 
         if ($validator->fails()) {
@@ -306,23 +307,33 @@ class AcademicController extends Controller
         }
 
         $today = now()->toDateString();
+        $user  = $request->user;
 
-        $user = $request->user;
         for ($i = 0; $i < count($user); $i++) {
-
-            $alreadyExists = StudentPresent::where('student_id', $user[$i])
-                ->whereDate('created_at', $today)
+            // Get head_id mapping for this student and schedule combination
+            $mapping = DB::table('schedules_students')
+                ->where('student_id', $user[$i])
                 ->where('unit_schedules_id', $request->jadwal)
-                ->exists();
-            if (! $alreadyExists) {
-                $present                    = new StudentPresent;
-                $present->student_id        = $user[$i];
-                $present->unit_schedules_id = $request->jadwal;
-                $present->teach_id          = JWTAuth::user()->data->id;
-                $present->hal               = $request->hal;
-                $present->Materi            = $request->Materi;
-                $present->Keterangan        = $request->Keterangan;
-                $present->save();
+                ->first();
+
+            if ($mapping) {
+                $alreadyExists = StudentPresent::where('student_id', $user[$i])
+                    ->whereDate('created_at', $today)
+                    ->where('unit_schedules_id', $request->jadwal)
+                    ->where('head_id', $mapping->head)
+                    ->exists();
+
+                if (!$alreadyExists) {
+                    $present                    = new StudentPresent;
+                    $present->student_id        = $user[$i];
+                    $present->unit_schedules_id = $request->jadwal;
+                    $present->head_id           = $mapping->head;
+                    $present->teach_id          = JWTAuth::user()->data->id;
+                    $present->hal               = $request->hal;
+                    $present->Materi            = $request->Materi;
+                    $present->Keterangan        = $request->Keterangan;
+                    $present->save();
+                }
             }
         }
 
