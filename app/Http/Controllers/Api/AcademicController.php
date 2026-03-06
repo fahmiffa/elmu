@@ -328,6 +328,7 @@ class AcademicController extends Controller
                     $present->student_id        = $user[$i];
                     $present->unit_schedules_id = $request->jadwal;
                     $present->head_id           = $mapping->head;
+                    $present->program_id        = $mapping->program_id;
                     $present->teach_id          = JWTAuth::user()->data->id;
                     $present->hal               = $request->hal;
                     $present->Materi            = $request->Materi;

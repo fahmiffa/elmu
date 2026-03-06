@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudentPresent extends Model
 {
     protected $hidden = ['created_at', 'updated_at'];
-    protected $fillable = ['student_id', 'unit_schedules_id', 'teach_id', 'hal', 'Materi', 'Keterangan', 'head_id'];
+    protected $fillable = ['student_id', 'unit_schedules_id', 'teach_id', 'hal', 'Materi', 'Keterangan', 'head_id', 'program_id'];
 
     protected $appends = ['tanggal'];
 
@@ -20,6 +20,11 @@ class StudentPresent extends Model
     public function reg()
     {
         return $this->belongsTo(Head::class, 'head_id', 'id');
+    }
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class, 'program_id', 'id');
     }
 
     public function getTanggalAttribute()

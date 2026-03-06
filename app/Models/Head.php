@@ -21,12 +21,7 @@ class Head extends Model
 
     public function present()
     {
-        return $this->hasMany(StudentPresent::class, 'student_id', 'students')
-            ->whereIn('unit_schedules_id', function ($query) {
-                $query->select('unit_schedules_id')
-                    ->from('schedules_students')
-                    ->whereColumn('schedules_students.head', 'head.id');
-            });
+        return $this->hasMany(StudentPresent::class, 'head_id', 'id');
     }
 
     public function level()
@@ -115,10 +110,5 @@ class Head extends Model
     public function jadwal()
     {
         return $this->belongsToMany(UnitSchedule::class, 'schedules_students', 'head', 'unit_schedules_id');
-    }
-
-    public function student_presents()
-    {
-        return $this->hasMany(StudentPresent::class, 'head_id', 'id');
     }
 }
