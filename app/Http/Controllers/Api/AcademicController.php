@@ -222,71 +222,68 @@ class AcademicController extends Controller
         $role = JWTAuth::user()->role;
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
-            $da        = Teach::where('user', $id)->first();
-            $items     = Head::where('unit', $da->unit_id)
+            $da = Teach::where('user', $id)->first();
+            if (!$da) return response()->json(['jadwal' => [], 'murid' => []]);
+
+            $items = Head::where('unit', $da->unit_id)
                 ->where('done', 0)
                 ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
                 ->get();
-
-            $allJadwal = collect();
-            $allMurid  = collect();
-
-            foreach ($items as $head) {
-                // Get program names for each schedule for this head
-                $pivotData = \DB::table('schedules_students')
-                    ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
-                    ->where('schedules_students.head', $head->id)
-                    ->select('programs.name as program_name', 'schedules_students.unit_schedules_id')
-                    ->get()
-                    ->keyBy('unit_schedules_id');
-
-                $jadwalWithProgram = $head->jadwal->map(function ($j) use ($pivotData) {
-                    $item = $j->toArray();
-                    unset($item['pivot']);
-                    $item['program_name'] = $pivotData[$j->id]->program_name ?? null;
-                    return $item;
-                });
-
-                $allJadwal = $allJadwal->merge($jadwalWithProgram);
-                $allMurid->push($head->murid);
-            }
-
-            return response()->json([
-                'jadwal' => $allJadwal->values()->unique('id')->all(),
-                'murid'  => $allMurid->values()->unique('id')->all(),
-            ]);
         } else {
-            $da    = Student::where('user', $id)->first();
+            $da = Student::where('user', $id)->first();
+            if (!$da) return response()->json(['jadwal' => [], 'murid' => null]);
+
             $items = Head::where('students', $da->id)
+                ->where('done', 0)
                 ->has('jadwal')
                 ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
-                ->first();
+                ->get();
+        }
 
-            if ($items) {
-                $pivotData = \DB::table('schedules_students')
-                    ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
-                    ->where('schedules_students.head', $items->id)
-                    ->select('programs.name as program_name', 'schedules_students.unit_schedules_id')
-                    ->get()
-                    ->keyBy('unit_schedules_id');
+        $allJadwal = collect();
+        $allMurid = collect();
 
-                $jadwalWithProgram = $items->jadwal->map(function ($j) use ($pivotData) {
-                    $item = $j->toArray();
-                    unset($item['pivot']);
-                    $item['program_name'] = $pivotData[$j->id]->program_name ?? null;
-                    return $item;
-                });
+        foreach ($items as $head) {
+            $pivotData = \DB::table('schedules_students')
+                ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
+                ->where('schedules_students.head', $head->id)
+                ->select('programs.name as program_name', 'programs.id as program_id', 'schedules_students.unit_schedules_id')
+                ->get()
+                ->keyBy('unit_schedules_id');
 
-                return response()->json([
-                    'jadwal' => $jadwalWithProgram,
-                    'murid'  => $items->murid,
-                ]);
-            } else {
-                return response()->json([
-                    'jadwal' => [],
-                    'murid'  => [],
-                ]);
-            }
+            $jadwalWithProgram = $head->jadwal->map(function ($j) use ($pivotData) {
+                $pData = $pivotData->get($j->id);
+                $item = $j->toArray();
+                unset($item['pivot']);
+                $item['program_name'] = $pData ? $pData->program_name : null;
+                $item['program_id'] = $pData ? $pData->program_id : null;
+                return $item;
+            });
+
+            $allJadwal = $allJadwal->merge($jadwalWithProgram);
+
+            $m = $head->murid->toArray();
+            $m['program_id'] = $head->program;
+            $allMurid->push($m);
+        }
+
+        if ($role == 3) {
+            return response()->json([
+                'jadwal' => $allJadwal->unique(function ($item) {
+                    return $item['id'] . '-' . $item['program_id'];
+                })->values()->all(),
+                'murid' => $allMurid->unique(function ($item) {
+                    return $item['id'] . '-' . $item['program_id'];
+                })->values()->all(),
+            ]);
+        } else {
+            $da->load('present');
+            return response()->json([
+                'jadwal' => $allJadwal->unique(function ($item) {
+                    return $item['id'] . '-' . $item['program_id'];
+                })->values()->all(),
+                'murid' => $da,
+            ]);
         }
     }
 
