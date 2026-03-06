@@ -223,16 +223,31 @@ class AcademicController extends Controller
         $id   = JWTAuth::user()->id;
         if ($role == 3) {
             $da        = Teach::where('user', $id)->first();
-            $items     = Head::where('unit', $da->unit_id)->where('done', 0)->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->get();
+            $items     = Head::where('unit', $da->unit_id)
+                ->where('done', 0)
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
+                ->get();
+
             $allJadwal = collect();
             $allMurid  = collect();
 
             foreach ($items as $head) {
-                $jadwalWithoutPivot = $head->jadwal->map(function ($j) {
-                    return $j->makeHidden('pivot');
+                // Get program names for each schedule for this head
+                $pivotData = \DB::table('schedules_students')
+                    ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
+                    ->where('schedules_students.head', $head->id)
+                    ->select('programs.name as program_name', 'schedules_students.unit_schedules_id')
+                    ->get()
+                    ->keyBy('unit_schedules_id');
+
+                $jadwalWithProgram = $head->jadwal->map(function ($j) use ($pivotData) {
+                    $item = $j->toArray();
+                    unset($item['pivot']);
+                    $item['program_name'] = $pivotData[$j->id]->program_name ?? null;
+                    return $item;
                 });
 
-                $allJadwal = $allJadwal->merge($jadwalWithoutPivot);
+                $allJadwal = $allJadwal->merge($jadwalWithProgram);
                 $allMurid->push($head->murid);
             }
 
@@ -242,11 +257,28 @@ class AcademicController extends Controller
             ]);
         } else {
             $da    = Student::where('user', $id)->first();
-            $items = Head::where('students', $da->id)->has('jadwal')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present')->first();
+            $items = Head::where('students', $da->id)
+                ->has('jadwal')
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
+                ->first();
+
             if ($items) {
-                $items->jadwal->makeHidden('pivot');
+                $pivotData = \DB::table('schedules_students')
+                    ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
+                    ->where('schedules_students.head', $items->id)
+                    ->select('programs.name as program_name', 'schedules_students.unit_schedules_id')
+                    ->get()
+                    ->keyBy('unit_schedules_id');
+
+                $jadwalWithProgram = $items->jadwal->map(function ($j) use ($pivotData) {
+                    $item = $j->toArray();
+                    unset($item['pivot']);
+                    $item['program_name'] = $pivotData[$j->id]->program_name ?? null;
+                    return $item;
+                });
+
                 return response()->json([
-                    'jadwal' => $items->jadwal,
+                    'jadwal' => $jadwalWithProgram,
                     'murid'  => $items->murid,
                 ]);
             } else {
