@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\ReportNotification;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -268,10 +270,6 @@ class ApiController extends Controller
         $re->user   = $id;
         $re->reason = $request->reason;
         $re->save();
-
-        // Notifikasi ke Admin
-        $admins = User::where('role', 0)->get();
-        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ReportNotification($re));
 
         return response()->json(['status' => true], 200);
     }

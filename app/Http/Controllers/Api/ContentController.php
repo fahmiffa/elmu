@@ -11,6 +11,10 @@ use App\Models\Vidoes;
 use App\Services\Firebase\FirebaseMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Notifications\ReportNotification;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ContentController extends Controller
@@ -73,6 +77,16 @@ class ContentController extends Controller
         $re->user   = $id;
         $re->reason = $request->reason;
         $re->save();
+
+        // Notifikasi ke Admin
+        try {
+            $admins = User::where('role', 0)->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new ReportNotification($re));
+            }
+        } catch (\Exception $e) {
+            Log::error("Notification Error in ContentController: " . $e->getMessage());
+        }
 
         return response()->json(['status' => true], 200);
     }

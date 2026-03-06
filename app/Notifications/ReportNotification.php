@@ -38,12 +38,14 @@ class ReportNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $userName = $this->report->users->name ?? 'User';
+
         return [
             'report_id' => $this->report->id,
-            'user_name' => $this->report->users->name ?? 'Unknown',
+            'user_name' => $userName,
             'reason'    => $this->report->reason,
-            'message'   => 'Laporan baru dari ' . ($this->report->users->name ?? 'User'),
-            'url'       => '/dashboard/report', // Sesuaikan dengan route admin report
+            'message'   => 'Laporan baru dari ' . $userName,
+            'url'       => route('dashboard.report.index'),
         ];
     }
 }
