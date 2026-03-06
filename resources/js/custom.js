@@ -1422,7 +1422,7 @@ export function payChart(par, reg) {
 
             const options = {
                 chart: {
-                    width: "auto",
+                    width: "100%",
                     height: 400,
                     title: par,
                 },

@@ -15,25 +15,6 @@
     </li>
 </a>
 @endif
-@if(Auth::user()->role == 0)
-<a href="{{ route('dashboard.notifications.index') }}">
-    <li
-        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.notifications.*') ? 'bg-orange-100' : null }}">
-        <span class="text-orange-500 mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-        </span> Notifikasi
-        @if(Auth::user()->unreadNotifications->count() > 0)
-        <span class="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-            {{ Auth::user()->unreadNotifications->count() }}
-        </span>
-        @endif
-    </li>
-</a>
-@endif
 <li x-data="{ open: {{ Route::is('dashboard.pay') ? 'true' : 'false' }} }" class="border-b border-gray-300">
     <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.pay') ? 'bg-orange-100' : null }}"
         @click="open = !open">
