@@ -46,13 +46,15 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <select x-model="selectedMonth" @change="updateChart()" class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-[#FF9966] text-sm font-medium bg-gray-50">
+                <select x-model="selectedMonth" @change="updateChart()"
+                    class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-[#FF9966] text-sm font-medium bg-gray-50">
                     <template x-for="(month, index) in months" :key="index">
                         <option :value="index + 1" x-text="month"></option>
                     </template>
                 </select>
 
-                <select x-model="selectedYear" @change="updateChart()" class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-[#FF9966] text-sm font-medium bg-gray-50">
+                <select x-model="selectedYear" @change="updateChart()"
+                    class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-[#FF9966] text-sm font-medium bg-gray-50">
                     <template x-for="year in years" :key="year">
                         <option :value="year" x-text="year"></option>
                     </template>
@@ -62,6 +64,95 @@
 
         <div class="overflow-x-auto scroll-show">
             <div id="pay" class="w-full flex justify-center"></div>
+        </div>
+    </div>
+
+    <!-- Registration Type Chart -->
+    <div x-data="regTypeChart('Analisis Pendaftaran', 'reg-type')" x-init="fetchData('/dashboard/chart-json/reg-type')">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Analisis Tipe Pendaftaran</h2>
+                    <p class="text-sm text-gray-500">Grafik perbandingan tipe pendaftaran per bulan</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <select x-model="selectedYear" @change="updateChart()"
+                        class="border border-gray-300 rounded-xl px-4 py-2 focus:outline-[#FF9966] text-sm font-medium bg-gray-50">
+                        <template x-for="year in years" :key="year">
+                            <option :value="year" x-text="year"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto scroll-show">
+                <div id="reg-type" class="w-full flex justify-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <!-- Monthly Payment per Unit -->
+        <div x-data="unitPayChart('Pembayaran Bulanan / Unit', 'unit-pay-monthly')"
+            x-init="fetchData('/dashboard/chart-json/unit-pay-monthly')">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 leading-tight">Bulanan / Unit</h2>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select x-model="selectedMonth" @change="updateChart()"
+                            class="border border-gray-300 rounded-xl px-2 py-1 focus:outline-[#FF9966] text-xs font-medium bg-gray-50">
+                            <template x-for="(month, index) in months" :key="index">
+                                <option :value="index + 1" x-text="month"></option>
+                            </template>
+                        </select>
+                        <select x-model="selectedYear" @change="updateChart()"
+                            class="border border-gray-300 rounded-xl px-2 py-1 focus:outline-[#FF9966] text-xs font-medium bg-gray-50">
+                            <template x-for="year in years" :key="year">
+                                <option :value="year" x-text="year"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto scroll-show">
+                    <div id="unit-pay-monthly" class="w-full flex justify-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Payment per Unit -->
+        <div x-data="unitPayChart('Pembayaran Layanan / Unit', 'unit-pay-service')"
+            x-init="fetchData('/dashboard/chart-json/unit-pay-service')">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800 leading-tight">Layanan / Unit</h2>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select x-model="selectedMonth" @change="updateChart()"
+                            class="border border-gray-300 rounded-xl px-2 py-1 focus:outline-[#FF9966] text-xs font-medium bg-gray-50">
+                            <template x-for="(month, index) in months" :key="index">
+                                <option :value="index + 1" x-text="month"></option>
+                            </template>
+                        </select>
+                        <select x-model="selectedYear" @change="updateChart()"
+                            class="border border-gray-300 rounded-xl px-2 py-1 focus:outline-[#FF9966] text-xs font-medium bg-gray-50">
+                            <template x-for="year in years" :key="year">
+                                <option :value="year" x-text="year"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto scroll-show">
+                    <div id="unit-pay-service" class="w-full flex justify-center"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -20,7 +20,7 @@
     </script>
 
     <form method="POST" action="{{ isset($edit) ? route('dashboard.reg.update', md5($items->id)) : route('dashboard.reg.store') }}"
-        class="flex flex-col" id="formReg" enctype="multipart/form-data" x-data="formHandler('{{ route('dashboard.reg.index') }}')"
+        class="flex flex-col" id="formReg" enctype="multipart/form-data" x-data="formHandler('{{ route('dashboard.reg.index') }}', true)"
         @submit.prevent="submit">
         @csrf
         @if(isset($edit)) @method('PUT') @endif
@@ -73,12 +73,9 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Unit</label>
-                    <select x-model="selectedUnit" name="unit"
+                    <select x-model="selectedUnit" name="unit" x-ref="selectUnit"
                         class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
                         required>
-                        <template x-for="option in filteredUnits" :key="option.value">
-                            <option :value="option.value" x-text="option.label"></option>
-                        </template>
                     </select>
                     @error('unit')
                     <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
@@ -86,12 +83,9 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Program Belajar</label>
-                    <select x-model="selectedProgram" name="program"
+                    <select x-model="selectedProgram" name="program" x-ref="selectProgram"
                         class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
                         required>
-                        <template x-for="option in filteredPrograms" :key="option.value">
-                            <option :value="option.value" x-text="option.label"></option>
-                        </template>
                     </select>
                     @error('program')
                     <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>

@@ -1380,6 +1380,155 @@ class Home extends Controller
             ];
         }
 
+        if ($par == 'reg-type') {
+            $year = [];
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            foreach ($year as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = [
+                        'Baru' => 0,
+                        'Tambah' => 0,
+                        'Pindah' => 0,
+                        'Lanjut' => 0,
+                    ];
+                }
+            }
+
+            $queryBaru = DB::table('head')->where('old', 0);
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryBaru->whereIn('unit', $unitIds);
+            }
+            $dataBaru = $queryBaru->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
+                ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+                ->get();
+
+            foreach ($dataBaru as $item) {
+                $bulanName = $bulanMap[$item->bulan] ?? null;
+                if ($bulanName && isset($dummyData[$item->tahun][$bulanName])) {
+                    $dummyData[$item->tahun][$bulanName]['Baru'] = (int) $item->total;
+                }
+            }
+
+            $queryLog = DB::table('log_heads')
+                ->join('head', 'log_heads.head_id', '=', 'head.id');
+
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryLog->whereIn('head.unit', $unitIds);
+            }
+
+            $dataLog = $queryLog->selectRaw('YEAR(log_heads.created_at) as tahun, MONTH(log_heads.created_at) as bulan, log_heads.tipe, count(*) as total')
+                ->groupByRaw('YEAR(log_heads.created_at), MONTH(log_heads.created_at), log_heads.tipe')
+                ->get();
+
+            foreach ($dataLog as $item) {
+                $bulanName = $bulanMap[$item->bulan] ?? null;
+                if ($bulanName && isset($dummyData[$item->tahun][$bulanName])) {
+                    $typeKey = '';
+                    switch ($item->tipe) {
+                        case 1:
+                            $typeKey = 'Tambah';
+                            break;
+                        case 2:
+                            $typeKey = 'Pindah';
+                            break;
+                        case 3:
+                            $typeKey = 'Lanjut';
+                            break;
+                    }
+                    if ($typeKey) {
+                        $dummyData[$item->tahun][$bulanName][$typeKey] = (int) $item->total;
+                    }
+                }
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
+        }
+
+        if ($par == 'unit-pay-monthly' || $par == 'unit-pay-service') {
+            $year = [];
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            $queryUnit = Unit::query();
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryUnit->whereIn('id', $unitIds);
+            }
+            $units = $queryUnit->get();
+
+            foreach ($year as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = [];
+                    foreach ($units as $unit) {
+                        $dummyData[$tahun][$namaBulan][$unit->name] = [
+                            'bayar' => 0,
+                            'belum' => 0,
+                        ];
+                    }
+                }
+            }
+
+            if ($par == 'unit-pay-monthly') {
+                $query = Paid::whereHas('reg', function ($q) {
+                    $q->where('done', 0);
+                });
+                if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                    $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                    $query->whereHas('reg', function ($q) use ($unitIds) {
+                        $q->whereIn('unit', $unitIds);
+                    });
+                }
+                $data = $query->with('reg.units')->get();
+
+                foreach ($data as $item) {
+                    $tahun = $item->tahun;
+                    $bulan = $bulanMap[(int)$item->bulan] ?? null;
+                    $unitName = $item->reg->units->name ?? null;
+                    if (!$bulan || !$unitName || !isset($dummyData[$tahun][$bulan][$unitName])) continue;
+
+                    $statusKey = $item->status == 1 ? 'bayar' : 'belum';
+                    $dummyData[$tahun][$bulan][$unitName][$statusKey] += (int) $item->total;
+                }
+            } else {
+                $query = Order::whereHas('reg', function ($q) {
+                    $q->where('done', 0);
+                })->with('product', 'reg.units');
+
+                if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                    $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                    $query->whereHas('reg', function ($q) use ($unitIds) {
+                        $q->whereIn('unit', $unitIds);
+                    });
+                }
+                $data = $query->get();
+
+                foreach ($data as $item) {
+                    $tahun = $item->created_at->format('Y');
+                    $bulanNum = (int)$item->created_at->format('m');
+                    $bulan = $bulanMap[$bulanNum] ?? null;
+                    $unitName = $item->reg->units->name ?? null;
+                    if (!$bulan || !$unitName || !isset($dummyData[$tahun][$bulan][$unitName])) continue;
+
+                    $statusKey = $item->status == 1 ? 'bayar' : 'belum';
+                    $dummyData[$tahun][$bulan][$unitName][$statusKey] += (int) ($item->product->harga ?? 0);
+                }
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
+        }
+
         return response()->json($da, 200);
     }
 
