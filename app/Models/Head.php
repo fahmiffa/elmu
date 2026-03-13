@@ -104,11 +104,18 @@ class Head extends Model
             return "Cuti";
         } else if ($this->done == 3) {
             return "Keluar";
+        } else if ($this->done == 4) {
+            return "Pindah";
         }
     }
 
     public function jadwal()
     {
         return $this->belongsToMany(UnitSchedule::class, 'schedules_students', 'head', 'unit_schedules_id');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(LogHead::class, 'head_id', 'id');
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Level;
+use App\Models\LogHead;
 use App\Models\Order;
 use App\Models\Paid;
 use App\Models\Payment;
@@ -643,7 +644,7 @@ class Home extends Controller
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $action  = "Form Pendaftaran";
-        $head    = Head::has('murid')->get();
+        $head    = Head::has('murid')->with('programs', 'units')->where('done', 0)->get();
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 
@@ -685,6 +686,8 @@ class Home extends Controller
                 'pendidikan_non_formal' => 'nullable|string',
                 'prestasi'              => 'nullable|string',
                 'panggilan'             => 'nullable|string',
+                'tipe'                  => 'required_if:option,2',
+                'keterangan'            => 'nullable|string',
             ],
             [
                 'required'    => 'Field Wajib disi',
@@ -702,6 +705,8 @@ class Home extends Controller
         DB::beginTransaction();
 
         try {
+
+            // baru
             if ($request->option == 1) {
 
                 $path = null;
@@ -825,6 +830,23 @@ class Home extends Controller
                 $head->program  = $request->program;
                 $head->payment  = $request->kontrak;
                 $head->save();
+
+                // Logic based on tipe
+                if ($request->tipe == 2) {
+                    $parent->done = 4;
+                    $parent->save();
+                } elseif ($request->tipe == 3) {
+                    $parent->done = 1;
+                    $parent->save();
+                }
+
+                // Create LogHead
+                LogHead::create([
+                    'head_id'    => $head->id,
+                    'student_id' => $parent->students,
+                    'tipe'       => $request->tipe,
+                    'keterangan' => $request->keterangan,
+                ]);
 
                 $paid        = new Paid;
                 $paid->head  = $head->id;

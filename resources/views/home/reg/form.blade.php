@@ -109,21 +109,41 @@
                         <label class="inline-flex items-center space-x-2">
                             <input type="radio" x-model="jenis" name="option" value="2"
                                 class="form-radio text-orange-600">
-                            <span class="text-gray-700">Existing</span>
+                            <span class="text-gray-700">Terdaftar</span>
                         </label>
                     </div>
                 </div>
                 <div class="mb-4" x-show="jenis === '2'" id="old">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Murid</label>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Murid</label>
                     <select name="murid" x-data="dropdownSelect()"
                         class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
                         <option value="">Pilih Murid</option>
                         @foreach ($head as $val)
-                        <option value="{{ $val->id }}" @selected(old('murid')==$val->id)>{{ $val->murid->name }}</option>
+                        <option value="{{ $val->id }}" @selected(old('murid')==$val->id)>{{ $val->murid->nama_panggilan }}, {{ $val->murid->name }} ({{ $val->programs->name }} - {{ $val->units->name }})</option>
                         @endforeach
                     </select>
 
                     @error('murid')
+                    <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="mb-4" x-show="jenis === '2'">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Tipe Pendaftaran</label>
+                    <select name="tipe"
+                        class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                        <option value="">Pilih Tipe</option>
+                        <option value="1" @selected(old('tipe') == 1)>Tambah program</option>
+                        <option value="2" @selected(old('tipe') == 2)>Pindah program</option>
+                        <option value="3" @selected(old('tipe') == 3)>Lanjut Program</option>
+                    </select>
+                    @error('tipe')
+                    <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="mb-4" x-show="jenis === '2'">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Keterangan</label>
+                    <textarea name="keterangan" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('keterangan') }}</textarea>
+                    @error('keterangan')
                     <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                     @enderror
                 </div>
