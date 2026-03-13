@@ -3,9 +3,27 @@
 @section('content')
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
 
-    <div class="mb-4 flex justify-between items-center gap-2">
-        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
-            class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+            <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
+                class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+            <select x-model="filterUnit" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Unit</option>
+                @foreach($units as $u)
+                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                @endforeach
+            </select>
+
+            <select x-model="filterProgram" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Program</option>
+                @foreach($pro as $p)
+                <option value="{{ $p->id }}">{{ $p->name }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     <div class="flex items-center gap-2 mb-3">
@@ -30,6 +48,7 @@
                     <th class="px-4 py-2">Panggilan</th>
                     <th class="px-4 py-2">Program</th>
                     <th class="px-4 py-2">Status</th>
+                    <th class="px-4 py-2 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,10 +94,21 @@
 
                             <div x-text="row.note"></div>
                         </td>
+                        <td class="px-4 py-2">
+                            <div class="flex items-center justify-center gap-2">
+                                <a :href="'/dashboard/akademik/' + md5(row.murid.user) + '/detail'"
+                                    class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" title="Detail Siswa">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                 </template>
                 <tr x-show="filteredData().length === 0">
-                    <td colspan="3" class="text-center px-4 py-2 text-gray-500">No results found.</td>
+                    <td colspan="7" class="text-center px-4 py-2 text-gray-500">No results found.</td>
                 </tr>
             </tbody>
         </table>

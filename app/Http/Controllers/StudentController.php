@@ -205,8 +205,51 @@ class StudentController extends Controller
             $siswa->user = $user->id;
             $siswa->name = $request->name;
             if ($request->hasFile('image')) {
-                $path       = $request->file('image')->store('images', 'public');
-                $siswa->img = $path;
+                $image = $request->file('image');
+                $filename = 'student_' . time() . '_' . uniqid() . '.jpg'; // Convert to jpg
+                $subPath = 'images/' . $filename;
+                $targetPath = storage_path('app/public/' . $subPath);
+
+                // Ensure directory exists
+                $dir = dirname($targetPath);
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+
+                $source = $image->getRealPath();
+                $info = getimagesize($source);
+
+                $img = null;
+                if ($info['mime'] == 'image/jpeg') {
+                    $img = imagecreatefromjpeg($source);
+                } elseif ($info['mime'] == 'image/png') {
+                    $img = imagecreatefrompng($source);
+                    // Handle transparency for PNG
+                    $bg = imagecreatetruecolor(imagesx($img), imagesy($img));
+                    imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
+                    imagecopy($bg, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+                    imagedestroy($img);
+                    $img = $bg;
+                } elseif ($info['mime'] == 'image/gif') {
+                    $img = imagecreatefromgif($source);
+                }
+
+                if ($img) {
+                    // Server-side compression: 60% quality
+                    imagejpeg($img, $targetPath, 60);
+                    imagedestroy($img);
+
+                    // Delete old image if exists
+                    if ($siswa->img) {
+                        Storage::disk('public')->delete($siswa->img);
+                    }
+
+                    $siswa->img = $subPath;
+                } else {
+                    // Fallback to standard storage
+                    $path       = $image->store('images', 'public');
+                    $siswa->img = $path;
+                }
             }
             $siswa->jenjang               = $request->grade;
             $siswa->alamat                = $request->alamat;
@@ -282,9 +325,19 @@ class StudentController extends Controller
             }
 
             DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Data murid berhasil dihapus.']);
+            }
+
             return back()->with('status', 'Data murid berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollback();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus data: ' . $e->getMessage()], 500);
+            }
+
             return back()->with('err', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }

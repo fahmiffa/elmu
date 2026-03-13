@@ -68,9 +68,31 @@
                         </td>
                         <td class="px-4 py-2">
                             <template x-for="(item, index) in row.present" :key="index">
-                                <dl class="mb-2 last:mb-0">
+                                <dl class="mb-3 last:mb-0 border-b border-gray-100 pb-2 last:border-0">
                                     <dt x-text="item.tanggal" class="font-semibold capitalize"></dt>
-                                    <dd class="text-xs text-gray-600" x-text="'Guru: ' + (item.guru?.name ?? '-')"></dd>
+                                    <div class="flex items-center gap-2">
+                                        <dd class="text-xs text-gray-700 font-medium" x-text="'Guru: ' + (item.guru?.name ?? '-')"></dd>
+                                        <template x-if="item.program">
+                                            <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold" x-text="item.program.name"></span>
+                                        </template>
+                                    </div>
+                                    <div class="mt-1 space-y-0.5">
+                                        <template x-if="item.hal">
+                                            <dd class="text-[11px] text-blue-600 flex items-center gap-1">
+                                                <span class="font-bold">Hal:</span> <span x-text="item.hal"></span>
+                                            </dd>
+                                        </template>
+                                        <template x-if="item.Materi">
+                                            <dd class="text-[11px] text-green-600 flex items-center gap-1">
+                                                <span class="font-bold">Materi:</span> <span x-text="item.Materi"></span>
+                                            </dd>
+                                        </template>
+                                        <template x-if="item.Keterangan">
+                                            <dd class="text-[11px] text-gray-500 italic flex items-start gap-1">
+                                                <span class="font-bold not-italic">Ket:</span> <span x-text="item.Keterangan"></span>
+                                            </dd>
+                                        </template>
+                                    </div>
                                 </dl>
                             </template>
                         </td>

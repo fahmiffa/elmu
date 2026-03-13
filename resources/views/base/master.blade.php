@@ -192,3 +192,34 @@
         </span> Materi
     </li>
 </a>
+<a href="{{ route('dashboard.master.tata-tertib.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.tata-tertib.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-clipboard-list">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <path d="M12 11h4" />
+                <path d="M12 16h4" />
+                <path d="M8 11h.01" />
+                <path d="M8 16h.01" />
+            </svg>
+        </span> Tata Tertib
+    </li>
+</a>
+<a href="{{ route('dashboard.master.log.index') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.master.log.*') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-history-icon lucide-history">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+            </svg>
+        </span> Log Aktivitas
+    </li>
+</a>

@@ -86,6 +86,8 @@ import {
     trixEditor,
     sweetAlert,
     formHandler,
+    regTypeChart,
+    unitPayChart,
 } from "./custom.js";
 
 window.Alpine = Alpine;
@@ -100,6 +102,8 @@ Alpine.data("jadwal", jadwal);
 Alpine.data("reg", reg);
 Alpine.data("salesChart", salesChart);
 Alpine.data("payChart", payChart);
+Alpine.data("regTypeChart", regTypeChart);
+Alpine.data("unitPayChart", unitPayChart);
 Alpine.data("countUp", countUp);
 Alpine.data("schedule", schedule);
 Alpine.data("jadwalForm", jadwalForm);

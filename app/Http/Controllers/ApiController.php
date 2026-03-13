@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\ReportNotification;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -178,7 +181,6 @@ class ApiController extends Controller
                 $present->teach_id          = JWTAuth::user()->data->id;
                 $present->save();
             }
-
         }
 
         return response()->json(['status' => true], 200);
@@ -200,7 +202,6 @@ class ApiController extends Controller
                 ->map(function ($q) {
                     return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid' => $q->murid->name];
                 });
-
         } else {
             $murid = JWTAuth::user()->data->murid->pluck("students")->toArray();
             $murid = Student::whereIn("id", $murid)->pluck("user")->toArray();
@@ -225,15 +226,16 @@ class ApiController extends Controller
         if ($role == 2) {
 
             $da = JWTAuth::user()->data->program->pluck("id")->toArray();
-
         } else {
             $da = JWTAuth::user()->data->head->pluck("program")->toArray();
         }
         $items = Materi::whereIn('program_id', $da)->with('program')->latest()->get()
             ->map(function ($q) {
-                return ["id" => $q->id,
+                return [
+                    "id" => $q->id,
                     "name"       => $q->program->name,
-                    "pdf"        => $q->pdf];
+                    "pdf"        => $q->pdf
+                ];
             });
 
         return response()->json($items);
@@ -310,9 +312,7 @@ class ApiController extends Controller
                     'murid'  => [],
                 ]);
             }
-
         }
-
     }
 
     private function youtubeToEmbed($url)
@@ -380,24 +380,20 @@ class ApiController extends Controller
     {
         $id       = JWTAuth::user()->id;
         $da       = Teach::where('user', $id)->first();
-        if($da)
-        {
+        if ($da) {
             $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->get();
             $allMurid = collect();
-    
+
             foreach ($items as $head) {
                 $allMurid->push($head->murid);
             }
-    
+
             return response()->json([
                 'murid' => $allMurid->values()->unique('id')->all(),
             ]);
+        } else {
+            return response()->json([]);
         }
-        else
-        {
-             return response()->json([]);
-        }
-
     }
 
     public function miska()
@@ -474,7 +470,7 @@ class ApiController extends Controller
                 return response()->json(['error' => 'Invalid credentials'], 401);
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Could not create token '.$e->getMessage()], 500);
+            return response()->json(['error' => 'Could not create token ' . $e->getMessage()], 500);
         }
 
         // Simpan FCM jika ada
@@ -519,7 +515,7 @@ class ApiController extends Controller
     public function program()
     {
         $role     = JWTAuth::user()->role;
-        $products = Program::select('id', 'name', 'des', 'level')->get();
+        $products = Program::select('id', 'name', 'des', 'level')->whereNull('extend')->get();
         if ($role == 3) {
             $products = $products->map(function ($item) {
                 $item->aktif = 0;
@@ -528,7 +524,6 @@ class ApiController extends Controller
             return response()->json([
                 'items' => $products,
             ]);
-
         } else {
             $items = JWTAuth::user()->data->reg->map(function ($q) {
                 return $q->programs;
@@ -546,7 +541,6 @@ class ApiController extends Controller
 
     public function unit()
     {
-        $id       = JWTAuth::user()->id;
         $products = Unit::select('id', 'name')->get();
         return response()->json(['items' => $products]);
     }
@@ -612,7 +606,6 @@ class ApiController extends Controller
                     "kelas"   => $val->product->class->name,
                     "bill"    => array_merge($bill, $lay),
                 ];
-
             }
 
             $result = [
@@ -670,12 +663,10 @@ class ApiController extends Controller
                             'name'  => $student->name,
                             'bills' => array_merge($bills, $lay),
                         ];
-
                     }
                 }
             }
             return response()->json(array_values($grouped));
-
         }
     }
 
@@ -842,7 +833,6 @@ class ApiController extends Controller
 
             return response()->json(array_values($grouped));
             return response()->json($students);
-
         }
     }
 
@@ -881,7 +871,6 @@ class ApiController extends Controller
                         ];
                     }
                 }
-
             }
         }
 
@@ -900,7 +889,7 @@ class ApiController extends Controller
             $student = User::select('id', 'name', 'email', 'status', 'role')
                 ->with('data')
                 ->where('id', $id)->first();
-                
+
             $induk          = optional($student->data->reg->first())->induk;
             $student->induk = $induk ? substr($induk, 0, -4) : null;
             $student->data->makeHidden('reg');
@@ -912,7 +901,6 @@ class ApiController extends Controller
             $student = User::select('id', 'name', 'email', 'status', 'role')->where('id', $id)->first();
             return response()->json($student);
         }
-
     }
 
     public function billStore(Request $request)
@@ -937,52 +925,54 @@ class ApiController extends Controller
         return response()->json([
             'status' => true,
         ]);
-
     }
 
     public function reg(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'grade_id'              => 'required',
-            'kelas'                 => 'required',
-            'gender'                => 'nullable|in:1,2',
-            'place'                 => 'nullable|string',
-            'birth'                 => 'nullable|date',
-            'dad'                   => 'nullable|string',
-            'dadJob'                => 'nullable|string',
-            'mom'                   => 'nullable|string',
-            'momJob'                => 'nullable|string',
-            'hp_parent'             => 'nullable|string',
-            'kontrak'               => 'required',
-            'program'               => 'required',
-            'unit'                  => 'required',
-            'hp'                    => ['required', 'unique:users,nomor', new NumberWa()],
-            'email'                 => 'required|email|unique:users,email',
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'grade_id'              => 'required',
+                'kelas'                 => 'required',
+                'gender'                => 'nullable|in:1,2',
+                'place'                 => 'nullable|string',
+                'birth'                 => 'nullable|date',
+                'dad'                   => 'nullable|string',
+                'dadJob'                => 'nullable|string',
+                'mom'                   => 'nullable|string',
+                'momJob'                => 'nullable|string',
+                'hp_parent'             => 'nullable|string',
+                'kontrak'               => 'required',
+                'program'               => 'required',
+                'unit'                  => 'required',
+                'hp'                    => ['required', 'unique:users,nomor', new NumberWa()],
+                'email'                 => 'required|email|unique:users,email',
 
-            // Optional
-            'name'                  => 'required|string',
-            'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'sekolah_kelas'         => 'nullable|string',
-            'alamat'                => 'nullable|string',
-            'alamat_sekolah'        => 'nullable|string',
-            'dream'                 => 'nullable|string',
-            'hp_siswa'              => 'nullable|string',
-            'agama'                 => 'nullable|string',
-            'sosmedChild'           => 'nullable|string',
-            'sosmedOther'           => 'nullable|string',
-            'study'                 => 'nullable|string',
-            'rank'                  => 'nullable|string',
-            'pendidikan_non_formal' => 'nullable|string',
-            'prestasi'              => 'nullable|string',
-            'panggilan'             => 'nullable|string',
-        ],
+                // Optional
+                'name'                  => 'required|string',
+                'image'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sekolah_kelas'         => 'nullable|string',
+                'alamat'                => 'nullable|string',
+                'alamat_sekolah'        => 'nullable|string',
+                'dream'                 => 'nullable|string',
+                'hp_siswa'              => 'nullable|string',
+                'agama'                 => 'nullable|string',
+                'sosmedChild'           => 'nullable|string',
+                'sosmedOther'           => 'nullable|string',
+                'study'                 => 'nullable|string',
+                'rank'                  => 'nullable|string',
+                'pendidikan_non_formal' => 'nullable|string',
+                'prestasi'              => 'nullable|string',
+                'panggilan'             => 'nullable|string',
+            ],
             [
                 'hp.required'    => 'Nomor wajib diisi.',
                 'hp.unique'      => 'Nomor sudah terdaftar.',
                 'email.required' => 'Email wajib diisi.',
                 'email.email'    => 'Email tidak valid.',
                 'email.unique'   => 'Email sudah terdaftar.',
-            ]);
+            ]
+        );
         if ($validator->fails()) {
             return response()->json([
                 'errors' => $validator->errors(),
@@ -1075,7 +1065,6 @@ class ApiController extends Controller
             return response()->json([
                 'status' => true,
             ]);
-
         } catch (\Throwable $e) {
             DB::rollback();
             if (isset($path)) {
@@ -1088,12 +1077,15 @@ class ApiController extends Controller
     public function forget(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
-            'hp' => ['required', new NumberWa()],
-        ],
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'hp' => ['required', new NumberWa()],
+            ],
             [
                 'hp.required' => 'Nomor wajib diisi.',
-            ]);
+            ]
+        );
         if ($validator->fails()) {
             return response()->json([
                 'errors' => $validator->errors(),
@@ -1116,7 +1108,7 @@ class ApiController extends Controller
             $response = Http::post(env('URL_WA') . '/send', [
                 'number'  => env('NUMBER_WA'),
                 'to'      => $to,
-                'message' => "Anda reset Berhasil Password\nPassword akun anda : *" . $pass."*",
+                'message' => "Anda reset Berhasil Password\nPassword akun anda : *" . $pass . "*",
             ]);
 
             if ($response->status() != 200) {
@@ -1130,7 +1122,6 @@ class ApiController extends Controller
                     'status' => true,
                 ]);
             }
-
         } catch (\Throwable $e) {
             DB::rollback();
             return response()->json(['error' => $e], 500);

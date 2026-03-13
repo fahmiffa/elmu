@@ -1,5 +1,7 @@
 import md5 from "blueimp-md5";
 import Swal from "sweetalert2";
+import TomSelect from "tom-select";
+import "tom-select/dist/css/tom-select.css";
 
 export function trixEditor() {
     return {
@@ -484,6 +486,9 @@ export const dataTable = (data) => {
 export const dataTableReg = (data) => {
     return {
         search: "",
+        md5(id) {
+            return md5(id);
+        },
         filterUnit: "",
         filterProgram: "",
         sortColumn: "name",
@@ -859,8 +864,6 @@ export const dataTablePay = (data) => {
     };
 };
 
-import TomSelect from "tom-select";
-import "tom-select/dist/css/tom-select.css";
 
 export function dropdownSelect() {
     return {
@@ -1002,51 +1005,133 @@ export function currencyInput(initialValue = "") {
 }
 
 export function reg(kelas, initial = {}) {
-    const val = kelas.map((e) => ({ value: e.id, label: e.name }));
+    const val = kelas
+        ? kelas.map((e) => ({ value: String(e.id), label: e.name }))
+        : [];
     return {
         selectedKelas: "",
-        optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
         selectedProgram: "",
-        selectedUnit: [{ value: "", label: "Pilih Unit" }],
+        selectedUnit: "",
+        tomUnit: null,
+        tomProgram: null,
+        optionsKelas: [{ value: "", label: "Pilih Kelas" }, ...val],
+
+        init() {
+            this.$nextTick(() => {
+                this.selectedKelas = initial.kelas ? String(initial.kelas) : "";
+
+                this.initTomSelect();
+                this.refreshTomSelect();
+
+                // Wait AGAIN for dependants (Unit/Program lists) to render
+                this.$nextTick(() => {
+                    this.selectedProgram = initial.program
+                        ? String(initial.program)
+                        : "";
+                    this.selectedUnit = initial.unit
+                        ? String(initial.unit)
+                        : "";
+
+                    if (this.tomUnit) this.tomUnit.setValue(this.selectedUnit);
+                    if (this.tomProgram)
+                        this.tomProgram.setValue(this.selectedProgram);
+                });
+            });
+
+            this.$watch("selectedKelas", (value) => {
+                this.refreshTomSelect();
+            });
+
+            this.$watch("selectedUnit", (value) => {
+                if (this.tomUnit && this.tomUnit.getValue() !== String(value)) {
+                    this.tomUnit.setValue(String(value));
+                }
+            });
+
+            this.$watch("selectedProgram", (value) => {
+                if (
+                    this.tomProgram &&
+                    this.tomProgram.getValue() !== String(value)
+                ) {
+                    this.tomProgram.setValue(String(value));
+                }
+            });
+        },
+
+        initTomSelect() {
+            if (this.$refs.selectUnit) {
+                this.tomUnit = new TomSelect(this.$refs.selectUnit, {
+                    placeholder: "Pilih Unit",
+                    onChange: (value) => {
+                        this.selectedUnit = value;
+                    },
+                });
+            }
+            if (this.$refs.selectProgram) {
+                this.tomProgram = new TomSelect(this.$refs.selectProgram, {
+                    placeholder: "Pilih Program",
+                    onChange: (value) => {
+                        this.selectedProgram = value;
+                    },
+                });
+            }
+        },
+
+        refreshTomSelect() {
+            if (this.tomUnit) {
+                this.tomUnit.clearOptions();
+                this.tomUnit.addOptions(
+                    this.filteredUnits.map((u) => ({
+                        value: u.value,
+                        text: u.label,
+                    })),
+                );
+                this.tomUnit.clear();
+            }
+            if (this.tomProgram) {
+                this.tomProgram.clearOptions();
+                this.tomProgram.addOptions(
+                    this.filteredPrograms.map((p) => ({
+                        value: p.value,
+                        text: p.label,
+                    })),
+                );
+                this.tomProgram.clear();
+            }
+        },
+
         get filteredPrograms() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Program" }];
 
-            var program = kelas
-                .filter(
-                    function (p) {
-                        return p.id == Number(this.selectedKelas);
-                    }.bind(this),
-                )
-                .flatMap(function (e) {
-                    return e.program.map(function (unit) {
-                        return {
-                            value: unit.id,
-                            label: unit.name,
-                        };
-                    });
-                });
+            const found = (kelas || []).find(
+                (p) => String(p.id) === String(this.selectedKelas),
+            );
+            const programs =
+                found && found.program
+                    ? found.program.map((p) => ({
+                          value: String(p.id),
+                          label: p.name,
+                      }))
+                    : [];
 
-            return [{ value: "", label: "Pilih Program" }, ...program];
+            return [{ value: "", label: "Pilih Program" }, ...programs];
         },
+
         get filteredUnits() {
             if (!this.selectedKelas)
                 return [{ value: "", label: "Pilih Unit" }];
 
-            var units = kelas
-                .filter(
-                    function (p) {
-                        return p.id == Number(this.selectedKelas);
-                    }.bind(this),
-                )
-                .flatMap(function (e) {
-                    return e.units.map(function (unit) {
-                        return {
-                            value: unit.id,
-                            label: unit.name,
-                        };
-                    });
-                });
+            const found = (kelas || []).find(
+                (p) => String(p.id) === String(this.selectedKelas),
+            );
+            const units =
+                found && found.units
+                    ? found.units.map((u) => ({
+                          value: String(u.id),
+                          label: u.name,
+                      }))
+                    : [];
 
             return [{ value: "", label: "Pilih Unit" }, ...units];
         },
@@ -1055,58 +1140,99 @@ export function reg(kelas, initial = {}) {
 
 export function schedule(data, initial = {}) {
     return {
-        selectedUnit: initial.unit || "",
-        selectedJadwal: initial.jadwal || "",
-        selectedMurid: initial.murid || [],
+        selectedUnit: initial.unit ? String(initial.unit) : "",
+        selectedProgram: initial.program ? String(initial.program) : "",
+        selectedJadwal: initial.jadwal ? initial.jadwal.map(String) : [],
+        selectedMurid: initial.murid ? initial.murid.map(String) : [],
         tom: null,
         tomJadwal: null,
 
-        get jadwals() {
-            if (!this.selectedUnit)
-                return [{ value: "", label: "Pilih Jadwal" }];
-
-            const found = data.find((p) => p.unit == this.selectedUnit);
-
-            if (!found || !found.units || !Array.isArray(found.units.jadwal)) {
-                return [{ value: "", label: "Pilih Jadwal" }];
-            }
-
-            const jadwalList = found.units.jadwal.map((j) => ({
-                value: j.id,
-                label: `${j.parse} - ${j.name} (${j.start.slice(
-                    0,
-                    5,
-                )} - ${j.end.slice(0, 5)})`,
+        get programs() {
+            if (!this.selectedUnit) return [];
+            const filtered = data.filter(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
+            const programList = filtered.map((p) => ({
+                id: String(p.programs.id),
+                name: p.programs.name,
             }));
-
-            return [{ value: "", label: "Pilih Jadwal" }, ...jadwalList];
+            // Unique by ID
+            return Array.from(new Set(programList.map((a) => a.id))).map(
+                (id) => {
+                    return programList.find((a) => a.id === id);
+                },
+            );
         },
 
         init() {
             this.$nextTick(() => {
                 this.initTomSelect();
 
-                this.$watch("selectedUnit", () => {
-                    this.selectedJadwal = initial.jadwal;
-                    this.updateOptions();
+                this.$watch("selectedUnit", (value) => {
+                    this.selectedProgram = "";
+                    this.refreshMurid();
+                    this.refreshJadwal();
+                });
+
+                this.$watch("selectedProgram", (value) => {
+                    this.refreshMurid();
                 });
             });
+        },
+
+        refreshMurid() {
+            if (this.tom) {
+                this.tom.clear();
+                this.tom.clearOptions();
+                const newMuridOptions = this.getFilteredMurid();
+                this.tom.addOptions(newMuridOptions);
+            }
+        },
+
+        refreshJadwal() {
+            if (this.tomJadwal) {
+                this.tomJadwal.clear();
+                this.tomJadwal.clearOptions();
+                const newJadwalOptions = this.getFilteredJadwal();
+                this.tomJadwal.addOptions(newJadwalOptions);
+            }
         },
 
         getFilteredJadwal() {
             if (!this.selectedUnit) return [];
 
-            const found = data.find((p) => p.unit == this.selectedUnit);
+            const found = data.find(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
 
             if (!found || !found.units || !Array.isArray(found.units.jadwal))
                 return [];
 
             return found.units.jadwal.map((j) => ({
-                value: j.id,
+                value: String(j.id),
                 text: `${j.parse} - ${j.name} (${j.start.slice(
                     0,
                     5,
                 )} - ${j.end.slice(0, 5)})`,
+            }));
+        },
+
+        getFilteredMurid() {
+            if (!this.selectedUnit) return [];
+
+            let filtered = data.filter(
+                (p) => String(p.unit) === String(this.selectedUnit),
+            );
+
+            if (this.selectedProgram) {
+                filtered = filtered.filter(
+                    (p) => String(p.program) === String(this.selectedProgram),
+                );
+            }
+
+            return filtered.map((p) => ({
+                value: String(p.id),
+                text: `${p.murid.name} (${p.programs.name}) - ${p.class.name}`,
             }));
         },
 
@@ -1134,43 +1260,6 @@ export function schedule(data, initial = {}) {
                     options: this.getFilteredJadwal(),
                     items: this.selectedJadwal,
                 });
-            }
-        },
-
-        getFilteredMurid() {
-            if (!this.selectedUnit) return [];
-
-            return data
-                .filter((p) => p.unit == this.selectedUnit)
-                .map((p) => ({
-                    value: p.id,
-                    text: `${p.murid.name} (${p.programs.name})`,
-                }));
-        },
-
-        updateOptions() {
-            if (this.tom) {
-                this.tom.clear();
-                const newMuridOptions = this.getFilteredMurid();
-                this.tom.clearOptions();
-                this.tom.addOptions(newMuridOptions);
-
-                if (this.selectedMurid.length) {
-                    this.tom.setValue(this.selectedMurid);
-                }
-                this.tom.refreshOptions(false);
-            }
-
-            if (this.tomJadwal) {
-                this.tomJadwal.clear();
-                const newJadwalOptions = this.getFilteredJadwal();
-                this.tomJadwal.clearOptions();
-                this.tomJadwal.addOptions(newJadwalOptions);
-
-                if (this.selectedJadwal && this.selectedJadwal.length) {
-                    this.tomJadwal.setValue(this.selectedJadwal);
-                }
-                this.tomJadwal.refreshOptions(false);
             }
         },
     };
@@ -1402,7 +1491,7 @@ export function payChart(par, reg) {
 
             const options = {
                 chart: {
-                    width: "auto",
+                    width: "100%",
                     height: 400,
                     title: par,
                 },
@@ -1427,6 +1516,211 @@ export function payChart(par, reg) {
             container.innerHTML = "";
 
             this.chartInstance = Chart.columnChart({
+                el: container,
+                data: chartData,
+                options,
+            });
+        },
+    };
+}
+
+export function regTypeChart(par, reg) {
+    return {
+        selectedYear: new Date().getFullYear(),
+        months: [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ],
+        years: [new Date().getFullYear()],
+        dummyData: {},
+
+        async fetchData(actionUrl) {
+            const method = "GET";
+            fetch(actionUrl, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector(
+                        "meta[name=csrf-token]",
+                    ).content,
+                },
+            })
+                .then((res) => res.json())
+                .then((da) => {
+                    this.years = da.Year;
+                    this.dummyData = da.data;
+                    this.$nextTick(() => {
+                        this.renderChart();
+                    });
+                });
+        },
+
+        chartInstance: null,
+
+        updateChart() {
+            this.renderChart();
+        },
+
+        renderChart() {
+            const dataByYear = this.dummyData[this.selectedYear] || {};
+            const categories = this.months;
+
+            const baruData = categories.map(
+                (month) => dataByYear[month]?.Baru || 0,
+            );
+            const tambahData = categories.map(
+                (month) => dataByYear[month]?.Tambah || 0,
+            );
+            const pindahData = categories.map(
+                (month) => dataByYear[month]?.Pindah || 0,
+            );
+            const lanjutData = categories.map(
+                (month) => dataByYear[month]?.Lanjut || 0,
+            );
+
+            const chartData = {
+                categories: categories,
+                series: [
+                    { name: "Baru", data: baruData },
+                    { name: "Tambah", data: tambahData },
+                    { name: "Pindah", data: pindahData },
+                    { name: "Lanjut", data: lanjutData },
+                ],
+            };
+
+            const options = {
+                chart: {
+                    width: "100%",
+                    height: 400,
+                    title: par,
+                },
+                xAxis: {
+                    title: "Bulan",
+                },
+                yAxis: {
+                    title: "Jumlah",
+                },
+                series: {
+                    stack: false,
+                },
+                responsive: {
+                    animation: true,
+                },
+            };
+
+            const container = document.getElementById(reg);
+            if (!container) return;
+            container.innerHTML = "";
+
+            this.chartInstance = Chart.columnChart({
+                el: container,
+                data: chartData,
+                options,
+            });
+        },
+    };
+}
+
+export function unitPayChart(par, reg) {
+    return {
+        selectedMonth: new Date().getMonth() + 1,
+        selectedYear: new Date().getFullYear(),
+        months: [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ],
+        years: [new Date().getFullYear()],
+        dummyData: {},
+
+        async fetchData(actionUrl) {
+            const method = "GET";
+            fetch(actionUrl, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector(
+                        "meta[name=csrf-token]",
+                    ).content,
+                },
+            })
+                .then((res) => res.json())
+                .then((da) => {
+                    this.years = da.Year;
+                    this.dummyData = da.data;
+                    this.$nextTick(() => {
+                        this.renderChart();
+                    });
+                });
+        },
+
+        chartInstance: null,
+
+        updateChart() {
+            this.renderChart();
+        },
+
+        renderChart() {
+            const monthName = this.months[this.selectedMonth - 1];
+            const dataByUnit =
+                this.dummyData[this.selectedYear]?.[monthName] || {};
+
+            const categories = Object.keys(dataByUnit);
+            const bayarData = categories.map((u) => dataByUnit[u]?.bayar || 0);
+            const belumData = categories.map((u) => dataByUnit[u]?.belum || 0);
+
+            const chartData = {
+                categories: categories,
+                series: [
+                    { name: "Lunas", data: bayarData },
+                    { name: "Belum", data: belumData },
+                ],
+            };
+
+            const options = {
+                chart: {
+                    width: "100%",
+                    height: 400,
+                    title: par,
+                },
+                xAxis: {
+                    title: "Jumlah",
+                },
+                yAxis: {
+                    title: "Unit",
+                },
+                series: {
+                    stack: false,
+                },
+                responsive: {
+                    animation: true,
+                },
+            };
+
+            const container = document.getElementById(reg);
+            if (!container) return;
+            container.innerHTML = "";
+
+            this.chartInstance = Chart.barChart({
                 el: container,
                 data: chartData,
                 options,
@@ -1531,12 +1825,80 @@ export function sweetAlert() {
     };
 }
 
-export function formHandler(redirectUrl = null) {
+export function formHandler(redirectUrl = null, useConfirm = false) {
     return {
         loading: false,
         submit(e) {
-            this.loading = true;
             const form = e.target;
+            if (useConfirm) {
+                this.showConfirm(form);
+            } else {
+                this.executeSubmit(form);
+            }
+        },
+
+        showConfirm(form) {
+            const formData = new FormData(form);
+            let summary = `<div class="text-left space-y-2 text-sm border-t pt-2">`;
+
+            // Detect if it's a registration form
+            const option = formData.get("option");
+            if (option) {
+                summary += `<div class="flex justify-between gap-4"><span>Grup Siswa:</span> <span class="font-bold text-right">${
+                    option == "1" ? "Baru" : "Terdaftar"
+                }</span></div>`;
+                if (option == "1") {
+                    summary += `<div class="flex justify-between gap-4"><span>Nama:</span> <span class="font-bold text-right">${
+                        formData.get("name") || "-"
+                    }</span></div>`;
+                } else {
+                    const select = form.querySelector('select[name="murid"]');
+                    summary += `<div class="flex justify-between gap-4"><span>Murid:</span> <span class="font-bold text-right">${
+                        select?.options[select.selectedIndex]?.text || "-"
+                    }</span></div>`;
+
+                    const tipe = form.querySelector('select[name="tipe"]');
+                    summary += `<div class="flex justify-between gap-4"><span>Tipe:</span> <span class="font-bold text-right">${
+                        tipe?.options[tipe.selectedIndex]?.text || "-"
+                    }</span></div>`;
+                }
+            }
+
+            const fields = [
+                { name: "grade", label: "Jenjang" },
+                { name: "kelas", label: "Kelas" },
+                { name: "unit", label: "Unit" },
+                { name: "program", label: "Program" },
+                { name: "kontrak", label: "Pembayaran" },
+            ];
+
+            fields.forEach((field) => {
+                const el = form.querySelector(`select[name="${field.name}"]`);
+                if (el) {
+                    const text = el.options[el.selectedIndex]?.text || "-";
+                    summary += `<div class="flex justify-between gap-4"><span>${field.label}:</span> <span class="font-bold text-right">${text}</span></div>`;
+                }
+            });
+
+            summary += `</div>`;
+
+            Swal.fire({
+                title: "Konfirmasi Pendaftaran",
+                html: summary,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Simpan",
+                cancelButtonText: "Cek Kembali",
+                confirmButtonColor: "#f97316",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.executeSubmit(form);
+                }
+            });
+        },
+
+        executeSubmit(form) {
+            this.loading = true;
             const formData = new FormData(form);
 
             fetch(form.action, {

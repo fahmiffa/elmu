@@ -39,6 +39,23 @@
                 <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                 @enderror
             </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Tipe</label>
+                <div class="flex items-center gap-6 mt-1">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="tipe" value="reguler"
+                            {{ old('tipe', isset($items) && $items->extend ? '' : 'checked') ? 'checked' : '' }}
+                            class="w-4 h-4 accent-orange-500 cursor-pointer">
+                        <span class="ml-2 text-gray-700 text-sm">Reguler</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="tipe" value="extend"
+                            {{ old('tipe') === 'extend' || (isset($items) && $items->extend) ? 'checked' : '' }}
+                            class="w-4 h-4 accent-orange-500 cursor-pointer">
+                        <span class="ml-2 text-gray-700 text-sm">Extend</span>
+                    </label>
+                </div>
+            </div>
             <div class="mb-4 col-span-2">
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Deskripsi</label>
                 <textarea name="des" class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">{{ old('des', $items->des ?? '') }}</textarea>

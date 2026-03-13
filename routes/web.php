@@ -14,10 +14,14 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeachController;
+use App\Http\Controllers\TataTertibController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\VidoesController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 
 // Route::any('{any}', function () {
@@ -52,12 +56,19 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
+    Route::get('/akademik/{id}/detail', [Home::class, 'akademikDetail'])->middleware('isRole')->name('akademik.detail');
     Route::get('/laporan-unit', [Home::class, 'reportUnit'])->middleware('isRole')->name('report.unit');
+    Route::get('/laporan-unit/export', [Home::class, 'reportUnitExport'])->middleware('isRole')->name('report.unit.export');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');
+    Route::get('/notifications', [Home::class, 'notifications'])->name('notifications.index');
+    Route::post('/notifications/mark-read', [Home::class, 'markNotificationsRead'])->name('notifications.mark-read');
     Route::middleware('restrictOperator')->group(function () {
         Route::get('/pendaftaran', [Home::class, 'reg'])->name('reg.index');
-        Route::Post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
+        Route::post('/pendaftaran', [Home::class, 'regStore'])->name('reg.store');
         Route::get('/pendaftaran/tambah', [Home::class, 'AddReg'])->name('reg.create');
+        Route::get('/pendaftaran/{id}/edit', [Home::class, 'regEdit'])->name('reg.edit');
+        Route::put('/pendaftaran/{id}', [Home::class, 'regUpdate'])->name('reg.update');
+        Route::post('/pendaftaran/{id}/hapus', [Home::class, 'regDestroy'])->name('reg.destroy');
         Route::resource('report', ReportController::class);
         Route::resource('raport', RaportController::class);
         Route::resource('campaign', CampaignController::class);
@@ -76,6 +87,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/bill', [Home::class, 'bill'])->name('bill');
     Route::post('/layanan/{id}', [Home::class, 'layanan'])->name('layanan');
     Route::post('/status/{id}', [Home::class, 'status'])->name('status');
+    Route::post('/user/{id}/update-profile', [Home::class, 'updateProfile'])->name('user.update-profile');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
     Route::resource('video', VidoesController::class);
@@ -112,11 +124,16 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::get('stater-kit/create', [AddonController::class, 'kit'])->name('kit.create');
         Route::post('stater-kit', [AddonController::class, 'kit'])->name('kit.store');
         Route::resource('grade', GradeController::class);
+        Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('log.index');
+        Route::delete('/activity-log/{id}', [\App\Http\Controllers\ActivityLogController::class, 'destroy'])->name('log.destroy');
+        Route::post('/activity-log/clear', [\App\Http\Controllers\ActivityLogController::class, 'clear'])->name('log.clear');
         Route::get('/unit-jadwal', [UnitController::class, 'jadwal'])->name('jadwal.index');
         Route::get('/unit-jadwal/create', [UnitController::class, 'jadwalCreate'])->name('jadwal.create');
         Route::get('/unit-jadwal/{id}/edit', [UnitController::class, 'jadwalEdit'])->name('jadwal.edit');
         Route::put('/unit-jadwal/{jadwal}', [UnitController::class, 'jadwalUpdate'])->name('jadwal.update');
         Route::post('/unit-jadwal', [UnitController::class, 'jadwalStore'])->name('jadwal.store');
-        Route::post('/unit-jadwal/{id}/hapus', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
+        Route::delete('/unit-jadwal/{id}', [UnitController::class, 'jadwalDestroy'])->name('jadwal.destroy');
+        Route::get('/tata-tertib', [TataTertibController::class, 'index'])->name('tata-tertib.index');
+        Route::put('/tata-tertib', [TataTertibController::class, 'update'])->name('tata-tertib.update');
     });
 });

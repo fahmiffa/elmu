@@ -12,6 +12,23 @@
             @endif
         </nav>
         <div class="flex space-x-4">
+            @if(Auth::user()->role == 0)
+            <a href="{{ route('dashboard.notifications.index') }}" class="relative inline-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+                @if(Auth::user()->unreadNotifications->count() > 0)
+                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 text-[8px] items-center justify-center text-white">
+                        {{ Auth::user()->unreadNotifications->count() }}
+                    </span>
+                </span>
+                @endif
+            </a>
+            @endif
             <a href="{{ route('dashboard.setting') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -40,9 +57,14 @@
             <h2 class="text-xl font-semibold">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
             </h2>
             @if (request()->segment(3))
-            <p class="text-sm opacity-80">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
+            <p class="text-sm opacity-80">
+                @hasSection('breadcrumb')
+                @yield('breadcrumb')
+                @else
+                {{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
                 >
                 {{ request()->segment(3) ? str_replace("-"," ",ucfirst(request()->segment(3))) : null }}
+                @endif
             </p>
             @endif
         </div>

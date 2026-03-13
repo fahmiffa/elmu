@@ -8,15 +8,21 @@ use App\Models\Grade;
 use App\Models\Head;
 use App\Models\Kelas;
 use App\Models\Level;
+use App\Models\LogHead;
 use App\Models\Order;
 use App\Models\Paid;
 use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Program;
+use App\Models\Raport;
+use App\Models\Report;
+use App\Models\Schedules_students;
 use App\Models\Student;
+use App\Models\StudentPresent;
 use App\Models\Teach;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Vidoes;
 use App\Models\Zone;
 use App\Services\Firebase\FirebaseMessage;
 use App\Services\Midtrans\Transaction;
@@ -24,18 +30,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Barryvdh\DomPDF\Facade\Pdf;
+use PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UnitReportExport;
+use Barryvdh\DomPDF\Facade\Pdf as BarryPdf;
 use App\Models\Zone_units;
 
 class Home extends Controller
 {
     public function absensi()
     {
-        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present.guru', 'class', 'units', 'programs');
+        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present.guru', 'present.program', 'class', 'units', 'programs');
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
@@ -264,7 +273,30 @@ class Home extends Controller
 
     public function userEdit($id)
     {
-        $user = User::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $user = User::with([
+            'data.reg.level',
+            'data.reg.bill.reg.units',
+            'data.reg.bill.reg.programs',
+            'data.reg.bill.reg.class',
+            'data.reg.lay.product.item',
+            'data.reg.units',
+            'data.reg.programs',
+            'data.reg.class'
+        ])
+            ->where(DB::raw('md5(id)'), $id)
+            ->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('error', 'Akses ditolak. Murid tidak berada di zona Anda.');
+            }
+        }
+
         if ($user->role != 0) {
             return view('master.user.detail', compact('user'));
         } else {
@@ -342,6 +374,14 @@ class Home extends Controller
     public function status(Request $request, $id)
     {
         $head = Head::where('id', $id)->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            if (!in_array($head->unit, $unitIds->toArray())) {
+                return back()->with('error', 'Akses ditolak.');
+            }
+        }
+
         $head->note = $request->keterangan;
         $head->done = $request->status;
         $head->save();
@@ -351,9 +391,15 @@ class Home extends Controller
 
     public function bill(Request $request)
     {
+        $request->validate([
+            'bulan' => 'required|numeric|between:1,12',
+        ], [
+            'bulan.required' => 'Pilih bulan terlebih dahulu',
+        ]);
 
         $bulan = $request->input('bulan');
         $da    = [];
+        $now   = now();
 
         $head = Head::select('id', 'old')
             // ->whereHas('kontrak',function($q){
@@ -362,9 +408,20 @@ class Home extends Controller
             ->where("done", 0)->get();
 
         foreach ($head as $val) {
-            $paid = Paid::where('bulan', $bulan)->where('tahun', date("Y"))->where('head', $val->id)->exists();
-            if ($paid == false) {
-                $da[] = ['head' => $val->id, 'bulan' => $bulan, 'tahun' => date("Y"), 'first' => $val->old == 0 ? 1 : 0];
+            $paid = Paid::where('bulan', $bulan)
+                ->where('tahun', date("Y"))
+                ->where('head', $val->id)
+                ->exists();
+
+            if (!$paid) {
+                $da[] = [
+                    'head'       => $val->id,
+                    'bulan'      => $bulan,
+                    'tahun'      => date("Y"),
+                    'first'      => $val->old == 0 ? 1 : 0,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
 
@@ -372,12 +429,24 @@ class Home extends Controller
             BulkInsertJob::dispatch($da);
         }
 
-        return back();
+        return back()->with('status', 'Tagihan berhasil dibuat');
     }
 
     public function index()
     {
         return view('home.index');
+    }
+
+    public function notifications()
+    {
+        $notifications = Auth::user()->notifications()->latest()->paginate(20);
+        return view('home.notifications', compact('notifications'));
+    }
+
+    public function markNotificationsRead()
+    {
+        Auth::user()->unreadNotifications->markAsRead();
+        return back()->with('status', 'Semua notifikasi ditandai telah dibaca');
     }
 
     public function reg()
@@ -386,9 +455,13 @@ class Home extends Controller
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
+        } else {
+            $units = Unit::all();
         }
         $items = $query->get();
-        return view('home.reg.index', compact('items'));
+        $pro = Program::all();
+        return view('home.reg.index', compact('items', 'units', 'pro'));
     }
 
     public function akademik()
@@ -397,15 +470,103 @@ class Home extends Controller
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $units = Unit::whereIn('id', $unitIds)->get();
+        } else {
+            $units = Unit::all();
         }
         $items = $query->get();
-        return view('home.reg.list', compact('items'));
+        $pro = Program::all();
+        return view('home.reg.list', compact('items', 'units', 'pro'));
+    }
+
+    public function akademikDetail($id)
+    {
+        $user = User::with([
+            'data.reg.level',
+            'data.reg.bill.reg.units',
+            'data.reg.bill.reg.programs',
+            'data.reg.bill.reg.class',
+            'data.reg.lay.product.item',
+            'data.reg.units',
+            'data.reg.programs',
+            'data.reg.class'
+        ])
+            ->where(DB::raw('md5(id)'), $id)
+            ->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('error', 'Akses ditolak. Murid tidak berada di zona Anda.');
+            }
+        }
+
+        return view('home.student_detail', compact('user'));
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::with('data')->where(DB::raw('md5(id)'), $id)->firstOrFail();
+
+        // Security check for role 4 (Zone Admin)
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $isAuthorized = Head::where('students', $user->data->id ?? 0)
+                ->whereIn('unit', $unitIds)
+                ->exists();
+
+            if (!$isAuthorized) {
+                return back()->with('err', 'Akses ditolak.');
+            }
+        }
+
+        $siswa = $user->data;
+        if (!$siswa) {
+            return back()->with('err', 'Data profil tidak ditemukan.');
+        }
+
+        $type = $request->input('type');
+
+        if ($type == 'murid') {
+            $siswa->name = $request->name;
+            $siswa->nama_panggilan = $request->nama_panggilan;
+            $siswa->alamat = $request->alamat;
+            $siswa->place = $request->place;
+            $siswa->birth = $request->birth;
+            $siswa->agama = $request->agama;
+            $siswa->gender = $request->gender;
+            $siswa->sekolah_kelas = $request->sekolah_kelas;
+            $siswa->hp_siswa = $request->hp_siswa;
+
+            // Also update user table name for consistency
+            $user->name = UserName($request->name);
+            $user->save();
+        } elseif ($type == 'ortu') {
+            $siswa->dad = $request->dad;
+            $siswa->dadJob = $request->dadJob;
+            $siswa->mom = $request->mom;
+            $siswa->momJob = $request->momJob;
+            $siswa->hp_parent = $request->hp_parent;
+        } elseif ($type == 'tambahan') {
+            $siswa->dream = $request->dream;
+            $siswa->study = $request->study;
+            $siswa->pendidikan_non_formal = $request->pendidikan_non_formal;
+            $siswa->prestasi = $request->prestasi;
+        }
+
+        $siswa->save();
+
+        return back()->with('status', 'Profil berhasil diperbarui!');
     }
 
     public function invoice($id)
     {
         $paid = Paid::where(DB::raw('md5(id)'), $id)->firstOrFail();
-        $pdf  = PDF::loadView('invoice', [
+        $pdf  = BarryPdf::loadView('invoice', [
             'items' => $paid,
         ]);
 
@@ -483,13 +644,14 @@ class Home extends Controller
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $action  = "Form Pendaftaran";
-        $head    = Head::has('murid')->get();
+        $head    = Head::has('murid')->with('programs', 'units')->where('done', 0)->get();
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 
     public function regStore(Request $request)
     {
-        $validated = $request->validate(
+        $validator = Validator::make(
+            $request->all(),
             [
                 // Wajib diisi
                 'murid'                 => "required_if:option,2",
@@ -524,22 +686,67 @@ class Home extends Controller
                 'pendidikan_non_formal' => 'nullable|string',
                 'prestasi'              => 'nullable|string',
                 'panggilan'             => 'nullable|string',
+                'tipe'                  => 'required_if:option,2',
+                'keterangan'            => 'nullable|string',
             ],
             [
                 'required'    => 'Field Wajib disi',
                 'required_if' => 'Field Wajib disi',
-
             ]
         );
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
 
         DB::beginTransaction();
 
         try {
+
+            // baru
             if ($request->option == 1) {
 
                 $path = null;
                 if ($request->hasFile('image')) {
-                    $path = $request->file('image')->store('images', 'public');
+                    $image = $request->file('image');
+                    $filename = 'student_' . time() . '_' . uniqid() . '.jpg';
+                    $subPath = 'images/' . $filename;
+                    $targetPath = storage_path('app/public/' . $subPath);
+
+                    $dir = dirname($targetPath);
+                    if (!file_exists($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+
+                    $source = $image->getRealPath();
+                    $info = getimagesize($source);
+
+                    $img = null;
+                    if (function_exists('imagecreatefromjpeg')) {
+                        if ($info['mime'] == 'image/jpeg') {
+                            $img = imagecreatefromjpeg($source);
+                        } elseif ($info['mime'] == 'image/png' && function_exists('imagecreatefrompng')) {
+                            $img = imagecreatefrompng($source);
+                            $bg = imagecreatetruecolor(imagesx($img), imagesy($img));
+                            imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
+                            imagecopy($bg, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+                            imagedestroy($img);
+                            $img = $bg;
+                        } elseif ($info['mime'] == 'image/gif' && function_exists('imagecreatefromgif')) {
+                            $img = imagecreatefromgif($source);
+                        }
+                    }
+
+                    if ($img && function_exists('imagejpeg')) {
+                        imagejpeg($img, $targetPath, 60);
+                        imagedestroy($img);
+                        $path = $subPath;
+                    } else {
+                        $path = $request->file('image')->store('images', 'public');
+                    }
                 }
 
                 $user           = new User;
@@ -624,6 +831,23 @@ class Home extends Controller
                 $head->payment  = $request->kontrak;
                 $head->save();
 
+                // Logic based on tipe
+                if ($request->tipe == 2) {
+                    $parent->done = 4;
+                    $parent->save();
+                } elseif ($request->tipe == 3) {
+                    $parent->done = 1;
+                    $parent->save();
+                }
+
+                // Create LogHead
+                LogHead::create([
+                    'head_id'    => $head->id,
+                    'student_id' => $parent->students,
+                    'tipe'       => $request->tipe,
+                    'keterangan' => $request->keterangan,
+                ]);
+
                 $paid        = new Paid;
                 $paid->head  = $head->id;
                 $paid->bulan = date("m");
@@ -640,6 +864,10 @@ class Home extends Controller
 
             DB::commit();
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil disimpan!']);
+            }
+
             return redirect()->route('dashboard.reg');
         } catch (\Exception $e) {
             DB::rollback();
@@ -648,7 +876,243 @@ class Home extends Controller
                 Storage::disk('public')->delete($path);
             }
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+            }
+
             return back()->withErrors('Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+        }
+    }
+
+    public function regEdit($id)
+    {
+        $items   = Head::where(DB::raw('md5(id)'), $id)->with('murid.users', 'murid.grade')->firstOrFail();
+        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
+        $kontrak = Payment::all();
+        $grade   = Grade::all();
+        $action  = "Edit Pendaftaran";
+        $head    = Head::has('murid')->get();
+        $edit    = true;
+        return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head', 'items', 'edit'));
+    }
+
+    public function regUpdate(Request $request, $id)
+    {
+        $headItem  = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+        $headId    = $headItem->id;
+        $studentId = $headItem->students;
+        $siswa     = $headItem->murid;
+
+        // Cek apakah data sudah memiliki aktivitas/pembayaran yang mengunci edit
+        $hasPaid          = Paid::where('head', $headId)->where('status', 1)->exists();
+        $hasOrder         = Order::where('head', $headId)->where('status', 1)->exists();
+        $hasPresent       = $studentId ? StudentPresent::where('student_id', $studentId)->exists() : false;
+        $hasSchedules     = Schedules_students::where('head', $headId)->exists();
+        $hasVidoes        = $studentId ? Vidoes::where('student_id', $studentId)->exists() : false;
+        $hasRaport        = $studentId && $siswa?->user ? Raport::where('student_id', $siswa->user)->exists() : false;
+        $hasReport        = $studentId && $siswa?->user ? Report::where('user', $siswa->user)->exists() : false;
+
+        if ($hasPaid || $hasOrder || $hasPresent || $hasSchedules || $hasVidoes || $hasRaport || $hasReport) {
+            $message = 'Data tidak dapat diubah karena sudah memiliki riwayat pembayaran atau aktivitas belajar.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $message], 422);
+            }
+            return back()->with('err', $message);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'grade'   => 'required',
+            'kelas'   => 'required',
+            'kontrak' => 'required',
+            'program' => 'required',
+            'unit'    => 'required',
+            'name'    => 'required',
+            'image'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'email'   => $siswa?->user ? 'required|email|unique:users,email,' . $siswa->user : 'nullable',
+        ], [
+            'required' => 'Field Wajib diisi',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Validasi gagal', 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Update Student
+            if ($siswa) {
+                // Image handling
+                if ($request->hasFile('image')) {
+                    $imageFile = $request->file('image');
+                    $filename = 'student_' . time() . '_' . uniqid() . '.jpg';
+                    $subPath = 'images/' . $filename;
+                    $targetPath = storage_path('app/public/' . $subPath);
+
+                    $dir = dirname($targetPath);
+                    if (!file_exists($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+
+                    $source = $imageFile->getRealPath();
+                    $info = getimagesize($source);
+
+                    $img = null;
+                    if (function_exists('imagecreatefromjpeg')) {
+                        if ($info['mime'] == 'image/jpeg') {
+                            $img = imagecreatefromjpeg($source);
+                        } elseif ($info['mime'] == 'image/png' && function_exists('imagecreatefrompng')) {
+                            $img = imagecreatefrompng($source);
+                            $bg = imagecreatetruecolor(imagesx($img), imagesy($img));
+                            imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
+                            imagecopy($bg, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+                            imagedestroy($img);
+                            $img = $bg;
+                        } elseif ($info['mime'] == 'image/gif' && function_exists('imagecreatefromgif')) {
+                            $img = imagecreatefromgif($source);
+                        }
+                    }
+
+                    if ($img && function_exists('imagejpeg')) {
+                        imagejpeg($img, $targetPath, 60);
+                        imagedestroy($img);
+
+                        // Delete old image
+                        if ($siswa->img) {
+                            Storage::disk('public')->delete($siswa->img);
+                        }
+                        $siswa->img = $subPath;
+                    } else {
+                        $path = $imageFile->store('images', 'public');
+                        if ($siswa->img) {
+                            Storage::disk('public')->delete($siswa->img);
+                        }
+                        $siswa->img = $path;
+                    }
+                }
+
+                $siswa->name = $request->name;
+                $siswa->nama_panggilan = $request->panggilan;
+                $siswa->grade_id = $request->grade;
+
+                // Only update these if they are present in the request (not hidden in edit mode)
+                if ($request->has('alamat')) $siswa->alamat = $request->alamat;
+                if ($request->has('place')) $siswa->place = $request->place;
+                if ($request->has('birth')) $siswa->birth = $request->birth;
+                if ($request->has('gender')) $siswa->gender = $request->gender;
+                if ($request->has('hp_parent')) $siswa->hp_parent = $request->hp_parent;
+                if ($request->has('dad')) $siswa->dad = $request->dad;
+                if ($request->has('mom')) $siswa->mom = $request->mom;
+                if ($request->has('hp_siswa')) $siswa->hp_siswa = $request->hp_siswa;
+
+                $siswa->save();
+
+                if ($siswa->users && $request->email) {
+                    $siswa->users->name = UserName($request->name);
+                    $siswa->users->email = $request->email;
+                    $siswa->users->save();
+                }
+            }
+
+            // Update Head
+            $price = Price::where('kelas', $request->kelas)
+                ->where('product', $request->program)
+                ->first();
+
+            $headItem->unit = $request->unit;
+            $headItem->kelas = $request->kelas;
+            $headItem->price = $price->id;
+            $headItem->program = $request->program;
+            $headItem->payment = $request->kontrak;
+            $headItem->save();
+
+            DB::commit();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil diperbarui!']);
+            }
+
+            return redirect()->route('dashboard.reg.index')->with('status', 'Pendaftaran berhasil diperbarui!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors('Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+        }
+    }
+
+    public function regDestroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $head = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+            $headId = $head->id;
+            $studentId = $head->students;
+
+            // Cek riwayat pembayaran yang sudah lunas (status = 1)
+            $hasPaid  = Paid::where('head', $headId)->where('status', 1)->exists();
+            $hasOrder = Order::where('head', $headId)->where('status', 1)->exists();
+
+            if ($hasPaid || $hasOrder) {
+                $message = 'Data tidak dapat dihapus karena sudah memiliki riwayat pembayaran yang lunas.';
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['status' => 'error', 'message' => $message], 422);
+                }
+                return back()->with('err', $message);
+            }
+
+            // Hapus relasi Head
+            Schedules_students::where('head', $headId)->delete();
+            Level::where('head', $headId)->delete();
+            Paid::where('head', $headId)->delete();
+            Order::where('head', $headId)->delete();
+
+            // Hapus relasi Student
+            if ($studentId) {
+                StudentPresent::where('student_id', $studentId)->delete();
+                Vidoes::where('student_id', $studentId)->delete();
+
+                $student = Student::find($studentId);
+                if ($student) {
+                    $userId = $student->user;
+
+                    // Hapus foto jika ada
+                    if ($student->img) {
+                        Storage::disk('public')->delete($student->img);
+                    }
+
+                    if ($userId) {
+                        Raport::where('student_id', $userId)->delete();
+                        Report::where('user', $userId)->delete();
+                    }
+
+                    $student->delete();
+
+                    if ($userId) {
+                        User::where('id', $userId)->where('role', 2)->delete();
+                    }
+                }
+            }
+
+            // Hapus Head
+            $head->delete();
+
+            DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil dihapus!']);
+            }
+
+            return redirect()->route('dashboard.reg.index')->with('status', 'Pendaftaran berhasil dihapus!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 
@@ -712,7 +1176,8 @@ class Home extends Controller
         $unit  = Unit::count();
         $murid = Student::count();
         $guru  = Teach::count();
-        return view('master.index', compact('kelas', 'unit', 'murid', 'guru'));
+        $logs  = \App\Models\ActivityLog::count();
+        return view('master.index', compact('kelas', 'unit', 'murid', 'guru', 'logs'));
     }
 
     public function reportUnit(Request $request)
@@ -720,7 +1185,13 @@ class Home extends Controller
         $bulan = $request->input('bulan', (int)date('m'));
         $tahun = $request->input('tahun', (int)date('Y'));
 
-        $items = Unit::get()->map(function ($unit) use ($bulan, $tahun) {
+        $query = Unit::query();
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereIn('id', $unitIds);
+        }
+
+        $items = $query->get()->map(function ($unit) use ($bulan, $tahun) {
             $headIds = Head::where('unit', $unit->id)->where('done', 0)->pluck('id');
 
             $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {
@@ -782,6 +1253,31 @@ class Home extends Controller
         return view('home.report_unit', compact('items', 'years', 'bulanMap', 'bulan', 'tahun'));
     }
 
+    public function reportUnitExport(Request $request)
+    {
+        $bulan = $request->input('bulan', (int)date('m'));
+        $tahun = $request->input('tahun', (int)date('Y'));
+
+        $bulanMap = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        $bulanName = $bulanMap[$bulan];
+
+        return Excel::download(new UnitReportExport($bulan, $tahun, $bulanName), 'Laporan-Unit-' . $bulanName . '-' . $tahun . '.xlsx');
+    }
+
     public function chart($par)
     {
         $dummyData = [];
@@ -840,8 +1336,8 @@ class Home extends Controller
 
         if ($par == 'pay') {
 
-            $query = Paid::whereHas('reg',function($q){
-                $q->where('done',0);
+            $query = Paid::whereHas('reg', function ($q) {
+                $q->where('done', 0);
             });
             if (Auth::user()->role == 4 && Auth::user()->zone_id) {
                 $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
@@ -876,6 +1372,155 @@ class Home extends Controller
 
             for ($tahun = $now; $tahun >= $start; $tahun--) {
                 array_push($year, $tahun);
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
+        }
+
+        if ($par == 'reg-type') {
+            $year = [];
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            foreach ($year as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = [
+                        'Baru' => 0,
+                        'Tambah' => 0,
+                        'Pindah' => 0,
+                        'Lanjut' => 0,
+                    ];
+                }
+            }
+
+            $queryBaru = DB::table('head')->where('old', 0);
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryBaru->whereIn('unit', $unitIds);
+            }
+            $dataBaru = $queryBaru->selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, count(*) as total')
+                ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+                ->get();
+
+            foreach ($dataBaru as $item) {
+                $bulanName = $bulanMap[$item->bulan] ?? null;
+                if ($bulanName && isset($dummyData[$item->tahun][$bulanName])) {
+                    $dummyData[$item->tahun][$bulanName]['Baru'] = (int) $item->total;
+                }
+            }
+
+            $queryLog = DB::table('log_heads')
+                ->join('head', 'log_heads.head_id', '=', 'head.id');
+
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryLog->whereIn('head.unit', $unitIds);
+            }
+
+            $dataLog = $queryLog->selectRaw('YEAR(log_heads.created_at) as tahun, MONTH(log_heads.created_at) as bulan, log_heads.tipe, count(*) as total')
+                ->groupByRaw('YEAR(log_heads.created_at), MONTH(log_heads.created_at), log_heads.tipe')
+                ->get();
+
+            foreach ($dataLog as $item) {
+                $bulanName = $bulanMap[$item->bulan] ?? null;
+                if ($bulanName && isset($dummyData[$item->tahun][$bulanName])) {
+                    $typeKey = '';
+                    switch ($item->tipe) {
+                        case 1:
+                            $typeKey = 'Tambah';
+                            break;
+                        case 2:
+                            $typeKey = 'Pindah';
+                            break;
+                        case 3:
+                            $typeKey = 'Lanjut';
+                            break;
+                    }
+                    if ($typeKey) {
+                        $dummyData[$item->tahun][$bulanName][$typeKey] = (int) $item->total;
+                    }
+                }
+            }
+
+            $da = [
+                "Year" => $year,
+                "data" => $dummyData,
+            ];
+        }
+
+        if ($par == 'unit-pay-monthly' || $par == 'unit-pay-service') {
+            $year = [];
+            for ($tahun = $now; $tahun >= $start; $tahun--) {
+                array_push($year, $tahun);
+            }
+
+            $queryUnit = Unit::query();
+            if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $queryUnit->whereIn('id', $unitIds);
+            }
+            $units = $queryUnit->get();
+
+            foreach ($year as $tahun) {
+                foreach ($bulanMap as $num => $namaBulan) {
+                    $dummyData[$tahun][$namaBulan] = [];
+                    foreach ($units as $unit) {
+                        $dummyData[$tahun][$namaBulan][$unit->name] = [
+                            'bayar' => 0,
+                            'belum' => 0,
+                        ];
+                    }
+                }
+            }
+
+            if ($par == 'unit-pay-monthly') {
+                $query = Paid::whereHas('reg', function ($q) {
+                    $q->where('done', 0);
+                });
+                if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                    $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                    $query->whereHas('reg', function ($q) use ($unitIds) {
+                        $q->whereIn('unit', $unitIds);
+                    });
+                }
+                $data = $query->with('reg.units')->get();
+
+                foreach ($data as $item) {
+                    $tahun = $item->tahun;
+                    $bulan = $bulanMap[(int)$item->bulan] ?? null;
+                    $unitName = $item->reg->units->name ?? null;
+                    if (!$bulan || !$unitName || !isset($dummyData[$tahun][$bulan][$unitName])) continue;
+
+                    $statusKey = $item->status == 1 ? 'bayar' : 'belum';
+                    $dummyData[$tahun][$bulan][$unitName][$statusKey] += (int) $item->total;
+                }
+            } else {
+                $query = Order::whereHas('reg', function ($q) {
+                    $q->where('done', 0);
+                })->with('product', 'reg.units');
+
+                if (Auth::user()->role == 4 && Auth::user()->zone_id) {
+                    $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                    $query->whereHas('reg', function ($q) use ($unitIds) {
+                        $q->whereIn('unit', $unitIds);
+                    });
+                }
+                $data = $query->get();
+
+                foreach ($data as $item) {
+                    $tahun = $item->created_at->format('Y');
+                    $bulanNum = (int)$item->created_at->format('m');
+                    $bulan = $bulanMap[$bulanNum] ?? null;
+                    $unitName = $item->reg->units->name ?? null;
+                    if (!$bulan || !$unitName || !isset($dummyData[$tahun][$bulan][$unitName])) continue;
+
+                    $statusKey = $item->status == 1 ? 'bayar' : 'belum';
+                    $dummyData[$tahun][$bulan][$unitName][$statusKey] += (int) ($item->product->harga ?? 0);
+                }
             }
 
             $da = [
