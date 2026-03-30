@@ -76,7 +76,7 @@ public function getTotalAttribute()
     $weeksRemaining = 4 - $week + 1;
 
     // Hitung pertemuan sesuai hari daftar
-    if (in_array($day, [1, 2])) {
+    if (in_array($day, [1, 2, 3])) {
         // Senin / Selasa → dapat full minggu
         $meetings = $weeksRemaining * 2;
     } else {
