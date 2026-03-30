@@ -44,7 +44,7 @@ class Home extends Controller
 {
     public function absensi()
     {
-        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name', 'present.guru', 'present.program', 'class', 'units', 'programs');
+        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'present.guru', 'present.program', 'class', 'units', 'programs');
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
@@ -59,6 +59,36 @@ class Home extends Controller
         }
         $pro   = Program::all();
         return view('home.present.index', compact('items', 'units', 'pro'));
+    }
+
+    public function salary(Request $request)
+    {
+        if (Auth::user()->role != 0) {
+            return redirect()->route('dashboard.master.index')->with('error', 'Akses dibatasi hanya untuk Super Admin.');
+        }
+
+        $month = $request->month ?? date('m');
+        $year  = $request->year ?? date('Y');
+        $unit  = $request->unit;
+
+        $units = Unit::all();
+
+        $query = Teach::with('unit')->withCount(['present' => function ($q) use ($month, $year) {
+            $q->whereMonth('created_at', $month)->whereYear('created_at', $year);
+        }]);
+
+        if ($unit) {
+            $query->where('unit_id', $unit);
+        }
+
+        $items = $query->get();
+
+        return view('home.salary.index', compact('items', 'month', 'year', 'units', 'unit'));
+    }
+
+    public function salaryGenerate(Request $request)
+    {
+       dd($request->input());
     }
 
     public function level()

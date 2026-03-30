@@ -153,7 +153,6 @@ class AcademicController extends Controller
                         'head'  => $reg->id,
                         'id'    => $student->id,
                         'name'  => $student->name,
-                        'name'  => $student->name,
                         'level' => $levels,
                     ];
                 }
@@ -302,14 +301,13 @@ class AcademicController extends Controller
 
     public function UpJadwal(Request $request)
     {
-        $id = JWTAuth::user()->id;
-
         $validator = Validator::make($request->all(), [
             'jadwal' => 'required',
-            'user'   => 'required',
+            'user'   => 'required|array',
         ], [
             'jadwal.required' => 'Jadwal wajib diisi.',
-            'user.required'   => 'Tidak murid yang di pilih',
+            'user.required'   => 'Siswa wajib dipilih.',
+            'user.array'      => 'Siswa harus dalam format array.',
         ]);
 
         if ($validator->fails()) {
@@ -318,13 +316,23 @@ class AcademicController extends Controller
             ], 400);
         }
 
-        $today = now()->toDateString();
-        $user  = $request->user;
+        // 1. Verify if the Unit Schedule exists
+        $scheduleExists = DB::table('unit_schedules')->where('id', $request->jadwal)->exists();
+        if (!$scheduleExists) {
+            return response()->json([
+                'errors' => ['jadwal' => ['Jadwal tidak ditemukan atau tidak valid.']]
+            ], 400);
+        }
 
-        for ($i = 0; $i < count($user); $i++) {
-            // Get head_id mapping for this student and schedule combination
+        $today     = now()->toDateString();
+        $users     = $request->user;
+        $processed = 0;
+        $failed    = [];
+
+        foreach ($users as $studentId) {
+            // 2. Get head_id mapping for this student and schedule combination
             $mappingQuery = DB::table('schedules_students')
-                ->where('student_id', $user[$i])
+                ->where('student_id', $studentId)
                 ->where('unit_schedules_id', $request->jadwal);
 
             if ($request->program_id) {
@@ -334,7 +342,7 @@ class AcademicController extends Controller
             $mapping = $mappingQuery->first();
 
             if ($mapping) {
-                $alreadyExists = StudentPresent::where('student_id', $user[$i])
+                $alreadyExists = StudentPresent::where('student_id', $studentId)
                     ->whereDate('created_at', $today)
                     ->where('unit_schedules_id', $request->jadwal)
                     ->where('head_id', $mapping->head)
@@ -342,20 +350,44 @@ class AcademicController extends Controller
 
                 if (!$alreadyExists) {
                     $present                    = new StudentPresent;
-                    $present->student_id        = $user[$i];
+                    $present->student_id        = $studentId;
                     $present->unit_schedules_id = $request->jadwal;
                     $present->head_id           = $mapping->head;
                     $present->program_id        = $mapping->program_id;
-                    $present->teach_id          = JWTAuth::user()->data->id;
+                    // Safely get teach_id if data exists
+                    $present->teach_id          = optional(JWTAuth::user()->data)->id;
                     $present->hal               = $request->hal;
                     $present->Materi            = $request->Materi;
                     $present->Keterangan        = $request->Keterangan;
                     $present->save();
+                    
+                    $processed++;
+                } else {
+                    $processed++; // Consider already exists as correctly handled for this student
                 }
+            } else {
+                $studentName = DB::table('students')->where('id', $studentId)->value('name') ?? "ID $studentId";
+                $failed[] = "Siswa $studentName tidak terdaftar dalam jadwal ini.";
             }
         }
 
-        return response()->json(['status' => true], 200);
+        // 3. Return results based on success/failure
+        if (count($failed) > 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Beberapa siswa gagal diproses.',
+                'errors'  => $failed
+            ], 400);
+        }
+
+        if ($processed == 0 && count($users) > 0) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Tidak ada data siswa yang valid untuk diproses.',
+            ], 400);
+        }
+
+        return response()->json(['status' => true, 'message' => "$processed data berhasil diproses."], 200);
     }
 
     public function raport()

@@ -33,4 +33,9 @@ class Teach extends Model
     {
         return $this->belongsTo(Unit::class, 'unit_id', 'id');
     }
+
+    public function present()
+    {
+        return $this->hasMany(StudentPresent::class, 'teach_id', 'id');
+    }
 }

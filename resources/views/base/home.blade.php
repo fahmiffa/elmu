@@ -136,7 +136,21 @@
         </span> Video
     </li>
 </a>
-@if(Auth::user()->role != 4)
+@if(Auth::user()->role == 0)
+<a href="{{ route('dashboard.salary') }}">
+    <li
+        class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.salary') ? 'bg-orange-100' : null }}">
+        <span class="text-orange-500 mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                class="lucide lucide-wallet">
+                <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+                <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+            </svg>
+        </span> Salary
+    </li>
+</a>
+@endif
 <a href="{{ route('dashboard.raport.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.raport.*') ? 'bg-orange-100' : null }}">
@@ -150,6 +164,7 @@
         </span> Raport
     </li>
 </a>
+@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.report.index') }}">
     <li
         class="flex items-center px-4 py-3 border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.report.index') ? 'bg-orange-100' : null }}">

@@ -1,7 +1,7 @@
 @extends('base.layout')
-@section('title', 'Detail User - ' . ($user->data->name ?? $user->name))
+@section('title', 'Detail User - ' . ($user->data->name ?? $user->name ?? 'User'))
 @section('breadcrumb')
-Master > {{ $user->data->name ?? $user->name }}
+Master > {{ $user->data->name ?? $user->name ?? 'User' }}
 @endsection
 @section('content')
 <div class="bg-white rounded-lg shadow-md p-6" x-data="{ 
@@ -27,7 +27,7 @@ Master > {{ $user->data->name ?? $user->name }}
                 alt="{{ $user->name }}">
         </div>
         <div class="flex-grow text-center md:text-left">
-            <h1 class="text-2xl font-bold text-gray-800">{{ $user->data->name ?? $user->name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-800">{{ $user->data->name ?? $user->name ?? 'User' }}</h1>
             <p class="text-gray-600 font-medium mb-1">Panggilan: {{ $user->data->nama_panggilan ?? '-' }}</p>
             <p class="text-gray-500 text-sm mb-2">{{ $user->email }} | {{ $user->nomor }}</p>
             <div class="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
@@ -96,7 +96,7 @@ Master > {{ $user->data->name ?? $user->name }}
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Jenis Kelamin</p>
-                        <p class="text-sm text-gray-700">{{ $user->data->gender == 1 ? 'Laki-laki' : 'Perempuan' }}</p>
+                        <p class="text-sm text-gray-700">{{ ($user->data && $user->data->gender) ? ($user->data->gender == 1 ? 'Laki-laki' : 'Perempuan') : '-' }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Sekolah / Kelas</p>
@@ -378,7 +378,7 @@ Master > {{ $user->data->name ?? $user->name }}
                             <div x-show="editType === 'murid'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lengkap</label>
-                                    <input type="text" name="name" value="{{ $user->data->name ?? $user->name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
+                                    <input type="text" name="name" value="{{ $user->data->name ?? $user->name ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Panggilan</label>

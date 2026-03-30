@@ -26,6 +26,11 @@ class Unit extends Model
         return $this->belongsToMany(Kelas::class, 'unit_kelas', 'unit_id', 'kelas_id');
     }
 
+    public function zone()
+    {
+        return $this->belongsToMany(Zone::class, 'zone_units', 'unit_id', 'zone_id');
+    }
+
     public function jadwal()
     {
         return $this->hasMany(UnitSchedule::class, 'unit_id', 'id');

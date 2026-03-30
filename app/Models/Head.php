@@ -29,6 +29,11 @@ class Head extends Model
         return $this->hasMany(Level::class, 'head', 'id');
     }
 
+    public function latestLevel()
+    {
+        return $this->hasOne(Level::class, 'head', 'id')->latestOfMany();
+    }
+
     public function paket()
     {
         return $this->belongsTo(Program::class, 'program', 'id');

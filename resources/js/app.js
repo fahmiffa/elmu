@@ -89,6 +89,7 @@ import {
     regTypeChart,
     unitPayChart,
 } from "./custom.js";
+import { raportForm } from "./raport-form.js";
 
 window.Alpine = Alpine;
 Alpine.data("dropdownSelect", dropdownSelect);
@@ -114,6 +115,7 @@ Alpine.data("videoForm", videoForm);
 Alpine.data("trixEditor", trixEditor);
 Alpine.data("sweetAlert", sweetAlert);
 Alpine.data("formHandler", formHandler);
+Alpine.data("raportForm", raportForm);
 Alpine.store("unit");
 
 Alpine.start();

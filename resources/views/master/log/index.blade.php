@@ -6,14 +6,14 @@
     <div class="mb-4 flex justify-between items-center gap-2">
         <h2 class="text-xl font-bold text-gray-800">Log Aktivitas User</h2>
 
-        <form action="{{ route('dashboard.master.log.clear') }}" method="POST"
+        <!-- <form action="{{ route('dashboard.master.log.clear') }}" method="POST"
             onsubmit="return confirm('Kosongkan semua log?')">
             @csrf
             <button type="submit"
                 class="cursor-pointer bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl text-xs">
                 Kosongkan Log
             </button>
-        </form>
+        </form> -->
     </div>
 
     @if (session('status'))

@@ -70,6 +70,7 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::put('/pendaftaran/{id}', [Home::class, 'regUpdate'])->name('reg.update');
         Route::post('/pendaftaran/{id}/hapus', [Home::class, 'regDestroy'])->name('reg.destroy');
         Route::resource('report', ReportController::class);
+        Route::get('/raport/preview/{id?}', [RaportController::class, 'preview'])->name('raport.preview');
         Route::resource('raport', RaportController::class);
         Route::resource('campaign', CampaignController::class);
         Route::post('/jadwal/{id}/hapus', [ScheduleController::class, 'hapus'])->name('hapus');
@@ -91,6 +92,8 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
     Route::resource('video', VidoesController::class);
+    Route::get('/salary', [Home::class, 'salary'])->name('salary');
+    Route::post('/salary/generate', [Home::class, 'salaryGenerate'])->name('salary.generate');
 
     Route::get('/job-progress/{jobId}', function ($jobId) {
         $total = DB::table('head')->count();
