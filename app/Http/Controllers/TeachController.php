@@ -17,7 +17,9 @@ class TeachController extends Controller
     public function index()
     {
         $items = Teach::with('akun', 'unit')->get();
-        return view('master.teach.index', compact('items'));
+        $units = Unit::all();
+
+        return view('master.teach.index', compact('items', 'units'));
     }
 
     /**

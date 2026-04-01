@@ -38,4 +38,9 @@ class StudentPresent extends Model
         return $this->belongsTo(Schedules_students::class, 'unit_schedules_id', 'unit_schedules_id')
             ->where('student_id', $this->student_id);
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
 }

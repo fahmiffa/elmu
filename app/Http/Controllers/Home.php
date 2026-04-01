@@ -73,7 +73,10 @@ class Home extends Controller
 
         $units = Unit::all();
 
-        $query = Teach::with('unit')->withCount(['present' => function ($q) use ($month, $year) {
+        $query = Teach::with(['unit', 'present' => function ($q) use ($month, $year) {
+            $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
+              ->with(['student', 'program', 'reg.units', 'reg.product']);
+        }])->withCount(['present' => function ($q) use ($month, $year) {
             $q->whereMonth('created_at', $month)->whereYear('created_at', $year);
         }]);
 

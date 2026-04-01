@@ -330,7 +330,10 @@ export const dataTable = (data) => {
                     email.includes(keyword);
 
                 const matchesUnit =
-                    this.filterUnit === "" || row.unit == this.filterUnit;
+                    this.filterUnit === "" || 
+                    row.unit == this.filterUnit || 
+                    row.unit_id == this.filterUnit;
+                    
                 const matchesProgram =
                     this.filterProgram === "" ||
                     row.program == this.filterProgram;

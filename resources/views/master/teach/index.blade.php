@@ -3,13 +3,23 @@
 @section('content')
     <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
-        <div class="mb-4 flex justify-between items-center gap-2">
-            <input type="text" x-model="search" placeholder="Cari Nama"
-                class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+        <div class="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex flex-1 items-center gap-2 w-full">
+                <input type="text" x-model="search" placeholder="Cari Nama"
+                    class="w-full md:w-1/2 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+                <select x-model="filterUnit" @change="currentPage = 1"
+                    class="px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:ring-orange-500 min-w-[150px]">
+                    <option value="">Semua Unit</option>
+                    @foreach($units as $u)
+                        <option value="{{ $u->id }}">{{ $u->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
             <a href="{{ route('dashboard.master.teach.create') }}"
-                class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
-                Tambah
+                class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-6 rounded-2xl focus:outline-none focus:shadow-outline whitespace-nowrap">
+                Tambah Guru
             </a>
         </div>
 
