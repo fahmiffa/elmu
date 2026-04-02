@@ -53,8 +53,8 @@ class RaportController extends Controller
         $validator = Validator::make($request->all(), [
             'name'                => 'required',
             'student_id'          => 'required',
-            'teacher'             => 'required',
-            'leader'              => 'required',
+            // 'teacher'             => 'required',
+            // 'leader'              => 'required',
             'score_concept'       => 'required|integer',
             'note_concept'        => 'required',
             'score_concentration' => 'required|integer',
@@ -80,6 +80,9 @@ class RaportController extends Controller
         }
 
         $data = $request->all();
+
+        $data['teacher'] = JWTAuth::user()->data->name;
+        $data['leader'] = "Leader";
 
         // Find Head ID for relationship
         if ($request->student_id && $request->program) {
