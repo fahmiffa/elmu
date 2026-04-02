@@ -130,6 +130,7 @@ class StudentController extends Controller
             foreach ($items as $head) {
                 $murid = $head->murid;
                 if ($murid) {
+                    $murid->head_id = $head->id;
                     $murid->program_id = $head->program;
                     $murid->program_name = optional($head->programs)->name;
                     $allMurid->push($murid);

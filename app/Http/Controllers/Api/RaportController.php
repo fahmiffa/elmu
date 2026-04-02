@@ -84,18 +84,6 @@ class RaportController extends Controller
         $data['teacher'] = JWTAuth::user()->data->name;
         $data['leader'] = "Leader";
 
-        // Find Head ID for relationship
-        if ($request->student_id && $request->program) {
-            $student = Student::where('user', $request->student_id)->first();
-            if ($student) {
-                $head = Head::where('students', $student->id)
-                    ->whereHas('programs', function($q) use ($request) {
-                        $q->where('name', $request->program);
-                    })->first();
-                $data['head_id'] = $head?->id;
-            }
-        }
-
         $raport = Raport::create($data);
         $this->generatePdf($raport);
 
