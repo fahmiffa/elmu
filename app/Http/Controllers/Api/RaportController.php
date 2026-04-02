@@ -22,11 +22,10 @@ class RaportController extends Controller
         if ($role == 2) {
             $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
                 ->map(function ($q) {
-                    return [
-                        'name' => $q->name, 
-                        "url" => asset('storage/' . $q->file), 
-                        'murid' => $q->murid->name ?? 'Unknown'
-                    ];
+                    $data = $q->toArray();
+                    $data['url'] = asset('storage/' . $q->file);
+                    $data['murid'] = $q->murid->name ?? 'Unknown';
+                    return $data;
                 });
         } else {
             $muridIds = JWTAuth::user()->data->murid->pluck("students")->toArray();
@@ -37,11 +36,10 @@ class RaportController extends Controller
                 ->latest()
                 ->get()
                 ->map(function ($q) {
-                    return [
-                        'name' => $q->name, 
-                        "url" => asset('storage/' . $q->file), 
-                        'murid' => $q->murid->name ?? 'Unknown'
-                    ];
+                    $data = $q->toArray();
+                    $data['url'] = asset('storage/' . $q->file);
+                    $data['murid'] = $q->murid->name ?? 'Unknown';
+                    return $data;
                 });
         }
         
@@ -89,6 +87,45 @@ class RaportController extends Controller
         return response()->json([
             'status' => true, 
             'message' => 'Raport berhasil disimpan.',
+            'data' => $raport
+        ], 200);
+    }
+
+    public function update(Request $request, Raport $raport)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'                => 'required',
+            'student_id'          => 'required',
+            'score_concept'       => 'required|integer',
+            'note_concept'        => 'required',
+            'score_concentration' => 'required|integer',
+            'note_concentration'  => 'required',
+            'score_accuracy'      => 'required|integer',
+            'note_accuracy'       => 'required',
+            'score_independence'  => 'required|integer',
+            'note_independence'   => 'required',
+            'strength'            => 'required',
+            'progress_period'     => 'required',
+            'improvement'         => 'required',
+            'category'            => 'required',
+            'recommendation'      => 'required',
+            'recommendation_note' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $data = $request->all();
+        $raport->update($data);
+        $this->generatePdf($raport);
+
+        return response()->json([
+            'status' => true, 
+            'message' => 'Raport berhasil diperbarui.',
             'data' => $raport
         ], 200);
     }

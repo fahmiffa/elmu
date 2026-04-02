@@ -57,4 +57,5 @@ Route::middleware('jwt')->group(function () {
     Route::get('/report', [ContentController::class, 'report']);
     Route::get('/raport', [RaportController::class, 'index']);
     Route::post('/raport', [RaportController::class, 'store']);
+    Route::post('/raport/{raport}', [RaportController::class, 'update']);
 });
