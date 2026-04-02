@@ -7,7 +7,7 @@ Salary Overview
 @section('content')
 <div class="bg-white rounded-lg shadow-md p-6" x-data="salaryComponent">
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 class="text-xl font-bold text-gray-800">Rekap Gaji / Mengajar Guru</h2>
+        <h2 class="text-xl font-bold text-gray-800">Rekap Salary</h2>
         
         <div class="flex flex-wrap items-center gap-3">
             <form action="{{ route('dashboard.salary') }}" method="GET" class="flex flex-wrap items-center gap-2">
@@ -136,89 +136,147 @@ Salary Overview
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-xl leading-6 font-bold text-gray-900 mb-6 flex items-center gap-3">
-                                <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <!-- Form for submissions -->
+                    <form id="generateForm" action="{{ route('dashboard.salary.generate') }}" method="POST" x-ref="generateForm">
+                        @csrf
+                        <input type="hidden" name="month" value="{{ $month }}">
+                        <input type="hidden" name="year" value="{{ $year }}">
+                        <template x-for="(guru, index) in selectedTeachersData" :key="guru.id">
+                            <div>
+                                <input type="hidden" :name="'teachers['+index+'][id]'" :value="guru.id">
+                                <input type="hidden" :name="'teachers['+index+'][sessions]'" :value="guru.sessions">
+                                <input type="hidden" :name="'teachers['+index+'][percentage]'" :value="guru.percentage">
+                            </div>
+                        </template>
+                    </form>
+
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-8">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
+                            </div>
+                            <div class="flex-1 ml-4">
+                                <h3 class="text-xl font-black text-gray-900 leading-none mb-1">
+                                    Konfirmasi Generate Salary
+                                </h3>
+                                <p class="text-xs text-gray-500 font-medium">Tinjau kehadiran dan tentukan parameter gaji per guru.</p>
+                            </div>
+                            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Search Filter -->
+                        <div class="mb-6">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                                     </svg>
-                                </div>
-                                Konfirmasi Generate Salary
-                            </h3>
-
-                            <!-- Nama Guru Seleksi -->
-                            <div class="mb-6">
-                                <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Guru yang dipilih:</label>
-                                <div class="flex flex-wrap gap-2">
-                                    <template x-for="guru in selectedTeachersData" :key="guru.id">
-                                        <span class="px-3 py-1 bg-gray-100 border border-gray-200 text-gray-700 rounded-full text-xs font-bold flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                            <span x-text="guru.name"></span>
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Input Sesi & Persentase -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                    <label class="text-xs font-bold text-blue-700 uppercase block mb-1">Jumlah Sesi</label>
-                                    <input type="number" x-model="sessions" class="w-full bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-blue-500 focus:border-blue-500">
-                                    <p class="text-[10px] text-blue-600 mt-1">* Digunakan sebagai pengali dalam perhitungan gaji.</p>
-                                </div>
-                                <div class="p-4 bg-purple-50 rounded-xl border border-purple-100">
-                                    <label class="text-xs font-bold text-purple-700 uppercase block mb-1">Persentase (%)</label>
-                                    <input type="number" x-model="percentage" class="w-full bg-white border border-purple-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-purple-500 focus:border-purple-500">
-                                    <p class="text-[10px] text-purple-600 mt-1">* Persentase gaji yang akan diterima guru.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Groups per Program -->
-                            <div class="mt-4 space-y-6 max-h-[400px] overflow-y-auto pr-2">
-                                <template x-for="(group, programName) in groupedPresents" :key="programName">
-                                    <div class="border rounded-xl overflow-hidden shadow-sm">
-                                        <div class="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
-                                            <div class="flex items-center gap-2">
-                                                <span class="p-1 px-2 bg-orange-600 text-white rounded text-[10px] font-bold uppercase" x-text="programName"></span>
-                                                <span class="text-sm font-bold text-gray-700" x-text="group.students.length + ' Siswa'"></span>
-                                            </div>
-                                            <div class="text-sm font-bold text-blue-700">
-                                                @ <span x-text="'Rp ' + group.harga_formatted"></span>
-                                            </div>
-                                        </div>
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <tbody class="divide-y divide-gray-100 bg-white">
-                                                <template x-for="item in group.students" :key="item.id">
-                                                    <tr class="hover:bg-gray-50/50 transition-colors">
-                                                        <td class="px-6 py-3 text-sm text-gray-800 font-medium" x-text="item.nama"></td>
-                                                        <td class="px-6 py-3 text-sm text-gray-500" x-text="item.nama_panggilan"></td>
-                                                        <td class="px-6 py-3 text-right text-sm text-gray-400 italic" x-text="item.unit"></td>
-                                                    </tr>
-                                                </template>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </template>
-
-                                <template x-if="Object.keys(groupedPresents).length === 0">
-                                    <div class="px-6 py-12 text-center text-gray-400 italic text-sm bg-gray-50/20 rounded-xl border border-dashed">
-                                        Tidak ada data kehadiran siswa pada periode ini.
-                                    </div>
-                                </template>
+                                </span>
+                                <input type="text" x-model="searchQuery" 
+                                    placeholder="Cari nama guru..." 
+                                    class="block w-full pl-10 pr-3 py-2.5 border border-gray-100 rounded-xl leading-5 bg-gray-50/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm transition-all">
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-100">
-                    <button type="submit" form="generateForm"
-                        class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-lg px-6 py-2.5 bg-green-600 text-base font-bold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all hover:scale-105 active:scale-95">
-                        Lanjutkan Generate
-                    </button>
-                    <button type="button" @click="showModal = false"
-                        class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-200 shadow-sm px-6 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all">
-                        Batal
-                    </button>
-                </div>
+                        <!-- List per Guru -->
+                        <div class="space-y-12 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar no-scrollbar">
+                            <template x-for="guru in filteredTeachers" :key="guru.id">
+                                <div class="relative">
+                                    <div class="sticky top-0 z-20 bg-white/90 backdrop-blur-sm py-2 mb-4 border-b flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-lg font-black text-gray-900" x-text="guru.name"></h4>
+                                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider" x-text="guru.unit"></p>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div class="flex flex-col">
+                                                <label class="text-[9px] font-black text-blue-700 uppercase">Sesi</label>
+                                                <input type="number" x-model="guru.sessions" class="w-16 px-2 py-1 border rounded bg-blue-50 text-xs font-bold text-blue-700 focus:ring-0">
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <label class="text-[9px] font-black text-purple-700 uppercase">Persentase (%)</label>
+                                                <input type="number" x-model="guru.percentage" class="w-16 px-2 py-1 border rounded bg-purple-50 text-xs font-bold text-purple-700 focus:ring-0">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 gap-4">
+                                        <template x-for="(group, programName) in guru.groupedPresents" :key="programName">
+                                            <div class="bg-gray-50/50 border border-gray-100 rounded-xl overflow-hidden">
+                                                <div class="px-4 py-2 flex justify-between items-center border-b border-gray-100">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-[9px] font-black uppercase" x-text="programName"></span>
+                                                        <span class="text-[10px] font-bold text-gray-400" x-text="group.students.length + ' Siswa'"></span>
+                                                    </div>
+                                                    <div class="text-[10px] font-black text-gray-600">
+                                                        @ <span x-text="formatCurrency(group.harga)"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="p-2">
+                                                    <template x-for="item in group.students" :key="item.id">
+                                                        <div class="flex justify-between items-center py-1 px-2 hover:bg-white rounded transition-colors group">
+                                                            <span class="text-xs text-gray-700 font-medium" x-text="item.nama"></span>
+                                                            <span class="text-[10px] text-gray-400 italic opacity-0 group-hover:opacity-100 transition-opacity" x-text="item.nama_panggilan"></span>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Rincian Hitung -->
+                                                    <div class="mt-2 p-3 bg-white border border-dashed border-gray-200 rounded-lg">
+                                                        <div class="flex flex-col gap-1">
+                                                            <div class="flex justify-between items-center text-[9px] text-gray-500 uppercase font-black">
+                                                                <span>Rumus</span>
+                                                                <span>Nominal / Siswa</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <div class="text-[10px] text-gray-400 font-medium">
+                                                                    (<span x-text="formatCurrency(group.harga)"></span> &times; <span x-text="guru.percentage + '%'"></span>) &divide; <span x-text="guru.sessions"></span>
+                                                                </div>
+                                                                <div class="text-xs font-black text-orange-600" x-text="formatCurrency(calculateNominal(group.harga, guru.percentage, guru.sessions))"></div>
+                                                            </div>
+                                                            <div class="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
+                                                                <span class="text-[10px] font-black text-gray-700 uppercase">Sub-Total Program</span>
+                                                                <span class="text-sm font-black text-green-700 underline decoration-2 decoration-green-200 underline-offset-4" x-text="formatCurrency(calculateSubtotal(group, guru.percentage, guru.sessions))"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Total Gaji Guru -->
+                                    <div class="mt-4 pt-4 border-t-2 border-dashed border-gray-100 flex justify-between items-center bg-green-50/50 p-4 rounded-xl">
+                                        <div>
+                                            <span class="text-[10px] font-black text-green-700 uppercase tracking-widest block">Estimasi Penerimaan Gaji</span>
+                                            <span class="text-[9px] text-green-600 font-bold uppercase" x-text="guru.name"></span>
+                                        </div>
+                                        <div class="text-xl font-black text-green-700" x-text="formatCurrency(calculateTeacherTotal(guru))"></div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="filteredTeachers.length === 0">
+                                <div class="px-6 py-20 text-center bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-100">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    </div>
+                                    <p class="text-xs text-gray-400 font-medium" x-text="searchQuery ? 'Guru dengan nama \'' + searchQuery + '\' tidak ditemukan.' : 'Tidak ada data kehadiran siswa untuk guru yang dipilih.'"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-100 rounded-b-3xl">
+                        <button type="submit" form="generateForm"
+                            class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-lg px-8 py-3 bg-green-600 text-base font-black text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all hover:scale-105 active:scale-95 shadow-green-200">
+                            Konfirmasi & Proses
+                        </button>
+                        <button type="button" @click="showModal = false"
+                            class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-200 shadow-sm px-8 py-3 bg-white text-base font-bold text-gray-600 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all">
+                            Batal
+                        </button>
+                    </div>
             </div>
         </div>
     </div>
@@ -253,6 +311,7 @@ document.addEventListener('alpine:init', () => {
         selectAll: false,
         showModal: false,
         selectedTeachersData: [],
+        searchQuery: '',
         groupedPresents: {},
         sessions: 1,
         percentage: 100,
@@ -273,31 +332,65 @@ document.addEventListener('alpine:init', () => {
             }
         },
         openSalaryModal() {
+            this.searchQuery = '';
             this.selectedTeachersData = [];
-            let allPresents = [];
             this.selectedTeachers.forEach(id => {
-                if (this.teachersDetails[id]) {
-                    this.selectedTeachersData.push(this.teachersDetails[id]);
-                    allPresents = [...allPresents, ...this.teachersDetails[id].presents];
-                }
-            });
+                if (this.teachersDetails[id] && this.teachersDetails[id].presents.length > 0) {
+                    const teacher = this.teachersDetails[id];
+                    const groups = {};
+                    
+                    teacher.presents.forEach(p => {
+                        if (!groups[p.program]) {
+                            groups[p.program] = {
+                                name: p.program,
+                                harga: p.harga,
+                                harga_formatted: p.harga_formatted,
+                                students: []
+                            };
+                        }
+                        groups[p.program].students.push(p);
+                    });
 
-            // Grouping by program
-            const groups = {};
-            allPresents.forEach(p => {
-                if (!groups[p.program]) {
-                    groups[p.program] = {
-                        name: p.program,
-                        harga: p.harga,
-                        harga_formatted: p.harga_formatted,
-                        students: []
-                    };
+                    this.selectedTeachersData.push({
+                        id: teacher.id,
+                        name: teacher.name,
+                        unit: teacher.unit,
+                        sessions: 8,
+                        percentage: 25,
+                        groupedPresents: groups
+                    });
                 }
-                groups[p.program].students.push(p);
             });
-            this.groupedPresents = groups;
 
             this.showModal = true;
+        },
+        get filteredTeachers() {
+            if (this.searchQuery.trim() === '') return this.selectedTeachersData;
+            return this.selectedTeachersData.filter(guru => 
+                guru.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+            );
+        },
+        calculateNominal(harga, percentage, sessions) {
+            if (!sessions || sessions == 0) return 0;
+            return (harga * (percentage / 100)) / sessions;
+        },
+        calculateSubtotal(group, percentage, sessions) {
+            const nominal = this.calculateNominal(group.harga, percentage, sessions);
+            return nominal * group.students.length;
+        },
+        calculateTeacherTotal(guru) {
+            let total = 0;
+            Object.values(guru.groupedPresents).forEach(group => {
+                total += this.calculateSubtotal(group, guru.percentage, guru.sessions);
+            });
+            return total;
+        },
+        formatCurrency(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(value);
         }
     }))
 })

@@ -23,6 +23,16 @@
                 <option value="{{ $p->id }}">{{ $p->name }}</option>
                 @endforeach
             </select>
+
+            <select x-model="filterStatus" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Status</option>
+                <option value="0">Aktif</option>
+                <option value="1">Lulus</option>
+                <option value="2">Cuti</option>
+                <option value="3">Keluar</option>
+                <option value="4">Pindah</option>
+            </select>
         </div>
     </div>
 

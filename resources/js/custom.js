@@ -494,6 +494,7 @@ export const dataTableReg = (data) => {
         },
         filterUnit: "",
         filterProgram: "",
+        filterStatus: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -536,8 +537,11 @@ export const dataTableReg = (data) => {
                 const matchesProgram =
                     this.filterProgram === "" ||
                     row.program == this.filterProgram;
+                const matchesStatus =
+                    this.filterStatus === "" ||
+                    row.done == this.filterStatus;
 
-                return matchesSearch && matchesUnit && matchesProgram;
+                return matchesSearch && matchesUnit && matchesProgram && matchesStatus;
             });
 
             temp.sort((a, b) => {

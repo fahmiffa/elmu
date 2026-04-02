@@ -13,9 +13,22 @@ Akademik > {{ $user->data->name ?? $user->name }}
         this.editType = type;
         this.editTitle = title;
         this.editModal = true;
+        this.photoPreview = null;
     },
     closeEdit() {
         this.editModal = false;
+        this.photoPreview = null;
+    },
+    photoPreview: null,
+    handlePhotoChange(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.photoPreview = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
     }
 }">
     <!-- Header with Photo and Basic Info -->
@@ -363,7 +376,7 @@ Akademik > {{ $user->data->name ?? $user->name }}
                     class="relative inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full z-[110]"
                     @click.stop>
 
-                    <form action="{{ route('dashboard.user.update-profile', md5($user->id)) }}" method="POST">
+                    <form action="{{ route('dashboard.user.update-profile', md5($user->id)) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="type" :value="editType">
 
@@ -378,45 +391,65 @@ Akademik > {{ $user->data->name ?? $user->name }}
 
                         <div class="px-6 py-6 max-h-[70vh] overflow-y-auto">
                             <!-- FORM MURID -->
-                            <div x-show="editType === 'murid'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lengkap</label>
-                                    <input type="text" name="name" value="{{ $user->data->name ?? $user->name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
+                            <div x-show="editType === 'murid'" class="space-y-4">
+                                <div class="mb-6 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 flex items-center gap-6">
+                                    <div class="relative flex-shrink-0">
+                                        <div class="w-24 h-24 rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white">
+                                            <img :src="photoPreview || '{{ ($user->data && $user->data->img) ? asset('storage/' . $user->data->img) : asset('logo.png') }}'" 
+                                                 class="w-full h-full object-cover"
+                                                 onerror="this.src='{{ asset('logo.png') }}'">
+                                        </div>
+                                        <label class="absolute -bottom-2 -right-2 w-9 h-9 bg-orange-600 text-white rounded-xl shadow-xl flex items-center justify-center cursor-pointer hover:bg-orange-700 transition-all border-2 border-white group">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            <input type="file" name="img" @change="handlePhotoChange" class="hidden" accept="image/*">
+                                        </label>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-xs font-black text-orange-700 uppercase tracking-widest mb-1">Foto Profil Murid</h4>
+                                        <p class="text-[10px] text-gray-500 leading-relaxed mb-0">Klik ikon berwarna oranye untuk mengunggah foto baru. Pastikan wajah murid terlihat jelas.</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Panggilan</label>
-                                    <input type="text" name="nama_panggilan" value="{{ $user->data->nama_panggilan ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">HP Siswa</label>
-                                    <input type="text" name="hp_siswa" value="{{ $user->data->hp_siswa ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat</label>
-                                    <textarea name="alamat" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" rows="2">{{ $user->data->alamat ?? '' }}</textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tempat Lahir</label>
-                                    <input type="text" name="place" value="{{ $user->data->place ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tanggal Lahir</label>
-                                    <input type="date" name="birth" value="{{ $user->data->birth ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Agama</label>
-                                    <input type="text" name="agama" value="{{ $user->data->agama ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jenis Kelamin</label>
-                                    <select name="gender" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-                                        <option value="1" {{ ($user->data->gender ?? '') == 1 ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="2" {{ ($user->data->gender ?? '') == 2 ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sekolah / Kelas</label>
-                                    <input type="text" name="sekolah_kelas" value="{{ $user->data->sekolah_kelas ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="col-span-2">
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
+                                        <input type="text" name="name" value="{{ $user->data->name ?? $user->name }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Nama Panggilan</label>
+                                        <input type="text" name="nama_panggilan" value="{{ $user->data->nama_panggilan ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">HP Siswa</label>
+                                        <input type="text" name="hp_siswa" value="{{ $user->data->hp_siswa ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Alamat</label>
+                                        <textarea name="alamat" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700" rows="2">{{ $user->data->alamat ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Tempat Lahir</label>
+                                        <input type="text" name="place" value="{{ $user->data->place ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Tanggal Lahir</label>
+                                        <input type="date" name="birth" value="{{ $user->data->birth ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Agama</label>
+                                        <input type="text" name="agama" value="{{ $user->data->agama ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Jenis Kelamin</label>
+                                        <select name="gender" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                            <option value="1" {{ ($user->data->gender ?? '') == 1 ? 'selected' : '' }}>Laki-laki</option>
+                                            <option value="2" {{ ($user->data->gender ?? '') == 2 ? 'selected' : '' }}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Sekolah / Kelas</label>
+                                        <input type="text" name="sekolah_kelas" value="{{ $user->data->sekolah_kelas ?? '' }}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all font-medium text-sm text-gray-700">
+                                    </div>
                                 </div>
                             </div>
 

@@ -38,6 +38,7 @@ use PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\UnitReportExport;
 use Barryvdh\DomPDF\Facade\Pdf as BarryPdf;
+use Intervention\Image\Laravel\Facades\Image;
 use App\Models\Zone_units;
 
 class Home extends Controller
@@ -565,6 +566,39 @@ class Home extends Controller
         $type = $request->input('type');
 
         if ($type == 'murid') {
+            if ($request->hasFile('img')) {
+                $request->validate([
+                    'img' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+                ]);
+
+                if ($siswa->img && Storage::disk('public')->exists($siswa->img)) {
+                    Storage::disk('public')->delete($siswa->img);
+                }
+
+                $imageFile = $request->file('img');
+                $filename  = time() . '.webp';
+                $path      = 'students/' . $filename;
+
+                try {
+                    // Resize and compress using Intervention Image (v3)
+                    $image = Image::read($imageFile->getRealPath());
+
+                    // Scale to max width 800px
+                    $image->scaleDown(width: 800);
+
+                    // Encode to webp with 70% quality
+                    $encoded = $image->toWebp(70);
+
+                    // Store using Laravel Storage
+                    Storage::disk('public')->put($path, (string) $encoded);
+                    $siswa->img = $path;
+                } catch (\Exception $e) {
+                    // Fallback to basic storage if intervention fails
+                    $path = $request->file('img')->store('students', 'public');
+                    $siswa->img = $path;
+                }
+            }
+
             $siswa->name = $request->name;
             $siswa->nama_panggilan = $request->nama_panggilan;
             $siswa->alamat = $request->alamat;
@@ -576,7 +610,7 @@ class Home extends Controller
             $siswa->hp_siswa = $request->hp_siswa;
 
             // Also update user table name for consistency
-            $user->name = UserName($request->name);
+            $user->name = userName($request->name);
             $user->save();
         } elseif ($type == 'ortu') {
             $siswa->dad = $request->dad;

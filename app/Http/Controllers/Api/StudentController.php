@@ -124,15 +124,20 @@ class StudentController extends Controller
         $id = JWTAuth::user()->id;
         $da = \App\Models\Teach::where('user', $id)->first();
         if ($da) {
-            $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->get();
+            $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->with('programs:id,name')->get();
             $allMurid = collect();
 
             foreach ($items as $head) {
-                $allMurid->push($head->murid);
+                $murid = $head->murid;
+                if ($murid) {
+                    $murid->program_id = $head->program;
+                    $murid->program_name = optional($head->programs)->name;
+                    $allMurid->push($murid);
+                }
             }
 
             return response()->json([
-                'murid' => $allMurid->values()->unique('id')->all(),
+                'murid' => $allMurid->values()->all(),
             ]);
         } else {
             return response()->json([]);

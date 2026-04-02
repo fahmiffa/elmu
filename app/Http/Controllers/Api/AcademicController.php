@@ -430,4 +430,5 @@ class AcademicController extends Controller
 
         return response()->json($items);
     }
+
 }
