@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AcademicController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\ContentController;
+use App\Http\Controllers\Api\RaportController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Home;
 use Illuminate\Support\Facades\Route;
@@ -54,5 +55,6 @@ Route::middleware('jwt')->group(function () {
     Route::post('/jadwal', [AcademicController::class, 'UpJadwal']);
     Route::post('/report', [ContentController::class, 'ureport']);
     Route::get('/report', [ContentController::class, 'report']);
-    Route::get('/raport', [AcademicController::class, 'raport']);
+    Route::get('/raport', [RaportController::class, 'index']);
+    Route::post('/raport', [RaportController::class, 'store']);
 });

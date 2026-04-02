@@ -18,7 +18,9 @@ use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AcademicController extends Controller
 {
@@ -390,26 +392,6 @@ class AcademicController extends Controller
         return response()->json(['status' => true, 'message' => "$processed data berhasil diproses."], 200);
     }
 
-    public function raport()
-    {
-        $id   = JWTAuth::user()->id;
-        $role = JWTAuth::user()->role;
-        if ($role == 2) {
-            $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
-                ->map(function ($q) {
-                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid' => $q->murid->name];
-                });
-        } else {
-            $murid = JWTAuth::user()->data->murid->pluck("students")->toArray();
-            $murid = Student::whereIn("id", $murid)->pluck("user")->toArray();
-            $item  = Raport::whereIn('student_id', $murid)->with('murid')->latest()->get()
-                ->map(function ($q) {
-                    return ['name' => $q->name, "url" => asset('storage/' . $q->file), 'murid' => $q->murid->name];
-                });
-        }
-        return response()->json($item);
-    }
-
     public function materi()
     {
         $id   = JWTAuth::user()->id;
@@ -430,5 +412,4 @@ class AcademicController extends Controller
 
         return response()->json($items);
     }
-
 }

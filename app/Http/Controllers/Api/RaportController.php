@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Raport;
+use App\Models\Student;
+use App\Models\Head;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
+class RaportController extends Controller
+{
+    public function index()
+    {
+        $id   = JWTAuth::user()->id;
+        $role = JWTAuth::user()->role;
+        
+        if ($role == 2) {
+            $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
+                ->map(function ($q) {
+                    return [
+                        'name' => $q->name, 
+                        "url" => asset('storage/' . $q->file), 
+                        'murid' => $q->murid->name ?? 'Unknown'
+                    ];
+                });
+        } else {
+            $muridIds = JWTAuth::user()->data->murid->pluck("students")->toArray();
+            $studentUsers = Student::whereIn("id", $muridIds)->pluck("user")->toArray();
+            
+            $item  = Raport::whereIn('student_id', $studentUsers)
+                ->with('murid')
+                ->latest()
+                ->get()
+                ->map(function ($q) {
+                    return [
+                        'name' => $q->name, 
+                        "url" => asset('storage/' . $q->file), 
+                        'murid' => $q->murid->name ?? 'Unknown'
+                    ];
+                });
+        }
+        
+        return response()->json($item);
+    }
+
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'                => 'required',
+            'student_id'          => 'required',
+            'teacher'             => 'required',
+            'leader'              => 'required',
+            'score_concept'       => 'required|integer',
+            'note_concept'        => 'required',
+            'score_concentration' => 'required|integer',
+            'note_concentration'  => 'required',
+            'score_accuracy'      => 'required|integer',
+            'note_accuracy'       => 'required',
+            'score_independence'  => 'required|integer',
+            'note_independence'   => 'required',
+            'strength'            => 'required',
+            'progress_period'     => 'required',
+            'improvement'         => 'required',
+            'category'            => 'required',
+            'recommendation'      => 'required',
+            'recommendation_note' => 'required',
+            'program'             => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $data = $request->all();
+
+        // Find Head ID for relationship
+        if ($request->student_id && $request->program) {
+            $student = Student::where('user', $request->student_id)->first();
+            if ($student) {
+                $head = Head::where('students', $student->id)
+                    ->whereHas('programs', function($q) use ($request) {
+                        $q->where('name', $request->program);
+                    })->first();
+                $data['head_id'] = $head?->id;
+            }
+        }
+
+        $raport = Raport::create($data);
+        $this->generatePdf($raport);
+
+        return response()->json([
+            'status' => true, 
+            'message' => 'Raport berhasil disimpan.',
+            'data' => $raport
+        ], 200);
+    }
+
+    private function generatePdf(Raport $raport)
+    {
+        $items = Raport::with(['murid', 'reg.programs', 'reg.units.zone', 'reg.class', 'reg.latestLevel'])->findOrFail($raport->id);
+        $murid = $items->murid ?? null;
+
+        $pdf = Pdf::loadView('home.raport.raport', compact('items', 'murid'))
+                  ->setPaper('a4', 'portrait');
+
+        $fileName = 'raport/raport-' . ($murid->user ?? $raport->id) . '-' . time() . '.pdf';
+
+        if ($raport->file && Storage::disk('public')->exists($raport->file)) {
+            Storage::disk('public')->delete($raport->file);
+        }
+
+        Storage::disk('public')->put($fileName, $pdf->output());
+        $raport->update(['file' => $fileName]);
+    }
+}
