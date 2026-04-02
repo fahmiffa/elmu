@@ -38,4 +38,9 @@ class Teach extends Model
     {
         return $this->hasMany(StudentPresent::class, 'teach_id', 'id');
     }
+
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class, 'teach_id', 'id');
+    }
 }

@@ -29,6 +29,7 @@
                 <tr class="bg-orange-500 text-left text-white">
                     <th class="px-4 py-2">No</th>
                     <th class="cursor-pointer px-4 py-2">Username</th>
+                    <th class="cursor-pointer px-4 py-2">Panggilan</th>
                     <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                     <th class="px-4 py-2">Email</th>
                     <th class="px-4 py-2">HP</th>
@@ -43,6 +44,7 @@
                     <tr class="border-t border-gray-300">
                         <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
                         <td class="px-4 py-2" x-text="row.name"></td>
+                        <td class="px-4 py-2" x-text="row.data.nama_panggilan"></td>
                         <td class="px-4 py-2" x-text="row.data ? row.data.name : row.name"></td>
                         <td class="px-4 py-2" x-text="row.email"></td>
                         <td class="px-4 py-2" x-text="row.nomor"></td>

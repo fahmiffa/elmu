@@ -16,6 +16,7 @@ use App\Models\Price;
 use App\Models\Program;
 use App\Models\Raport;
 use App\Models\Report;
+use App\Models\Salary;
 use App\Models\Schedules_students;
 use App\Models\Student;
 use App\Models\StudentPresent;
@@ -74,10 +75,15 @@ class Home extends Controller
 
         $units = Unit::all();
 
-        $query = Teach::with(['unit', 'present' => function ($q) use ($month, $year) {
-            $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
-              ->with(['student', 'program', 'reg.units', 'reg.product']);
-        }])->withCount(['present' => function ($q) use ($month, $year) {
+        $query = Teach::with(['unit', 
+            'salaries' => function ($q) use ($month, $year) {
+                $q->whereMonth('tanggal', $month)->whereYear('tanggal', $year);
+            },
+            'present' => function ($q) use ($month, $year) {
+                $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
+                  ->with(['student', 'program', 'reg.units', 'reg.product']);
+            }
+        ])->withCount(['present' => function ($q) use ($month, $year) {
             $q->whereMonth('created_at', $month)->whereYear('created_at', $year);
         }]);
 
@@ -92,7 +98,26 @@ class Home extends Controller
 
     public function salaryGenerate(Request $request)
     {
-       dd($request->input());
+        $teachers = $request->input('teachers', []);
+        $month = $request->input('month', date('m'));
+        $year  = $request->input('year', date('Y'));
+        
+        $tanggalGenerate = $year . '-' . sprintf('%02d', $month) . '-28';
+
+        foreach ($teachers as $t) {
+            Salary::create([
+                'teach_id'         => $t['id'],
+                'tanggal'          => $tanggalGenerate,
+                'sesi'             => $t['sessions'] ?? 0,
+                'persentase'       => $t['percentage'] ?? 0,
+                'jumlah_pertemuan' => $t['jumlah_pertemuan'] ?? 0,
+                'total'            => $t['total'] ?? 0,
+                'nominal'          => $t['total'] ?? 0,
+                'status'           => 0
+            ]);
+        }
+
+        return redirect()->route('dashboard.salary')->with('status', 'Salary berhasil di-generate dan tersimpan.');
     }
 
     public function level()

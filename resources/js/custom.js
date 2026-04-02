@@ -317,10 +317,11 @@ export const dataTable = (data) => {
         filteredData() {
             let temp = this.rows.filter((row) => {
                 const keyword = this.search.toLowerCase();
-                const name = (row.name ?? row.users?.name ?? "").toLowerCase();
+                const name = (row.name ?? row.users?.name ?? row.data?.name ?? "").toLowerCase();
                 const panggilan = (
                     row.nama_panggilan ??
                     row.users?.data?.nama_panggilan ??
+                    row.data?.nama_panggilan ??
                     ""
                 ).toLowerCase();
                 const email = (row.email ?? "").toLowerCase();

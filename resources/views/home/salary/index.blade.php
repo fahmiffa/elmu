@@ -38,9 +38,6 @@ Salary Overview
                 class="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors shadow-md flex items-center gap-2"
                 :disabled="selectedTeachers.length === 0"
                 :class="selectedTeachers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
                 Generate Salary (<span x-text="selectedTeachers.length"></span>)
             </button>
         </div>
@@ -65,19 +62,22 @@ Salary Overview
                             <input type="checkbox" @click="toggleAll()" :checked="selectAll" class="rounded text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer">
                         </th>
                         <th class="px-6 py-4 text-left">No</th>
-                        <th class="px-6 py-4 text-left">Nama Guru</th>
-                        <th class="px-6 py-4 text-left">Unit / Cabang</th>
-                        <th class="px-6 py-4 text-center text-blue-600">Jumlah Mengajar</th>
-                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-left">Miska</th>
+                        <th class="px-6 py-4 text-left">Unit</th>
+                        <th class="px-6 py-4 text-center text-blue-600">Jumlah</th>
+                        <th class="px-6 py-4 text-right text-green-600">Total</th>
+                        <th class="px-6 py-4 text-center">Tanggal</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($items as $teach)
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4">
-                            <input type="checkbox" value="{{ $teach->id }}" 
-                                x-model="selectedTeachers"
-                                class="teacher-checkbox rounded text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer">
+                            @if($teach->salaries->isEmpty())
+                                <input type="checkbox" value="{{ $teach->id }}" 
+                                    x-model="selectedTeachers"
+                                    class="teacher-checkbox rounded text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer">
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $loop->iteration }}</td>
                         <td class="px-6 py-4 text-sm font-bold text-gray-800">{{ $teach->name }}</td>
@@ -87,13 +87,24 @@ Salary Overview
                                 {{ $teach->present_count }} Siswa
                             </span>
                         </td>
+                        <td class="px-6 py-4 text-right">
+                            @if($teach->salaries->isNotEmpty())
+                                <span class="font-bold text-green-700">Rp {{ number_format($teach->salaries->first()->total, 0, ',', '.') }}</span>
+                            @else
+                                <span class="text-gray-400 italic text-xs">-</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold uppercase">Active</span>
+                            @if($teach->salaries->isNotEmpty())
+                                <span class="text-xs text-gray-600 font-medium">{{ \Carbon\Carbon::parse($teach->salaries->first()->created_at)->translatedFormat('d M Y, H:i') }}</span>
+                            @else
+                                <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] font-bold uppercase">Belum Tergenerate</span>
+                            @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic">Data guru tidak ditemukan.</td>
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-400 italic">Data guru tidak ditemukan.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -103,7 +114,7 @@ Salary Overview
 
     <div class="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-100">
         <p class="text-xs text-orange-700 leading-relaxed">
-            <strong>Catatan:</strong> Jumlah mengajar dihitung berdasarkan total kehadiran siswa (Student Present) yang diinput oleh guru selama periode terpilih. Satu sesi mengajar dengan 5 siswa akan terhitung sebagai 5 poin mengajar.
+            <strong>Catatan:</strong> Jumlah mengajar dihitung berdasarkan total kehadiran siswa
         </p>
     </div>
 
@@ -137,7 +148,7 @@ Salary Overview
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <!-- Form for submissions -->
-                    <form id="generateForm" action="{{ route('dashboard.salary.generate') }}" method="POST" x-ref="generateForm">
+                    <form id="processForm" action="{{ route('dashboard.salary.generate') }}" method="POST" x-ref="processForm">
                         @csrf
                         <input type="hidden" name="month" value="{{ $month }}">
                         <input type="hidden" name="year" value="{{ $year }}">
@@ -146,6 +157,8 @@ Salary Overview
                                 <input type="hidden" :name="'teachers['+index+'][id]'" :value="guru.id">
                                 <input type="hidden" :name="'teachers['+index+'][sessions]'" :value="guru.sessions">
                                 <input type="hidden" :name="'teachers['+index+'][percentage]'" :value="guru.percentage">
+                                <input type="hidden" :name="'teachers['+index+'][total]'" :value="calculateTeacherTotal(guru)">
+                                <input type="hidden" :name="'teachers['+index+'][jumlah_pertemuan]'" :value="Object.values(guru.groupedPresents).reduce((acc, curr) => acc + curr.totalAttendance, 0)">
                             </div>
                         </template>
                     </form>
@@ -207,7 +220,7 @@ Salary Overview
                                                 <div class="px-4 py-2 flex justify-between items-center border-b border-gray-100">
                                                     <div class="flex items-center gap-2">
                                                         <span class="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-[9px] font-black uppercase" x-text="programName"></span>
-                                                        <span class="text-[10px] font-bold text-gray-400" x-text="group.students.length + ' Siswa'"></span>
+                                                        <span class="text-[10px] font-bold text-gray-400" x-text="group.totalAttendance + ' Siswa'"></span>
                                                     </div>
                                                     <div class="text-[10px] font-black text-gray-600">
                                                         @ <span x-text="formatCurrency(group.harga)"></span>
@@ -216,7 +229,10 @@ Salary Overview
                                                 <div class="p-2">
                                                     <template x-for="item in group.students" :key="item.id">
                                                         <div class="flex justify-between items-center py-1 px-2 hover:bg-white rounded transition-colors group">
-                                                            <span class="text-xs text-gray-700 font-medium" x-text="item.nama"></span>
+                                                            <span class="text-xs text-gray-700 font-medium">
+                                                                <span x-text="item.nama"></span>
+                                                                <span x-show="item.count > 1" class="text-blue-600 font-bold ml-1" x-text="'(' + item.count + 'x)'"></span>
+                                                            </span>
                                                             <span class="text-[10px] text-gray-400 italic opacity-0 group-hover:opacity-100 transition-opacity" x-text="item.nama_panggilan"></span>
                                                         </div>
                                                     </template>
@@ -268,7 +284,7 @@ Salary Overview
                     </div>
 
                     <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-100 rounded-b-3xl">
-                        <button type="submit" form="generateForm"
+                        <button type="submit" form="processForm"
                             class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-lg px-8 py-3 bg-green-600 text-base font-black text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-all hover:scale-105 active:scale-95 shadow-green-200">
                             Konfirmasi & Proses
                         </button>
@@ -345,10 +361,22 @@ document.addEventListener('alpine:init', () => {
                                 name: p.program,
                                 harga: p.harga,
                                 harga_formatted: p.harga_formatted,
-                                students: []
+                                students: [],
+                                totalAttendance: 0
                             };
                         }
-                        groups[p.program].students.push(p);
+                        
+                        groups[p.program].totalAttendance++;
+
+                        let existingStudent = groups[p.program].students.find(s => s.nama === p.nama);
+                        if (existingStudent) {
+                            existingStudent.count++;
+                        } else {
+                            groups[p.program].students.push({
+                                ...p,
+                                count: 1
+                            });
+                        }
                     });
 
                     this.selectedTeachersData.push({
@@ -376,7 +404,7 @@ document.addEventListener('alpine:init', () => {
         },
         calculateSubtotal(group, percentage, sessions) {
             const nominal = this.calculateNominal(group.harga, percentage, sessions);
-            return nominal * group.students.length;
+            return nominal * group.totalAttendance;
         },
         calculateTeacherTotal(guru) {
             let total = 0;

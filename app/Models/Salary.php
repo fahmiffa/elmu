@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Salary extends Model
 {
-    protected $fillable = ['head_id', 'teach_id', 'nominal', 'status'];
+    protected $fillable = ['teach_id', 'nominal', 'status', 'tanggal', 'sesi', 'persentase', 'total', 'jumlah_pertemuan'];
     protected $hidden = ['created_at', 'updated_at'];
 
     public function teach()
