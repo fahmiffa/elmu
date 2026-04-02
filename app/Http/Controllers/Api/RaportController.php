@@ -16,9 +16,9 @@ class RaportController extends Controller
 {
     public function index()
     {
-        $id   = JWTAuth::user()->id;
+        $id   = JWTAuth::user()->data->id;
         $role = JWTAuth::user()->role;
-        
+
         if ($role == 2) {
             $item = Raport::with('murid')->where('student_id', $id)->latest()->get()
                 ->map(function ($q) {
