@@ -124,7 +124,7 @@ class StudentController extends Controller
         $id = JWTAuth::user()->id;
         $da = \App\Models\Teach::where('user', $id)->first();
         if ($da) {
-            $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name')->with('programs:id,name')->get();
+            $items    = Head::where('unit', $da->unit_id)->where('done', 0)->with('murid:id,name,nama_panggilan')->with('programs:id,name')->get();
             $allMurid = collect();
 
             foreach ($items as $head) {
