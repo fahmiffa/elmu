@@ -69,7 +69,6 @@ class RaportController extends Controller
             'category'            => 'required',
             'recommendation'      => 'required',
             'recommendation_note' => 'required',
-            'program'             => 'required',
         ]);
 
         if ($validator->fails()) {
