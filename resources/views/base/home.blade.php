@@ -1,4 +1,3 @@
-@if(Auth::user()->role != 4)
 <a href="{{ route('dashboard.reg.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.reg.*') ? 'bg-orange-100' : null }}">
@@ -14,7 +13,6 @@
         </span> Pendaftaran
     </li>
 </a>
-@endif
 <li x-data="{ open: {{ Route::is('dashboard.pay') ? 'true' : 'false' }} }" class="border-b border-gray-300">
     <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-100 cursor-pointer {{ Route::is('dashboard.pay') ? 'bg-orange-100' : null }}"
         @click="open = !open">

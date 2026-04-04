@@ -17,7 +17,7 @@ class RestrictOperator
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check() && Auth::user()->role == 4) {
-            if (!$request->is('dashboard/jadwal*') && !$request->is('dashboard/raport*')) {
+            if (!$request->is('dashboard/jadwal*') && !$request->is('dashboard/raport*') && !$request->is('dashboard/pendaftaran*')) {
                 return redirect()->route('dashboard.home')->with('error', 'Akses dibatasi.');
             }
         }

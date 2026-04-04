@@ -732,16 +732,34 @@ class Home extends Controller
 
     public function AddReg()
     {
-        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
+        $queryKelas = Kelas::with('program:id,name', 'units:id,name');
+        $queryHead  = Head::has('murid')->with('programs', 'units')->where('done', 0);
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $queryKelas->whereHas('units', function ($q) use ($unitIds) {
+                $q->whereIn('unit_id', $unitIds);
+            });
+            $queryHead->whereIn('unit', $unitIds);
+        }
+
+        $kelas   = $queryKelas->get();
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $action  = "Form Pendaftaran";
-        $head    = Head::has('murid')->with('programs', 'units')->where('done', 0)->get();
+        $head    = $queryHead->get();
+
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head'));
     }
 
     public function regStore(Request $request)
     {
+        $unitRule = Rule::in(Unit::pluck('id')->toArray());
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $unitRule = Rule::in($unitIds->toArray());
+        }
+
         $validator = Validator::make(
             $request->all(),
             [
@@ -759,7 +777,7 @@ class Home extends Controller
                 'hp_parent'             => 'nullable|string',
                 'kontrak'               => 'required',
                 'program'               => ['required', Rule::in(Program::pluck('id')->toArray())],
-                'unit'                  => ['required', Rule::in(Unit::pluck('id')->toArray())],
+                'unit'                  => ['required', $unitRule],
                 'email'                 => 'exclude_if:option,2|required|email|unique:users,email',
 
                 // Optional
@@ -979,11 +997,29 @@ class Home extends Controller
     public function regEdit($id)
     {
         $items   = Head::where(DB::raw('md5(id)'), $id)->with('murid.users', 'murid.grade')->firstOrFail();
-        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
+
+        $queryKelas = Kelas::with('program:id,name', 'units:id,name');
+        $queryHead  = Head::has('murid')->with('programs', 'units')->where('done', 0);
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+
+            // Security check for role 4
+            if (!in_array($items->unit, $unitIds->toArray())) {
+                return back()->with('error', 'Akses ditolak. Data tidak berada di zona Anda.');
+            }
+
+            $queryKelas->whereHas('units', function ($q) use ($unitIds) {
+                $q->whereIn('unit_id', $unitIds);
+            });
+            $queryHead->whereIn('unit', $unitIds);
+        }
+
+        $kelas   = $queryKelas->get();
         $kontrak = Payment::all();
         $grade   = Grade::all();
         $action  = "Edit Pendaftaran";
-        $head    = Head::has('murid')->get();
+        $head    = $queryHead->get();
         $edit    = true;
         return view('home.reg.form', compact('action', 'kelas', 'kontrak', 'grade', 'head', 'items', 'edit'));
     }
@@ -991,6 +1027,14 @@ class Home extends Controller
     public function regUpdate(Request $request, $id)
     {
         $headItem  = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            if (!in_array($headItem->unit, $unitIds->toArray())) {
+                return back()->with('error', 'Akses ditolak.');
+            }
+        }
+
         $headId    = $headItem->id;
         $studentId = $headItem->students;
         $siswa     = $headItem->murid;
@@ -1012,12 +1056,18 @@ class Home extends Controller
             return back()->with('err', $message);
         }
 
+        $unitRule = Rule::in(Unit::pluck('id')->toArray());
+        if (Auth::user()->role == 4) {
+            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $unitRule = Rule::in($unitIds->toArray());
+        }
+
         $validator = Validator::make($request->all(), [
             'grade'   => 'required',
             'kelas'   => 'required',
             'kontrak' => 'required',
             'program' => 'required',
-            'unit'    => 'required',
+            'unit'    =>  ['required', $unitRule],
             'name'    => 'required',
             'image'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'email'   => $siswa?->user ? 'required|email|unique:users,email,' . $siswa->user : 'nullable',
@@ -1141,6 +1191,14 @@ class Home extends Controller
         DB::beginTransaction();
         try {
             $head = Head::where(DB::raw('md5(id)'), $id)->firstOrFail();
+
+            if (Auth::user()->role == 4) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                if (!in_array($head->unit, $unitIds->toArray())) {
+                    return back()->with('error', 'Akses ditolak.');
+                }
+            }
+
             $headId = $head->id;
             $studentId = $head->students;
 
