@@ -739,7 +739,9 @@ class Home extends Controller
             $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $queryKelas->whereHas('units', function ($q) use ($unitIds) {
                 $q->whereIn('unit_id', $unitIds);
-            });
+            })->with(['program:id,name', 'units' => function ($q) use ($unitIds) {
+                $q->whereIn('unit_id', $unitIds);
+            }]);
             $queryHead->whereIn('unit', $unitIds);
         }
 
@@ -1011,7 +1013,9 @@ class Home extends Controller
 
             $queryKelas->whereHas('units', function ($q) use ($unitIds) {
                 $q->whereIn('unit_id', $unitIds);
-            });
+            })->with(['program:id,name', 'units' => function ($q) use ($unitIds) {
+                $q->whereIn('unit_id', $unitIds);
+            }]);
             $queryHead->whereIn('unit', $unitIds);
         }
 
