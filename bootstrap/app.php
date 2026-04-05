@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\LogActivity::class,
         ]);
 
+        $middleware->api(append: [
+            \App\Http\Middleware\LogActivity::class,
+        ]);
+
         $middleware->alias([
             'isRole'           => \App\Http\Middleware\isRole::class,
             'restrictOperator' => \App\Http\Middleware\RestrictOperator::class,

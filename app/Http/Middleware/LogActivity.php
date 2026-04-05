@@ -19,16 +19,30 @@ class LogActivity
     {
         $response = $next($request);
 
-        if (Auth::check() && in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-            ActivityLog::create([
-                'user_id'    => Auth::id(),
-                'action'     => $this->getActionName($request),
-                'method'     => $request->method(),
-                'url'        => $request->fullUrl(),
-                'payload'    => $this->getCleanPayload($request),
-                'ip'         => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+        if (in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            $userId = null;
+            
+            if (Auth::check()) {
+                $userId = Auth::id();
+            } elseif ($request->bearerToken()) {
+                try {
+                    $userId = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate()->id;
+                } catch (\Exception $e) {
+                    $userId = null;
+                }
+            }
+
+            if ($userId) {
+                ActivityLog::create([
+                    'user_id'    => $userId,
+                    'action'     => $this->getActionName($request),
+                    'method'     => $request->method(),
+                    'url'        => $request->fullUrl(),
+                    'payload'    => $this->getCleanPayload($request),
+                    'ip'         => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
         }
 
         return $response;
