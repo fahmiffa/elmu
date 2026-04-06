@@ -1154,6 +1154,8 @@ export function schedule(data, initial = {}) {
         selectedMurid: initial.murid ? initial.murid.map(String) : [],
         tom: null,
         tomJadwal: null,
+        tomUnit: null,
+        tomProgram: null,
 
         get programs() {
             if (!this.selectedUnit) return [];
@@ -1176,16 +1178,43 @@ export function schedule(data, initial = {}) {
             this.$nextTick(() => {
                 this.initTomSelect();
 
+                if (this.tomUnit && this.selectedUnit) {
+                    this.tomUnit.setValue(this.selectedUnit);
+                }
+                if (this.tomProgram && this.selectedProgram) {
+                    this.refreshProgram();
+                    this.tomProgram.setValue(this.selectedProgram);
+                }
+
                 this.$watch("selectedUnit", (value) => {
                     this.selectedProgram = "";
+                    if (this.tomUnit && this.tomUnit.getValue() !== String(value)) {
+                        this.tomUnit.setValue(String(value));
+                    }
+                    this.refreshProgram();
                     this.refreshMurid();
                     this.refreshJadwal();
                 });
 
                 this.$watch("selectedProgram", (value) => {
+                    if (this.tomProgram && this.tomProgram.getValue() !== String(value)) {
+                        this.tomProgram.setValue(String(value));
+                    }
                     this.refreshMurid();
                 });
             });
+        },
+
+        refreshProgram() {
+            if (this.tomProgram) {
+                this.tomProgram.clear();
+                this.tomProgram.clearOptions();
+                const newProgramOptions = this.programs.map((p) => ({
+                    value: String(p.id),
+                    text: p.name,
+                }));
+                this.tomProgram.addOptions(newProgramOptions);
+            }
         },
 
         refreshMurid() {
@@ -1229,7 +1258,9 @@ export function schedule(data, initial = {}) {
             if (!this.selectedUnit) return [];
 
             let filtered = data.filter(
-                (p) => String(p.unit) === String(this.selectedUnit),
+                (p) =>
+                    String(p.unit) === String(this.selectedUnit) &&
+                    Number(p.done) === 0,
             );
 
             if (this.selectedProgram) {
@@ -1267,6 +1298,28 @@ export function schedule(data, initial = {}) {
                     placeholder: "Pilih Jadwal",
                     options: this.getFilteredJadwal(),
                     items: this.selectedJadwal,
+                });
+            }
+
+            if (this.$refs.selectUnit) {
+                this.tomUnit = new TomSelect(this.$refs.selectUnit, {
+                    placeholder: "Pilih Unit",
+                    onChange: (value) => {
+                        this.selectedUnit = value;
+                    },
+                });
+            }
+
+            if (this.$refs.selectProgram) {
+                this.tomProgram = new TomSelect(this.$refs.selectProgram, {
+                    placeholder: "Pilih Program",
+                    options: this.programs.map((p) => ({
+                        value: String(p.id),
+                        text: p.name,
+                    })),
+                    onChange: (value) => {
+                        this.selectedProgram = value;
+                    },
                 });
             }
         },

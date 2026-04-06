@@ -22,7 +22,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-data="schedule({{ json_encode($murid) }}, {{ json_encode($selected) }})" x-init="init()" x-cloak>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Unit</label>
-                    <select name="unit" x-model="selectedUnit"
+                    <select name="unit" x-model="selectedUnit" x-ref="selectUnit"
                         class="block border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
                         required>
                         @isset($items)
@@ -41,13 +41,10 @@
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Program</label>
-                    <select name="program" x-model="selectedProgram"
+                    <select name="program" x-model="selectedProgram" x-ref="selectProgram"
                         class="block border border-gray-300 ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]"
                         required>
                         <option value="">Pilih Program</option>
-                        <template x-for="p in programs" :key="p.id">
-                            <option :value="p.id" x-text="p.name" :selected="selectedProgram == p.id"></option>
-                        </template>
                     </select>
                     @error('program')
                     <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>

@@ -40,7 +40,8 @@ class ScheduleController extends Controller
     public function create()
     {
         $action = "Tambah Jadwal";
-        $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students')
+        $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
+            ->where('done', 0)
             ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name');
 
         if (Auth::user()->role == 4) {
@@ -149,7 +150,8 @@ class ScheduleController extends Controller
         $action = "Edit Jadwal";
 
         // Query murid & unit filtered by zone
-        $query = Head::select('id', 'kelas', 'unit', 'program', 'students')
+        $query = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
+            ->where('done', 0)
             ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name');
 
         if (Auth::user()->role == 4) {

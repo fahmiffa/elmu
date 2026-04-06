@@ -239,7 +239,7 @@ class AcademicController extends Controller
             $items = Head::where('students', $da->id)
                 ->where('done', 0)
                 ->has('jadwal')
-                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present', 'murid.schedules'])
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'murid.present', 'murid.schedules'])
                 ->get();
         }
 
