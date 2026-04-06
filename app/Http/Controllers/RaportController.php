@@ -29,7 +29,7 @@ class RaportController extends Controller
             });
         }
 
-        $items = $items->get();
+        $items = $items->with('murid')->get();
         return view('home.raport.index', compact('items'));
     }
 
@@ -183,11 +183,23 @@ class RaportController extends Controller
 
     public function destroy(Raport $raport)
     {
-        if (isset($raport->file)) {
-            Storage::disk('public')->delete($raport->file);
+        try {
+            if (isset($raport->file)) {
+                Storage::disk('public')->delete($raport->file);
+            }
+            $raport->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Raport berhasil dihapus']);
+            }
+
+            return back()->with('status', 'Raport berhasil dihapus');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Gagal menghapus raport: ' . $e->getMessage()], 500);
+            }
+            return back()->with('err', 'Gagal menghapus raport');
         }
-        $raport->delete();
-        return back();
     }
 
     public function preview($id = null)
