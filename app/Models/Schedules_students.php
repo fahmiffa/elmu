@@ -23,4 +23,9 @@ class Schedules_students extends Model
     {
         return $this->belongsTo(Program::class, 'program_id', 'id');
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
 }

@@ -13,6 +13,7 @@ use App\Models\Program;
 use App\Models\Raport;
 use App\Models\Student;
 use App\Models\StudentPresent;
+use App\Models\Schedules_students;
 use App\Models\Teach;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -229,7 +230,7 @@ class AcademicController extends Controller
 
             $items = Head::where('unit', $da->unit_id)
                 ->where('done', 0)
-                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present', 'murid.schedules'])
                 ->get();
         } else {
             $da = Student::where('user', $id)->first();
@@ -238,7 +239,7 @@ class AcademicController extends Controller
             $items = Head::where('students', $da->id)
                 ->where('done', 0)
                 ->has('jadwal')
-                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present'])
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name', 'murid.present', 'murid.schedules'])
                 ->get();
         }
 
@@ -247,10 +248,8 @@ class AcademicController extends Controller
         $today = now()->toDateString();
 
         foreach ($items as $head) {
-            $pivotData = DB::table('schedules_students')
-                ->join('programs', 'schedules_students.program_id', '=', 'programs.id')
-                ->where('schedules_students.head', $head->id)
-                ->select('programs.name as program_name', 'programs.id as program_id', 'schedules_students.unit_schedules_id')
+            $pivotData = Schedules_students::with('program')
+                ->where('head', $head->id)
                 ->get()
                 ->keyBy('unit_schedules_id');
 
@@ -258,8 +257,8 @@ class AcademicController extends Controller
                 $pData = $pivotData->get($j->id);
                 $item = $j->toArray();
                 unset($item['pivot']);
-                $item['program_name'] = $pData ? $pData->program_name : null;
-                $item['program_id'] = $pData ? $pData->program_id : null;
+                $item['program_name'] = $pData?->program?->name;
+                $item['program_id']    = $pData?->program_id;
                 return $item;
             });
 
@@ -291,7 +290,7 @@ class AcademicController extends Controller
                 })->values()->all(),
             ]);
         } else {
-            $da->load('present');
+            $da->load('present', 'schedules');
             return response()->json([
                 'jadwal' => $allJadwal->unique(function ($item) {
                     return $item['id'] . '-' . $item['program_id'];
@@ -333,8 +332,7 @@ class AcademicController extends Controller
 
         foreach ($users as $studentId) {
             // 2. Get head_id mapping for this student and schedule combination
-            $mappingQuery = DB::table('schedules_students')
-                ->where('student_id', $studentId)
+            $mappingQuery = Schedules_students::where('student_id', $studentId)
                 ->where('unit_schedules_id', $request->jadwal);
 
             if ($request->program_id) {

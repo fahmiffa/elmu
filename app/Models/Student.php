@@ -85,4 +85,9 @@ class Student extends Model
     {
         return $this->HasMany(StudentPresent::class, 'student_id', 'id');
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedules_students::class, 'student_id', 'id');
+    }
 }
