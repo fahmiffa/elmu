@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Jobs\SendWhatsAppJob;
 
 class AuthController extends Controller
 {
@@ -101,52 +102,48 @@ class AuthController extends Controller
     public function forget(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'hp' => ['required', new NumberWa()],
-        ], [
-            'hp.required' => 'Nomor wajib diisi.',
-        ]);
+                'hp' => ['required', new NumberWa()],
+            ], [
+                'hp.required' => 'Nomor wajib diisi.',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-            ], 400);
-        }
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
 
-        DB::beginTransaction();
-        try {
             $user = User::where('nomor', $request->hp)->first();
+
             if (! $user) {
                 return response()->json([
                     'errors' => ['hp' => 'Nomor tidak valid'],
                 ], 400);
             }
 
-            $pass           = random_int(10000, 99999);
-            $user->password = bcrypt($pass);
-            $user->save();
+            try {
+                $pass = random_int(10000, 99999);
 
-            $to       = '62' . substr($user->nomor, 1);
-            $response = Http::post(env('URL_WA') . '/send', [
-                'number'  => env('NUMBER_WA'),
-                'to'      => $to,
-                'message' => "Anda reset Berhasil Password\nPassword akun anda : *" . $pass . "*",
-            ]);
+                $user->password = Hash::make($pass);
+                $user->save();
 
-            if ($response->status() != 200) {
-                Log::error($response->json());
-                return response()->json([
-                    'errors' => ['hp' => 'Server Sibuk'],
-                ], 400);
-            } else {
-                DB::commit();
+                $to = '62' . substr($user->nomor, 1);
+
+                $message = "Anda reset berhasil\nPassword akun anda: *{$pass}*";
+
+                // 🚀 kirim ke queue (tidak blocking)
+                SendWhatsAppJob::dispatch($to, $message);
+
                 return response()->json([
                     'status' => true,
+                    'message' => 'Password reset berhasil, cek WhatsApp Anda',
                 ]);
+
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'error' => $e->getMessage(),
+                ], 500);
             }
-        } catch (\Throwable $e) {
-            DB::rollback();
-            return response()->json(['error' => $e], 500);
-        }
     }
 
     public function upass(Request $request)
