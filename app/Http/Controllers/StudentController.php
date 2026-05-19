@@ -129,6 +129,12 @@ class StudentController extends Controller
                     $level->level      = $row[16] ?? null; // perbaikan
                     $level->status     = 1;
                     $level->save();
+
+                    if (!empty($user->nomor)) {
+                        $to       = '62' . substr($user->nomor, 1);
+                        $message  = "Selamat Anda berhasil bergabung dengan Murika\n*username : {$user->name}*\n*password : murik@*\n\nAkses aplikasi silahkan download di https://play.google.com/store/apps/details?id=com.murika.elmu\n\n_Terima kasih atas partisipasinya_";
+                        \App\Jobs\SendWhatsAppJob::dispatch($to, $message);
+                    }
                 }
             }
 

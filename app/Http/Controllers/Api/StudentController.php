@@ -277,11 +277,8 @@ class StudentController extends Controller
             $level->save();
 
             $to       = '62' . substr($user->nomor, 1);
-            $response = Http::post(env('URL_WA') . '/send', [
-                'number'  => env('NUMBER_WA'),
-                'to'      => $to,
-                'message' => "Selamat Anda Berhasil mendaftar\nPassword akun anda : *murik@*",
-            ]);
+            $message  = "Selamat Anda berhasil bergabung dengan Murika\n*username : {$user->name}*\n*password : murik@*\n\n_Terima kasih atas partisipasinya_";
+            \App\Jobs\SendWhatsAppJob::dispatch($to, $message);
 
             DB::commit();
 
