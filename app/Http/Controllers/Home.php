@@ -75,13 +75,14 @@ class Home extends Controller
 
         $units = Unit::all();
 
-        $query = Teach::with(['unit', 
+        $query = Teach::with([
+            'unit',
             'salaries' => function ($q) use ($month, $year) {
                 $q->whereMonth('tanggal', $month)->whereYear('tanggal', $year);
             },
             'present' => function ($q) use ($month, $year) {
                 $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
-                  ->with(['student', 'program', 'reg.units', 'reg.product']);
+                    ->with(['student', 'program', 'reg.units', 'reg.product']);
             }
         ])->withCount(['present' => function ($q) use ($month, $year) {
             $q->whereMonth('created_at', $month)->whereYear('created_at', $year);
@@ -101,7 +102,7 @@ class Home extends Controller
         $teachers = $request->input('teachers', []);
         $month = $request->input('month', date('m'));
         $year  = $request->input('year', date('Y'));
-        
+
         $tanggalGenerate = $year . '-' . sprintf('%02d', $month) . '-28';
 
         foreach ($teachers as $t) {
@@ -1276,9 +1277,11 @@ class Home extends Controller
         return view('home.schedule.index', compact('items'));
     }
 
-    public function monthly()
+    public function monthly(Request $request)
     {
-        $queryPaid = Paid::has('reg')->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units')->orderBy('bulan', 'asc');
+        $queryPaid = Paid::has('reg')
+            ->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units', 'reg.prices')
+            ->orderBy('bulan', 'asc');
 
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
@@ -1287,13 +1290,47 @@ class Home extends Controller
             });
         }
 
-        $items = $queryPaid->get();
+        // Tab Filter
+        $tab = $request->get('tab', 'tagihan');
+        if ($tab == 'riwayat') {
+            $queryPaid->where('status', 1);
+        } else {
+            $queryPaid->where('status', '!=', 1);
+        }
+
+        // Search & Filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $queryPaid->whereHas('reg.murid', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('unit')) {
+            $queryPaid->whereHas('reg', function ($q) use ($request) {
+                $q->where('unit', $request->unit);
+            });
+        }
+
+        if ($request->filled('program')) {
+            $queryPaid->whereHas('reg', function ($q) use ($request) {
+                $q->where('program', $request->program);
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $queryPaid->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $queryPaid->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        $items = $queryPaid->paginate(100)->withQueryString();
         $units = Unit::all();
         if (Auth::user()->role == 4) {
             $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
-            $queryPaid->whereHas('reg', function ($q) use ($unitIds) {
-                $q->whereIn('unit', $unitIds);
-            });
             $units = Unit::whereIn('id', $unitIds)->get();
         }
         $pro   = Program::all();

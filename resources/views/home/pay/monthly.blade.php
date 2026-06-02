@@ -2,58 +2,63 @@
 @section('title', 'Pembayaran Bulanan')
 @section('content')
 @section('content')
-<div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTablePay({{ json_encode($items) }})">
+<div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTablePay({{ json_encode($items->items()) }})">
     <div x-init="
+        tabStatus = '{{ request('tab', 'tagihan') }}';
         $watch('tabStatus', value => {
             currentPage = 1;
             startDate = '';
             endDate = '';
         });
     ">
+        @php $tab = request('tab', 'tagihan'); @endphp
         <div class="flex border-b border-gray-300">
-            <button class="px-4 py-2 -mb-px text-sm font-medium border-b-2 cursor-pointer"
-                :class="tabStatus === 'tagihan' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-600 hover:text-orange-500'"
-                @click="tabStatus = 'tagihan'">
+            <a href="{{ route('dashboard.pay.monthly', array_merge(request()->query(), ['tab' => 'tagihan'])) }}"
+                class="px-4 py-2 -mb-px text-sm font-medium border-b-2 cursor-pointer {{ $tab === 'tagihan' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-600 hover:text-orange-500' }}">
                 Tagihan
-            </button>
-            <button class="px-4 py-2 -mb-px text-sm font-medium border-b-2 cursor-pointer"
-                :class="tabStatus === 'riwayat' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-600 hover:text-orange-500'"
-                @click="tabStatus = 'riwayat'">
+            </a>
+            <a href="{{ route('dashboard.pay.monthly', array_merge(request()->query(), ['tab' => 'riwayat'])) }}"
+                class="px-4 py-2 -mb-px text-sm font-medium border-b-2 cursor-pointer {{ $tab === 'riwayat' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-600 hover:text-orange-500' }}">
                 Riwayat
-            </button>
+            </a>
         </div>
 
         <div class="mt-4">
-            <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-2 flex-1">
-                    <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
-                        class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+            <form action="{{ route('dashboard.pay.monthly') }}" method="GET" class="mb-4">
+                <input type="hidden" name="tab" value="{{ request('tab', 'tagihan') }}">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama / Panggilan"
+                            class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
-                    <select x-model="filterUnit" @change="resetPage()"
-                        class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
-                        <option value="">Semua Unit</option>
-                        @foreach($units as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
+                        <select name="unit" onchange="this.form.submit()"
+                            class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                            <option value="">Semua Unit</option>
+                            @foreach($units as $u)
+                            <option value="{{ $u->id }}" {{ request('unit') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                            @endforeach
+                        </select>
 
-                    <select x-model="filterProgram" @change="resetPage()"
-                        class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
-                        <option value="">Semua Program</option>
-                        @foreach($pro as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }}</option>
-                        @endforeach
-                    </select>
+                        <select name="program" onchange="this.form.submit()"
+                            class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                            <option value="">Semua Program</option>
+                            @foreach($pro as $p)
+                            <option value="{{ $p->id }}" {{ request('program') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                            @endforeach
+                        </select>
 
-                    <div x-show="tabStatus === 'tagihan'" class="flex items-center gap-2">
-                        <input type="date" x-model="startDate" @change="resetPage()"
-                            class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
-                        <span class="text-gray-500">s/d</span>
-                        <input type="date" x-model="endDate" @change="resetPage()"
-                            class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+                        <div class="flex items-center gap-2">
+                            <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()"
+                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+                            <span class="text-gray-500">s/d</span>
+                            <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
+                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+                        </div>
+                        <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 transition">Filter</button>
+                        <a href="{{ route('dashboard.pay.monthly') }}" class="text-gray-500 text-sm hover:underline">Reset</a>
                     </div>
                 </div>
-            </div>
+            </form>
 
             <div class="flex items-center gap-2 mb-3">
                 <span class="text-sm">Show:</span>
@@ -201,14 +206,8 @@
                     </tbody>
                 </table>
             </div>
-            <div class="flex justify-between items-center mt-4 text-sm">
-                <button @click="prevPage()" :disabled="currentPage === 1"
-                    class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Prev</button>
-
-                <span class="text-gray-600">Halaman <span x-text="currentPage"></span> dari <span x-text="totalPages()"></span></span>
-
-                <button @click="nextPage()" :disabled="currentPage === totalPages()"
-                    class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Next</button>
+            <div class="mt-4 overflow-x-auto">
+                {{ $items->links() }}
             </div>
         </div>
     </div>
