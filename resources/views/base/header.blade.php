@@ -1,5 +1,5 @@
 <header class="bg-orange-700 text-white">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-5 md:px-6 py-3">
+    <div class="max-w-full mx-auto flex items-center justify-between px-5 md:px-8 py-3">
         <div class="text-2xl font-bold">
             ELMU<span class="font-light"></span>
         </div>
@@ -52,7 +52,7 @@
 </header>
 
 <div class="bg-orange-600 text-white">
-    <div class="max-w-7xl mx-auto flex justify-between px-6 py-3">
+    <div class="max-w-full mx-auto flex justify-between px-6 md:px-8 py-3">
         <div>
             <h2 class="text-xl font-semibold">{{ request()->segment(2) ? str_replace("-"," ",ucfirst(request()->segment(2))) : 'Dashboard' }}
             </h2>

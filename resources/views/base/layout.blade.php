@@ -43,13 +43,15 @@
     <!-- HEADER -->
     @include('base.header')
     <!-- MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto mt-6 px-6 grid grid-cols-1 md:grid-cols-4 gap-6 py-2">
+    <main class="max-w-full mx-auto mt-6 px-4 md:px-8 grid grid-cols-1 md:grid-cols-12 gap-6 py-2">
 
         <!-- SIDEBAR -->
-        @include('base.side')
+        <div class="md:col-span-3 lg:col-span-2">
+            @include('base.side')
+        </div>
 
         <!-- CONTENT -->
-        <section class="col-span-3">
+        <section class="md:col-span-9 lg:col-span-10">
             @yield('content')
         </section>
 
