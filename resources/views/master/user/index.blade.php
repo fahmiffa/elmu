@@ -5,15 +5,31 @@
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-2 flex-1">
+            <select x-model="perPage" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="10">10 Data</option>
+                <option value="25">25 Data</option>
+                <option value="50">50 Data</option>
+                <option value="100">100 Data</option>
+                <option value="all">Semua Data</option>
+            </select>
+
             <input type="text" x-model="search" placeholder="Cari Nama"
                 class="w-full md:w-1/2 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
             <select x-model="filterRole" @change="resetPage()"
                 class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
-                <option value="">Semua Tipe</option>
+                <option value="">Semua Role</option>
                 <option value="3">Guru</option>
                 <option value="2">User</option>
                 <option value="4">Operator</option>
+            </select>
+
+            <select x-model="filterStatus" @change="resetPage()"
+                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Status</option>
+                <option value="1">Aktif</option>
+                <option value="0">Tidak Aktif</option>
             </select>
         </div>
 
@@ -42,9 +58,9 @@
             <tbody>
                 <template x-for="(row, index) in paginatedData()" :key="row.id">
                     <tr class="border-t border-gray-300">
-                        <td class="px-4 py-2" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                        <td class="px-4 py-2" x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)"></td>
                         <td class="px-4 py-2" x-text="row.name"></td>
-                        <td class="px-4 py-2" x-text="row.data.nama_panggilan"></td>
+                        <td class="px-4 py-2" x-text="row.data ? row.data.nama_panggilan : '-'"></td>
                         <td class="px-4 py-2" x-text="row.data ? row.data.name : row.name"></td>
                         <td class="px-4 py-2" x-text="row.email"></td>
                         <td class="px-4 py-2" x-text="row.nomor"></td>

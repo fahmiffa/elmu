@@ -357,8 +357,10 @@ class Home extends Controller
             }
         }
 
+        $zones = Zone::all();
+
         if ($user->role != 0) {
-            return view('master.user.detail', compact('user'));
+            return view('master.user.detail', compact('user', 'zones'));
         } else {
             return back();
         }
@@ -582,6 +584,27 @@ class Home extends Controller
             if (!$isAuthorized) {
                 return back()->with('err', 'Akses ditolak.');
             }
+        }
+
+        $type = $request->input('type');
+
+        if ($type == 'akun') {
+            $request->validate([
+                'email'    => 'required|email|unique:users,email,' . $user->id,
+                'name'     => 'required|unique:users,name,' . $user->id,
+            ]);
+
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->nomor = $request->nomor;
+            if ($request->has('zone_id')) {
+                $user->zone_id = $request->zone_id;
+            }
+            if ($request->has('status')) {
+                $user->status = $request->status;
+            }
+            $user->save();
+            return back()->with('status', 'Informasi akun berhasil diperbarui!');
         }
 
         $siswa = $user->data;

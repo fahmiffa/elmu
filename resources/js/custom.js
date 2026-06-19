@@ -285,6 +285,7 @@ export const dataTable = (data) => {
         filterUnit: "",
         filterProgram: "",
         filterRole: "",
+        filterStatus: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -317,7 +318,12 @@ export const dataTable = (data) => {
         filteredData() {
             let temp = this.rows.filter((row) => {
                 const keyword = this.search.toLowerCase();
-                const name = (row.name ?? row.users?.name ?? row.data?.name ?? "").toLowerCase();
+                const name = (
+                    row.name ??
+                    row.users?.name ??
+                    row.data?.name ??
+                    ""
+                ).toLowerCase();
                 const panggilan = (
                     row.nama_panggilan ??
                     row.users?.data?.nama_panggilan ??
@@ -331,22 +337,25 @@ export const dataTable = (data) => {
                     email.includes(keyword);
 
                 const matchesUnit =
-                    this.filterUnit === "" || 
-                    row.unit == this.filterUnit || 
+                    this.filterUnit === "" ||
+                    row.unit == this.filterUnit ||
                     row.unit_id == this.filterUnit;
-                    
+
                 const matchesProgram =
                     this.filterProgram === "" ||
                     row.program == this.filterProgram;
 
                 const matchesRole =
                     this.filterRole === "" || row.role == this.filterRole;
+                const matchesStatus =
+                    this.filterStatus === "" || row.status == this.filterStatus;
 
                 return (
                     matchesSearch &&
                     matchesUnit &&
                     matchesProgram &&
-                    matchesRole
+                    matchesRole &&
+                    matchesStatus
                 );
             });
 
@@ -539,10 +548,14 @@ export const dataTableReg = (data) => {
                     this.filterProgram === "" ||
                     row.program == this.filterProgram;
                 const matchesStatus =
-                    this.filterStatus === "" ||
-                    row.done == this.filterStatus;
+                    this.filterStatus === "" || row.done == this.filterStatus;
 
-                return matchesSearch && matchesUnit && matchesProgram && matchesStatus;
+                return (
+                    matchesSearch &&
+                    matchesUnit &&
+                    matchesProgram &&
+                    matchesStatus
+                );
             });
 
             temp.sort((a, b) => {
@@ -872,7 +885,6 @@ export const dataTablePay = (data) => {
     };
 };
 
-
 export function dropdownSelect() {
     return {
         init() {
@@ -1188,7 +1200,10 @@ export function schedule(data, initial = {}) {
 
                 this.$watch("selectedUnit", (value) => {
                     this.selectedProgram = "";
-                    if (this.tomUnit && this.tomUnit.getValue() !== String(value)) {
+                    if (
+                        this.tomUnit &&
+                        this.tomUnit.getValue() !== String(value)
+                    ) {
                         this.tomUnit.setValue(String(value));
                     }
                     this.refreshProgram();
@@ -1197,7 +1212,10 @@ export function schedule(data, initial = {}) {
                 });
 
                 this.$watch("selectedProgram", (value) => {
-                    if (this.tomProgram && this.tomProgram.getValue() !== String(value)) {
+                    if (
+                        this.tomProgram &&
+                        this.tomProgram.getValue() !== String(value)
+                    ) {
                         this.tomProgram.setValue(String(value));
                     }
                     this.refreshMurid();

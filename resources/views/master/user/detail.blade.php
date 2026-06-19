@@ -67,6 +67,48 @@ Master > {{ $user->data->name ?? $user->name ?? 'User' }}
     <div>
         <!-- TAB DATA -->
         <div x-show="activeTab === 'data'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+            <!-- Data Akun -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="flex items-center text-lg font-bold text-gray-700">
+                        <span class="bg-gray-700 w-1 h-6 mr-3 rounded-full"></span>
+                        Informasi Akun
+                    </h3>
+                    <button @click="openEdit('akun', 'Edit Informasi Akun')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded-lg border flex items-center gap-1 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                        </svg>
+                        Edit
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-xl">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Username</p>
+                        <p class="text-sm text-gray-700">{{ $user->name ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Email</p>
+                        <p class="text-sm text-gray-700">{{ $user->email ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">No. HP (Akun)</p>
+                        <p class="text-sm text-gray-700">{{ $user->nomor ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Role / Peran</p>
+                        <p class="text-sm text-gray-700">{{ $user->roles ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Zona</p>
+                        <p class="text-sm text-gray-700">{{ $user->zone ? $user->zone->name : '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Status</p>
+                        <p class="text-sm text-gray-700">{{ $user->status == 1 ? 'Aktif' : 'Nonaktif' }}</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Data Murid -->
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
@@ -374,6 +416,40 @@ Master > {{ $user->data->name ?? $user->name ?? 'User' }}
                         </div>
 
                         <div class="px-6 py-6 max-h-[70vh] overflow-y-auto">
+                            <!-- FORM AKUN -->
+                            <div x-show="editType === 'akun'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username</label>
+                                    <input type="text" name="name" value="{{ $user->name ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                                    <input type="email" name="email" value="{{ $user->email ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">No. HP (Akun)</label>
+                                    <input type="text" name="nomor" value="{{ $user->nomor ?? '' }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
+                                </div>
+                                @if(Auth::user()->role == 0)
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Zona</label>
+                                    <select name="zone_id" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
+                                        <option value="">Pilih Zona</option>
+                                        @foreach($zones ?? [] as $zone)
+                                        <option value="{{ $zone->id }}" {{ $user->zone_id == $zone->id ? 'selected' : '' }}>{{ $zone->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Akun</label>
+                                    <select name="status" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
+                                        <option value="1" {{ $user->status == 1 ? 'selected' : '' }}>Aktif</option>
+                                        <option value="0" {{ $user->status == 0 ? 'selected' : '' }}>Tidak Aktif</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- FORM MURID -->
                             <div x-show="editType === 'murid'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
