@@ -42,6 +42,7 @@ class ScheduleController extends Controller
         $action = "Tambah Jadwal";
         $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
             ->where('done', 0)
+            ->whereDoesntHave('jadwal')
             ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name');
 
         if (Auth::user()->role == 4) {
@@ -50,6 +51,7 @@ class ScheduleController extends Controller
         }
 
         $murid = $murid->get();
+
 
         $unit = $murid->pluck('units')
             ->unique('id')
@@ -62,6 +64,7 @@ class ScheduleController extends Controller
             })
             ->filter()
             ->values();
+
 
         return view('home.schedule.form', compact('action', 'murid', 'unit'));
     }
