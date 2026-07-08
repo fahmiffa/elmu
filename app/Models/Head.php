@@ -87,7 +87,7 @@ class Head extends Model
 
     public function getwaktuAttribute()
     {
-        $date             = Carbon::parse($this->crated_at)->locale('id');
+        $date             = Carbon::parse($this->created_at)->locale('id');
         return $formatted = $date->translatedFormat('l, d F Y');
     }
 

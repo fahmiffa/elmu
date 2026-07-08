@@ -248,6 +248,10 @@ class AcademicController extends Controller
         $today = now()->toDateString();
 
         foreach ($items as $head) {
+            if (!$head->murid) {
+                continue;
+            }
+
             $pivotData = Schedules_students::with('program')
                 ->where('head', $head->id)
                 ->get()
@@ -360,7 +364,7 @@ class AcademicController extends Controller
                     $present->Materi            = $request->Materi;
                     $present->Keterangan        = $request->Keterangan;
                     $present->save();
-                    
+
                     $processed++;
                 } else {
                     $processed++; // Consider already exists as correctly handled for this student

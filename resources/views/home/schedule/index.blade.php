@@ -4,8 +4,27 @@
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
 
     <div class="mb-4 flex justify-between items-center gap-2">
-        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
-            class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+        <div class="flex gap-2 w-full md:w-3/4">
+            <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
+                class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+            <select x-model="filterUnit" @change="resetPage()"
+                class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Unit</option>
+                @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                @endforeach
+            </select>
+
+            <select x-model="filterProgram" @change="resetPage()"
+                class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Program</option>
+                @foreach ($programs as $program)
+                <option value="{{ $program->id }}">{{ $program->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <a href="{{ route('dashboard.jadwal.create') }}"
             class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
             Tambah

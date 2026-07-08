@@ -521,7 +521,7 @@ class Home extends Controller
         } else {
             $units = Unit::all();
         }
-        $items = $query->get();
+        $items = $query->latest()->get();
         $pro = Program::all();
         return view('home.reg.index', compact('items', 'units', 'pro'));
     }
@@ -536,7 +536,7 @@ class Home extends Controller
         } else {
             $units = Unit::all();
         }
-        $items = $query->get();
+        $items = $query->latest()->get();
         $pro = Program::all();
         return view('home.reg.list', compact('items', 'units', 'pro'));
     }
@@ -757,7 +757,8 @@ class Home extends Controller
     public function AddReg()
     {
         $queryKelas = Kelas::with('program:id,name', 'units:id,name');
-        $queryHead  = Head::has('murid')->with('programs', 'units')->where('done', 0);
+        $queryHead  = Head::has('murid')->with('programs', 'units');
+
 
         if (Auth::user()->role == 4) {
             $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');

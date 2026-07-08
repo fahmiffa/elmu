@@ -17,10 +17,15 @@ class ScheduleController extends Controller
     public function index()
     {
         $query = Head::has('jadwal')->with('jadwal', 'murid', 'class', 'units', 'programs');
+        $unitsQuery = \App\Models\Unit::query();
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
+            $unitsQuery->whereIn('id', $unitIds);
         }
+        $units = $unitsQuery->get(['id', 'name']);
+        $programs = \App\Models\Program::get(['id', 'name']);
+
         $items = $query->get()->map(function ($item) {
             // Because jadwal is a many-to-many through schedules_students, 
             // we can get the program name from the pivot table if we load it properly,
@@ -31,7 +36,7 @@ class ScheduleController extends Controller
             return $item;
         });
 
-        return view('home.schedule.index', compact('items'));
+        return view('home.schedule.index', compact('items', 'units', 'programs'));
     }
 
     /**
