@@ -158,26 +158,43 @@ class ScheduleController extends Controller
         $action = "Edit Jadwal";
 
         // Query murid & unit filtered by zone
+        // Hanya ambil kolom yang diperlukan, tanpa units.jadwal (berat)
         $query = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
             ->where('done', 0)
-            ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name');
+            ->with([
+                'murid:id,name',
+                'units:id,name',
+                'programs:id,name',
+                'class:id,name',
+            ]);
 
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
         }
-        $murid = $query->get();
 
-        $unit = $murid->pluck('units')
+        // Suppress $appends (waktu, induk, status) agar tidak trigger Carbon & relasi saat json_encode
+        $murid = $query->get()->each->setAppends([])->map(function ($item) {
+            return [
+                'id'       => $item->id,
+                'kelas'    => $item->kelas,
+                'unit'     => $item->unit,
+                'program'  => $item->program,
+                'students' => $item->students,
+                'done'     => $item->done,
+                'murid'    => $item->murid ? ['id' => $item->murid->id, 'name' => $item->murid->name] : null,
+                'units'    => $item->units ? ['id' => $item->units->id, 'name' => $item->units->name, 'jadwal' => $item->units->jadwal] : null,
+                'programs' => $item->programs ? ['id' => $item->programs->id, 'name' => $item->programs->name] : null,
+                'class'    => $item->class ? ['id' => $item->class->id, 'name' => $item->class->name] : null,
+            ];
+        });
+
+        $unit = collect($murid->pluck('units'))
             ->unique('id')
-            ->map(function ($u) {
-                if (!$u) return null;
-                return [
-                    'id'   => $u->id,
-                    'name' => $u->name,
-                ];
-            })
             ->filter()
+            ->map(function ($u) {
+                return ['id' => $u['id'], 'name' => $u['name']];
+            })
             ->values();
 
         $firstSchedule = Schedules_students::where('head', $items->id)->first();
