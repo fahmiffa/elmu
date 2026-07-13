@@ -26,12 +26,12 @@ class ScheduleController extends Controller
         $units = $unitsQuery->get(['id', 'name']);
         $programs = \App\Models\Program::get(['id', 'name']);
 
+        $query->with(['schedules' => function ($q) {
+            $q->with('program')->limit(1);
+        }]);
+
         $items = $query->get()->map(function ($item) {
-            // Because jadwal is a many-to-many through schedules_students, 
-            // we can get the program name from the pivot table if we load it properly,
-            // but the user wants a simple way to see it.
-            // Let's just pass it or ensure schedules_students model is used.
-            $firstSchedule = Schedules_students::where('head', $item->id)->with('program')->first();
+            $firstSchedule = $item->schedules->first();
             $item->present_program = $firstSchedule ? $firstSchedule->program : null;
             return $item;
         });

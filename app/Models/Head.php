@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Price;
+use App\Models\Schedules_students;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -117,6 +118,11 @@ class Head extends Model
     public function jadwal()
     {
         return $this->belongsToMany(UnitSchedule::class, 'schedules_students', 'head', 'unit_schedules_id');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedules_students::class, 'head', 'id');
     }
 
     public function logs()
