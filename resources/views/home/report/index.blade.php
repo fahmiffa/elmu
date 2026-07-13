@@ -47,23 +47,23 @@
                         <td class="px-4 py-2"
                             x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                         </td>
-                        <td class="px-4 py-2" x-text="row.users.name"></td>
-                        <td class="px-4 py-2" x-text="row.users.data.nama_panggilan"></td>
+                        <td class="px-4 py-2" x-text="row.users?.name ?? '-'"></td>
+                        <td class="px-4 py-2" x-text="row.users?.data?.nama_panggilan ?? '-'"></td>
                         <td class="px-4 py-2">
                             <div class="whitespace-nowrap" x-show="row.users?.data?.reg?.length">
                                 <template x-for="(item, index) in row.users?.data?.reg" :key="index">
                                     <dl>
-                                        <dt x-text="item.units.name" class="font-semibold capitalize"></dt>
+                                        <dt x-text="item.units?.name" class="font-semibold capitalize"></dt>
                                         <dt class="text-xs">
-                                            <span x-text="item.programs.name"></span>
-                                            <span x-text="item.class.name"></span>
+                                            <span x-text="item.programs?.name"></span>
+                                            <span x-text="item.class?.name"></span>
                                         </dt>
                                     </dl>
                                 </template>
                             </div>
                         </td>
 
-                        <td class="px-4 py-2" x-text="row.users.role === 2 ? 'Murid' : 'Maska/Miska' "></td>
+                        <td class="px-4 py-2" x-text="row.users?.role === 2 ? 'Murid' : (row.users ? 'Maska/Miska' : '-')"></td>
                         <td class="px-4 py-2" x-text="row.reason"></td>
                         <td class="px-4 py-2">
                             <div x-show="row.reply !== null" x-text="row.reply"></div>

@@ -33,28 +33,30 @@
 
 </head>
 
-<body class="bg-gray-100" x-data="layout()" x-init="init()">
+<body class="bg-gray-100 overflow-hidden h-screen" x-data="layout()" x-init="init()">
     <div x-data="sweetAlert()" x-init="
         @if (session('status')) toast('{{ session('status') }}', 'success'); @endif
         @if (session('err')) toast('{{ session('err') }}', 'error'); @endif
     "></div>
 
     @if (Route::is('dashboard.*'))
-    <!-- HEADER -->
-    @include('base.header')
-    <!-- MAIN CONTENT -->
-    <main class="max-w-full mx-auto mt-6 px-4 md:px-8 grid grid-cols-1 md:grid-cols-12 gap-6 py-2">
+    <!-- HEADER (Fixed) -->
+    <div class="fixed top-0 left-0 right-0 z-40">
+        @include('base.header')
+    </div>
 
-        <!-- SIDEBAR -->
-        <div class="md:col-span-3 lg:col-span-2">
+    <!-- MAIN CONTENT (Below fixed header) -->
+    <main class="fixed top-0 left-0 right-0 bottom-0 pt-[108px] grid grid-cols-1 md:grid-cols-12">
+
+        <!-- SIDEBAR (Fixed, scrollable sendiri) -->
+        <div class="md:col-span-3 lg:col-span-2 hidden md:block overflow-y-auto scroll-show scroll-hidden px-4 py-4">
             @include('base.side')
         </div>
 
-        <!-- CONTENT -->
-        <section class="md:col-span-9 lg:col-span-10">
+        <!-- CONTENT (Scrollable area) -->
+        <section class="md:col-span-9 lg:col-span-10 overflow-y-auto scroll-show scroll-hidden px-4 md:px-8 py-4">
             @yield('content')
         </section>
-
 
     </main>
     @else
