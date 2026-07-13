@@ -45,31 +45,43 @@ class ScheduleController extends Controller
     public function create()
     {
         $action = "Tambah Jadwal";
-        $murid  = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
+        $query  = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
             ->where('done', 0)
             ->whereDoesntHave('jadwal')
-            ->with('murid:id,name', 'units:id,name', 'units.jadwal', 'programs:id,name', 'class:id,name');
+            ->with(['murid:id,name', 'units:id,name', 'programs:id,name', 'class:id,name']);
 
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
-            $murid->whereIn('unit', $unitIds);
+            $query->whereIn('unit', $unitIds);
         }
 
-        $murid = $murid->get();
+        $heads = $query->get()->each->setAppends([]);
 
+        // Load jadwal per unit sekali saja (1 query)
+        $unitIds    = $heads->pluck('unit')->unique()->filter();
+        $unitJadwal = \App\Models\Unit::whereIn('id', $unitIds)->with('jadwal:id,unit_id,name,day,parse,start,end')->get(['id', 'name'])->keyBy('id');
 
-        $unit = $murid->pluck('units')
+        $murid = $heads->map(function ($item) use ($unitJadwal) {
+            $unit = $unitJadwal->get($item->unit);
+            return [
+                'id'       => $item->id,
+                'kelas'    => $item->kelas,
+                'unit'     => $item->unit,
+                'program'  => $item->program,
+                'students' => $item->students,
+                'done'     => $item->done,
+                'murid'    => $item->murid ? ['id' => $item->murid->id, 'name' => $item->murid->name] : null,
+                'units'    => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'jadwal' => $unit->jadwal] : null,
+                'programs' => $item->programs ? ['id' => $item->programs->id, 'name' => $item->programs->name] : null,
+                'class'    => $item->class ? ['id' => $item->class->id, 'name' => $item->class->name] : null,
+            ];
+        });
+
+        $unit = collect($murid->pluck('units'))
             ->unique('id')
-            ->map(function ($unit) {
-                if (!$unit) return null;
-                return [
-                    'id'   => $unit->id,
-                    'name' => $unit->name,
-                ];
-            })
             ->filter()
+            ->map(fn($u) => ['id' => $u['id'], 'name' => $u['name']])
             ->values();
-
 
         return view('home.schedule.form', compact('action', 'murid', 'unit'));
     }
@@ -158,7 +170,6 @@ class ScheduleController extends Controller
         $action = "Edit Jadwal";
 
         // Query murid & unit filtered by zone
-        // Hanya ambil kolom yang diperlukan, tanpa units.jadwal (berat)
         $query = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
             ->where('done', 0)
             ->with([
@@ -173,8 +184,15 @@ class ScheduleController extends Controller
             $query->whereIn('unit', $unitIds);
         }
 
-        // Suppress $appends (waktu, induk, status) agar tidak trigger Carbon & relasi saat json_encode
-        $murid = $query->get()->each->setAppends([])->map(function ($item) {
+        $heads = $query->get()->each->setAppends([]);
+
+        // Load jadwal per unit sekali saja (1 query), bukan per-head
+        $unitIds    = $heads->pluck('unit')->unique()->filter();
+        $unitJadwal = \App\Models\Unit::whereIn('id', $unitIds)->with('jadwal:id,unit_id,name,day,parse,start,end')->get(['id', 'name'])->keyBy('id');
+
+        // Suppress $appends dan flatten ke plain array agar json_encode di view tidak memicu Carbon
+        $murid = $heads->map(function ($item) use ($unitJadwal) {
+            $unit = $unitJadwal->get($item->unit);
             return [
                 'id'       => $item->id,
                 'kelas'    => $item->kelas,
@@ -183,7 +201,7 @@ class ScheduleController extends Controller
                 'students' => $item->students,
                 'done'     => $item->done,
                 'murid'    => $item->murid ? ['id' => $item->murid->id, 'name' => $item->murid->name] : null,
-                'units'    => $item->units ? ['id' => $item->units->id, 'name' => $item->units->name, 'jadwal' => $item->units->jadwal] : null,
+                'units'    => $unit ? ['id' => $unit->id, 'name' => $unit->name, 'jadwal' => $unit->jadwal] : null,
                 'programs' => $item->programs ? ['id' => $item->programs->id, 'name' => $item->programs->name] : null,
                 'class'    => $item->class ? ['id' => $item->class->id, 'name' => $item->class->name] : null,
             ];
@@ -192,9 +210,7 @@ class ScheduleController extends Controller
         $unit = collect($murid->pluck('units'))
             ->unique('id')
             ->filter()
-            ->map(function ($u) {
-                return ['id' => $u['id'], 'name' => $u['name']];
-            })
+            ->map(fn($u) => ['id' => $u['id'], 'name' => $u['name']])
             ->values();
 
         $firstSchedule = Schedules_students::where('head', $items->id)->first();
