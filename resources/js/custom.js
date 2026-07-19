@@ -882,6 +882,60 @@ export const dataTablePay = (data) => {
                 }) + " WIB"
             );
         },
+        submitPayment(e, id, callback) {
+            Swal.fire({
+                title: "Mohon Tunggu...",
+                text: "Memproses pembayaran...",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+
+            const form = e.target;
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content"),
+                },
+            })
+                .then(async (res) => {
+                    const data = await res.json();
+                    if (res.ok) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Berhasil!",
+                            text: data.message || "Pembayaran berhasil.",
+                            timer: 1500,
+                            showConfirmButton: false,
+                        }).then(() => {
+                            if (typeof callback === "function") callback();
+                            const rowIndex = this.rows.findIndex(
+                                (r) => r.id === id,
+                            );
+                            if (rowIndex !== -1) {
+                                this.rows[rowIndex].status = 1;
+                            }
+                        });
+                    } else {
+                        Swal.fire(
+                            "Error",
+                            data.message || "Gagal memproses pembayaran.",
+                            "error",
+                        );
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    Swal.fire("Error", "Gagal menghubungi server", "error");
+                });
+        },
     };
 };
 

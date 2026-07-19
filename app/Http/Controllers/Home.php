@@ -722,6 +722,9 @@ class Home extends Controller
                 FirebaseMessage::sendFCMMessage($message);
             }
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pembayaran berhasil']);
+            }
             return back()->with('status', 'Pembayaran berhasil');
         }
 
@@ -749,7 +752,13 @@ class Home extends Controller
                 ];
                 FirebaseMessage::sendFCMMessage($message);
             }
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Pembayaran berhasil']);
+            }
             return back()->with('status', 'Pembayaran berhasil');
+        }
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Pembayaran gagal'], 400);
         }
         return back()->with('err', 'Pembayaran gagal');
     }
@@ -1322,6 +1331,12 @@ class Home extends Controller
             $queryPaid->where('status', '!=', 1);
         }
 
+        // Default filter: bulan & tahun berjalan
+        $filterBulan = $request->input('bulan', date('m'));
+        $filterTahun = $request->input('tahun', date('Y'));
+
+        $queryPaid->where('bulan', $filterBulan)->where('tahun', $filterTahun);
+
         // Search & Filters
         if ($request->filled('search')) {
             $search = $request->search;
@@ -1343,22 +1358,37 @@ class Home extends Controller
             });
         }
 
-        if ($request->filled('start_date')) {
-            $queryPaid->whereDate('created_at', '>=', $request->start_date);
-        }
-
-        if ($request->filled('end_date')) {
-            $queryPaid->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $items = $queryPaid->paginate(100)->withQueryString();
+        $items = $queryPaid->paginate(50)->withQueryString();
         $units = Unit::all();
         if (Auth::user()->role == 4) {
             $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $units = Unit::whereIn('id', $unitIds)->get();
         }
         $pro   = Program::all();
-        return view('home.pay.monthly', compact('items', 'units', 'pro'));
+
+        $bulanMap = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember'
+        ];
+
+        $now   = (int) date('Y');
+        $start = (int) env('APP_START', 2025);
+        $years = [];
+        for ($y = $now; $y >= $start; $y--) {
+            $years[] = $y;
+        }
+
+        return view('home.pay.monthly', compact('items', 'units', 'pro', 'bulanMap', 'years', 'filterBulan', 'filterTahun'));
     }
 
     public function service()

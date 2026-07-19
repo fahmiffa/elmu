@@ -40,25 +40,27 @@
     "></div>
 
     @if (Route::is('dashboard.*'))
-    <!-- HEADER (Fixed) -->
-    <div class="fixed top-0 left-0 right-0 z-40">
-        @include('base.header')
-    </div>
-
-    <!-- MAIN CONTENT (Below fixed header) -->
-    <main class="fixed top-0 left-0 right-0 bottom-0 pt-[108px] grid grid-cols-1 md:grid-cols-12">
-
-        <!-- SIDEBAR (Fixed, scrollable sendiri) -->
-        <div class="md:col-span-3 lg:col-span-2 hidden md:block overflow-y-auto scroll-show scroll-hidden px-4 py-4">
-            @include('base.side')
+    <div class="flex flex-col h-full w-full">
+        <!-- HEADER -->
+        <div class="flex-none z-40">
+            @include('base.header')
         </div>
 
-        <!-- CONTENT (Scrollable area) -->
-        <section class="md:col-span-9 lg:col-span-10 overflow-y-auto scroll-show scroll-hidden px-4 md:px-8 py-4">
-            @yield('content')
-        </section>
+        <!-- MAIN CONTENT (Takes remaining height) -->
+        <main class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12">
 
-    </main>
+            <!-- SIDEBAR (Fixed flex layout, scrollable) -->
+            <div class="md:col-span-3 lg:col-span-2 hidden md:block overflow-y-auto scroll-show scroll-hidden px-4 py-4">
+                @include('base.side')
+            </div>
+
+            <!-- CONTENT (Scrollable area) -->
+            <section class="md:col-span-9 lg:col-span-10 overflow-y-auto scroll-show scroll-hidden px-4 md:px-8 py-4">
+                @yield('content')
+            </section>
+
+        </main>
+    </div>
     @else
     @yield('content')
     @endif

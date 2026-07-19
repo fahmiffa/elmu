@@ -1,14 +1,11 @@
 @extends('base.layout')
 @section('title', 'Pembayaran Bulanan')
 @section('content')
-@section('content')
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTablePay({{ json_encode($items->items()) }})">
     <div x-init="
         tabStatus = '{{ request('tab', 'tagihan') }}';
         $watch('tabStatus', value => {
             currentPage = 1;
-            startDate = '';
-            endDate = '';
         });
     ">
         @php $tab = request('tab', 'tagihan'); @endphp
@@ -24,6 +21,11 @@
         </div>
 
         <div class="mt-4">
+            <div class="mb-3">
+                <span class="text-sm font-semibold text-gray-600">
+                    Menampilkan data bulan: {{ $bulanMap[$filterBulan] }} {{ $filterTahun }}
+                </span>
+            </div>
             <form action="{{ route('dashboard.pay.monthly') }}" method="GET" class="mb-4">
                 <input type="hidden" name="tab" value="{{ request('tab', 'tagihan') }}">
                 <div class="flex flex-wrap items-center justify-between gap-4">
@@ -48,14 +50,21 @@
                         </select>
 
                         <div class="flex items-center gap-2">
-                            <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()"
-                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
-                            <span class="text-gray-500">s/d</span>
-                            <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
-                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+                            <select name="bulan" onchange="this.form.submit()"
+                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                                @foreach($bulanMap as $num => $namaBulan)
+                                <option value="{{ $num }}" {{ $filterBulan == $num ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                                @endforeach
+                            </select>
+
+                            <select name="tahun" onchange="this.form.submit()"
+                                class="w-full md:w-auto border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                                @foreach($years as $y)
+                                <option value="{{ $y }}" {{ $filterTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 transition">Filter</button>
-                        <a href="{{ route('dashboard.pay.monthly') }}" class="text-gray-500 text-sm hover:underline">Reset</a>
+                        <a href="{{ route('dashboard.pay.monthly') }}" class="bg-orange-500 text-white px-3 py-2 rounded-xl hover:bg-orange-600 transition text-sm">Reset</a>
                     </div>
                 </div>
             </form>
@@ -65,10 +74,8 @@
                 <select x-model="perPage" @change="resetPage()"
                     class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
                     <option value="10">10</option>
+                    <option value="25">25</option>
                     <option value="50">50</option>
-                    <option value="100">100</option>
-                    <option value="1000">1000</option>
-                    <option value="all">All</option>
                 </select>
             </div>
 
@@ -76,11 +83,10 @@
                 <table class="min-w-full bg-white border border-gray-200 text-sm">
                     <thead>
                         <tr class="bg-orange-500 text-left text-white">
-                            <th class="px-4 py-2">No</th>
                             <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
                             <th class="px-4 py-2">Panggilan</th>
                             <th class="px-4 py-2">Program/Unit</th>
-                            <th class="px-4 py-2 text-nowarp">Tempo</th>
+                            <th class="px-4 py-2 text-nowrap">Tempo</th>
                             <th class="px-4 py-2">Waktu</th>
                             <th class="px-4 py-2">Total</th>
                             <th class="px-4 py-2">Status</th>
@@ -91,11 +97,8 @@
                     <tbody>
                         <template x-for="(row, index) in paginatedData()" :key="row.id">
                             <tr class="border-t border-gray-300">
-                                <td class="px-4 py-2"
-                                    x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
-                                </td>
-                                <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.name ?? '-'"></td>
-                                <td class="px-4 py-2 text-nowarp" x-text="row.reg?.murid?.nama_panggilan ?? ''"></td>
+                                <td class="px-4 py-2 text-nowrap" x-text="row.reg?.murid?.name ?? '-'"></td>
+                                <td class="px-4 py-2 text-nowrap" x-text="row.reg?.murid?.nama_panggilan ?? ''"></td>
                                 <td class="px-4 py-2">
                                     <div class="text-xs">
                                         <div class="font-semibold" x-text="row.reg?.units?.name ?? '-'"></div>
@@ -103,7 +106,7 @@
                                         <div class="text-gray-500" x-text="row.reg?.class?.name ?? '-'"></div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-2 text-nowarp" x-text="row.tempo ?? '-'"></td>
+                                <td class="px-4 py-2 text-nowrap" x-text="row.tempo ?? '-'"></td>
                                 <td class="px-4 py-2" x-text="`${row.bulan}/${row.tahun}`"></td>
                                 <td class="px-4 py-2" x-text="formatNumber(row.total)"></td>
                                 <td class="px-4 py-2"
@@ -170,7 +173,8 @@
                                                 </div>
 
                                                 <form method="POST"
-                                                    :action="'/dashboard/pembayaran/' + md5Component(row.id) + '/bul'">
+                                                    :action="'/dashboard/pembayaran/' + md5Component(row.id) + '/bul'"
+                                                    @submit.prevent="submitPayment($event, row.id, () => modal.closeModal())">
                                                     @csrf
                                                     <div class="mb-4">
                                                         <label
@@ -206,11 +210,10 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4 overflow-x-auto">
+            <div class="mt-4">
                 {{ $items->links() }}
             </div>
         </div>
     </div>
-</div>
 </div>
 @endsection
