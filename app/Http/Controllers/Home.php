@@ -75,8 +75,11 @@ class Home extends Controller
 
         $units = Unit::all();
 
-        $query = Teach::with([
+        $query = Teach::whereHas('akun',function($q){
+            $q->where('status',1);
+        })->with([
             'unit',
+            'akun',
             'salaries' => function ($q) use ($month, $year) {
                 $q->whereMonth('tanggal', $month)->whereYear('tanggal', $year);
             },
@@ -84,14 +87,16 @@ class Home extends Controller
                 $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
                     ->with(['student', 'program', 'reg.units', 'reg.product']);
             }
-        ])->withCount(['present' => function ($q) use ($month, $year) {
+        ])
+        ->withCount(['present' => function ($q) use ($month, $year) {
             $q->whereMonth('created_at', $month)->whereYear('created_at', $year);
         }]);
+
+
 
         if ($unit) {
             $query->where('unit_id', $unit);
         }
-
         $items = $query->get();
 
         return view('home.salary.index', compact('items', 'month', 'year', 'units', 'unit'));

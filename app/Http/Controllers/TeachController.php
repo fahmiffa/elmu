@@ -73,7 +73,7 @@ class TeachController extends Controller
         $user->name     = UserName($request->name);
         $user->email    = $request->email;
         $user->nomor    = $request->hp;
-        $user->status   = 3;
+        $user->status   = 1;
         $user->role     = 3;
         $user->password = bcrypt('rahasia');
         $user->save();
@@ -101,7 +101,8 @@ class TeachController extends Controller
      */
     public function show(Teach $teach)
     {
-        //
+        $teach->load(['akun', 'unit']);
+        return view('master.teach.show', compact('teach'));
     }
 
     /**

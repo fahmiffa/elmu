@@ -30,6 +30,31 @@ export function raportForm(students, units, kelas, programs, teaches, initial = 
         program: initial.program || "",
         levelPeriod: initial.levelPeriod || "",
 
+        // --- score fields (for auto category) ---
+        scoreConcept: initial.scoreConcept ?? 4,
+        scoreConcentration: initial.scoreConcentration ?? 4,
+        scoreAccuracy: initial.scoreAccuracy ?? 4,
+        scoreIndependence: initial.scoreIndependence ?? 4,
+
+        // --- computed category ---
+        get totalSkor() {
+            return (parseInt(this.scoreConcept) || 0) +
+                   (parseInt(this.scoreConcentration) || 0) +
+                   (parseInt(this.scoreAccuracy) || 0) +
+                   (parseInt(this.scoreIndependence) || 0);
+        },
+        get persentase() {
+            const maxSkor = 16;
+            return Math.round((this.totalSkor / maxSkor) * 100);
+        },
+        get kategoriOtomatis() {
+            const pct = this.persentase;
+            if (pct >= 85) return 'Sangat Baik';
+            if (pct >= 75) return 'Baik';
+            if (pct >= 65) return 'Cukup';
+            return 'Perlu Pendampingan Khusus';
+        },
+
         // --- TomSelect instances ---
         tomMurid: null,
         tomUnit: null,
@@ -196,6 +221,10 @@ export function raportForm(students, units, kelas, programs, teaches, initial = 
                 this.program     = student.program_name || "";
                 this.levelPeriod = student.grade_name   || "";
             }
+        },
+
+        syncScore(name, val) {
+            this[name] = val;
         },
     };
 }

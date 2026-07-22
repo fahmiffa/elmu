@@ -38,12 +38,12 @@ Master > {{ $user->data->name ?? $user->name ?? 'User' }}
             </div>
         </div>
         <div class="flex-shrink-0">
-            <a href="{{ route('dashboard.master.index') }}" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold">
+            <button @click="window.history.back()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m15 18-6-6 6-6" />
                 </svg>
                 Kembali
-            </a>
+            </button>
         </div>
     </div>
 
@@ -82,6 +82,10 @@ Master > {{ $user->data->name ?? $user->name ?? 'User' }}
                     </button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-xl">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Nama</p>
+                        <p class="text-sm text-gray-700">{{ $user->data()->first()->name ?? '-' }}</p>
+                    </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase mb-1">Username</p>
                         <p class="text-sm text-gray-700">{{ $user->name ?? '-' }}</p>
@@ -442,7 +446,7 @@ Master > {{ $user->data->name ?? $user->name ?? 'User' }}
                                 </div>
                                 @endif
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Akun</label>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status Akun {{ $user->role }}</label>
                                     <select name="status" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-700 outline-none">
                                         <option value="1" {{ $user->status == 1 ? 'selected' : '' }}>Aktif</option>
                                         <option value="0" {{ $user->status == 0 ? 'selected' : '' }}>Tidak Aktif</option>

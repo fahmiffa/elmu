@@ -31,10 +31,14 @@
              {{ $programs->map(fn($p) => ['id' => $p->id, 'name' => $p->name])->toJson() }},
              {{ $teachers->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'unit_id' => $t->unit_id])->toJson() }},
              {
-                 studentId:  '{{ old('student_id',  $items->student_id  ?? '') }}',
-                 program:    '{{ old('program',      $items->program     ?? '') }}',
-                 levelPeriod:'{{ old('level_period', $items->level_period ?? '') }}',
-                 teacher:    '{{ old('teacher',      $items->teacher      ?? '') }}'
+                 studentId:         '{{ old('student_id',  $items->student_id  ?? '') }}',
+                 program:           '{{ old('program',      $items->program     ?? '') }}',
+                 levelPeriod:       '{{ old('level_period', $items->level_period ?? '') }}',
+                 teacher:           '{{ old('teacher',      $items->teacher      ?? '') }}',
+                 scoreConcept:      {{ old('score_concept',      $items->score_concept      ?? 4) }},
+                 scoreConcentration:{{ old('score_concentration', $items->score_concentration ?? 4) }},
+                 scoreAccuracy:     {{ old('score_accuracy',     $items->score_accuracy     ?? 4) }},
+                 scoreIndependence: {{ old('score_independence', $items->score_independence ?? 4) }}
              }
          )">
 
@@ -159,18 +163,30 @@
                 <div class="md:col-span-2 space-y-4 pt-4">
                     <h3 class="font-bold text-orange-600 border-l-4 border-orange-500 pl-2">A. Kompetensi Utama (Skor 1-4)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
-                        @foreach([
-                            'concept'       => 'Penguasaan Konsep Utama',
-                            'concentration' => 'Ketahanan Konsentrasi',
-                            'accuracy'      => 'Ketepatan & Kecepatan',
-                            'independence'  => 'Kemandirian Belajar'
-                        ] as $key => $label)
+                        @php
+                            $scoreFields = [
+                                'concept'       => 'Penguasaan Konsep Utama',
+                                'concentration' => 'Ketahanan Konsentrasi',
+                                'accuracy'      => 'Ketepatan & Kecepatan',
+                                'independence'  => 'Kemandirian Belajar'
+                            ];
+                            $alpineProps = [
+                                'concept'       => 'scoreConcept',
+                                'concentration' => 'scoreConcentration',
+                                'accuracy'      => 'scoreAccuracy',
+                                'independence'  => 'scoreIndependence',
+                            ];
+                        @endphp
+                        @foreach($scoreFields as $key => $label)
+                        @php $alpineProp = $alpineProps[$key]; @endphp
                         <div class="flex gap-4">
                             <div class="w-24">
                                 <label class="block text-xs font-bold text-gray-500 mb-1">Skor</label>
-                                <select name="score_{{ $key }}" class="border border-gray-300 rounded-lg px-2 py-1 w-full outline-none">
+                                <select name="score_{{ $key }}"
+                                    x-model.number="{{ $alpineProp }}"
+                                    class="border border-gray-300 rounded-lg px-2 py-1 w-full outline-none">
                                     @for($i=1; $i<=4; $i++)
-                                        <option value="{{ $i }}" {{ old('score_'.$key, $items->{'score_'.$key} ?? 4) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                        <option value="{{ $i }}">{{ $i }}</option>
                                     @endfor
                                 </select>
                             </div>
@@ -181,6 +197,30 @@
                             </div>
                         </div>
                         @endforeach
+                        {{-- Live Score Summary --}}
+                        <div class="md:col-span-2 flex items-center gap-4 mt-2 bg-white border border-orange-200 rounded-xl px-4 py-3">
+                            <div class="flex items-center gap-1 text-sm font-semibold text-gray-600">
+                                <span>Total Skor:</span>
+                                <span class="text-lg font-bold text-orange-600" x-text="totalSkor"></span>
+                                <span class="text-gray-400">/ 16</span>
+                            </div>
+                            <div class="w-px h-6 bg-orange-200"></div>
+                            <div class="flex items-center gap-1 text-sm font-semibold text-gray-600">
+                                <span>Persentase:</span>
+                                <span class="text-lg font-bold text-orange-600" x-text="persentase + '%'"></span>
+                            </div>
+                            <div class="w-px h-6 bg-orange-200"></div>
+                            <div class="flex items-center gap-1 text-sm font-semibold text-gray-600">
+                                <span>Kategori:</span>
+                                <span class="text-lg font-bold" x-text="kategoriOtomatis"
+                                    :class="{
+                                        'text-green-600': persentase >= 85,
+                                        'text-blue-600': persentase >= 75 && persentase < 85,
+                                        'text-yellow-600': persentase >= 65 && persentase < 75,
+                                        'text-red-600': persentase < 65
+                                    }"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -211,12 +251,20 @@
                     <h3 class="font-bold text-orange-600 border-l-4 border-orange-500 pl-2">C. Ringkasan & Rekomendasi</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Kategori Akhir</label>
-                            <select name="category" class="border border-gray-300 rounded-xl px-3 py-2 w-full focus:ring-2 focus:ring-orange-500 outline-none">
-                                @foreach(['Sangat Baik', 'Baik', 'Cukup', 'Perlu Pendampingan Khusus'] as $cat)
-                                    <option value="{{ $cat }}" {{ old('category', $items->category ?? '') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Kategori Akhir <span class="text-xs text-gray-400 font-normal">(otomatis dari skor)</span></label>
+                            <input type="text" name="category" x-model="kategoriOtomatis" readonly
+                                class="border border-gray-300 rounded-xl px-3 py-2 w-full focus:ring-2 focus:ring-orange-500 outline-none bg-gray-100 cursor-not-allowed"
+                                :class="{
+                                    'bg-green-50 border-green-300 text-green-700': persentase >= 85,
+                                    'bg-blue-50 border-blue-300 text-blue-700': persentase >= 75 && persentase < 85,
+                                    'bg-yellow-50 border-yellow-300 text-yellow-700': persentase >= 65 && persentase < 75,
+                                    'bg-red-50 border-red-300 text-red-700': persentase < 65
+                                }">
+                            <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                                <span>Skor: <b x-text="totalSkor"></b>/16</span>
+                                <span>|</span>
+                                <span>Nilai: <b x-text="persentase"></b>%</span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Rekomendasi Utama</label>
