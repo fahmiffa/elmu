@@ -513,6 +513,194 @@ export const dataTableReg = (data) => {
         selectedRow: null,
         modalOpen: false,
         selectedItem: null,
+        collapsedUnits: [],
+        localSearch: {},
+        localProgram: {},
+
+        toggleUnit(unitId) {
+            if (this.collapsedUnits.includes(unitId)) {
+                this.collapsedUnits = this.collapsedUnits.filter(
+                    (id) => id !== unitId,
+                );
+            } else {
+                this.collapsedUnits.push(unitId);
+            }
+        },
+
+        isCollapsed(unitId) {
+            return this.collapsedUnits.includes(unitId);
+        },
+
+        collapseAllUnits(units) {
+            this.collapsedUnits = units.map((u) => u.id);
+        },
+
+        expandAllUnits() {
+            this.collapsedUnits = [];
+        },
+
+        groupedUnits() {
+            const unitsMap = {};
+
+            this.rows.forEach((row) => {
+                const unitId = row.units?.id || row.unit || 99999;
+                if (this.filterUnit !== "" && unitId != this.filterUnit) {
+                    return;
+                }
+
+                const unitName = row.units?.name || "Lainnya";
+
+                if (!unitsMap[unitId]) {
+                    unitsMap[unitId] = {
+                        id: unitId,
+                        name: unitName,
+                        days: {},
+                    };
+                }
+
+                if (row.jadwal && row.jadwal.length > 0) {
+                    row.jadwal.forEach((session) => {
+                        const day = session.parse || "Lainnya";
+                        if (!unitsMap[unitId].days[day]) {
+                            unitsMap[unitId].days[day] = {};
+                        }
+
+                        const sessionKey = `${session.name} ${session.start} - ${session.end}`;
+                        if (!unitsMap[unitId].days[day][sessionKey]) {
+                            unitsMap[unitId].days[day][sessionKey] = {
+                                session: session,
+                                students: [],
+                            };
+                        }
+
+                        if (
+                            !unitsMap[unitId].days[day][
+                                sessionKey
+                            ].students.some((s) => s.id === row.id)
+                        ) {
+                            unitsMap[unitId].days[day][
+                                sessionKey
+                            ].students.push(row);
+                        }
+                    });
+                }
+            });
+
+            const sortedUnits = [];
+            const dayOrder = [
+                "Senin",
+                "Selasa",
+                "Rabu",
+                "Kamis",
+                "Jumat",
+                "Sabtu",
+                "Minggu",
+            ];
+
+            Object.values(unitsMap).forEach((u) => {
+                const uSearch = (this.localSearch[u.id] || "").toLowerCase();
+                const uProgram = this.localProgram[u.id] || "";
+
+                const flatRows = [];
+
+                const processDay = (dName) => {
+                    if (!u.days[dName]) return;
+
+                    const sortedSessions = [];
+
+                    Object.values(u.days[dName]).forEach((s) => {
+                        const filteredStudents = s.students.filter((st) => {
+                            const name = (st.murid?.name ?? "").toLowerCase();
+                            const panggilan = (
+                                st.murid?.nama_panggilan ?? ""
+                            ).toLowerCase();
+                            const matchesSearch =
+                                uSearch === "" ||
+                                name.includes(uSearch) ||
+                                panggilan.includes(uSearch);
+
+                            const studentProgramId =
+                                st.present_program?.id || st.program;
+                            const matchesProgram =
+                                uProgram === "" || studentProgramId == uProgram;
+
+                            return matchesSearch && matchesProgram;
+                        });
+
+                        if (filteredStudents.length > 0) {
+                            sortedSessions.push({
+                                session: s.session,
+                                students: filteredStudents,
+                            });
+                        }
+                    });
+
+                    sortedSessions.sort((a, b) => {
+                        return (a.session.start || "").localeCompare(
+                            b.session.start || "",
+                        );
+                    });
+
+                    let dayTotalStudents = 0;
+                    sortedSessions.forEach((s) => {
+                        dayTotalStudents += s.students.length;
+                    });
+
+                    let isFirstStudentOfDay = true;
+
+                    sortedSessions.forEach((s) => {
+                        const sessionTotalStudents = s.students.length;
+                        let isFirstStudentOfSession = true;
+
+                        s.students.forEach((st) => {
+                            flatRows.push({
+                                dayName: dName,
+                                showDay: isFirstStudentOfDay,
+                                dayRowspan: dayTotalStudents,
+
+                                sessionName: s.session.name,
+                                sessionTime: `${(s.session.start || "").slice(0, 5)} - ${(s.session.end || "").slice(0, 5)}`,
+                                showSession: isFirstStudentOfSession,
+                                sessionRowspan: sessionTotalStudents,
+
+                                studentName: st.murid?.name || "-",
+                                studentNickname:
+                                    st.murid?.nama_panggilan || "-",
+                                studentProgram:
+                                    st.present_program?.name ||
+                                    st.programs?.name ||
+                                    "-",
+                                studentClass: st.class?.name || "-",
+                                studentId: st.id,
+                                studentRaw: st,
+                                sessionRaw: s.session,
+                            });
+
+                            isFirstStudentOfDay = false;
+                            isFirstStudentOfSession = false;
+                        });
+                    });
+                };
+
+                dayOrder.forEach((dName) => processDay(dName));
+
+                Object.keys(u.days).forEach((dName) => {
+                    if (!dayOrder.includes(dName)) {
+                        processDay(dName);
+                    }
+                });
+
+                sortedUnits.push({
+                    id: u.id,
+                    name: u.name,
+                    rows: flatRows,
+                });
+            });
+
+            sortedUnits.sort((a, b) => a.name.localeCompare(b.name));
+
+            return sortedUnits;
+        },
 
         openModal(item) {
             this.selectedItem = item;
