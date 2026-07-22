@@ -169,9 +169,13 @@ class ScheduleController extends Controller
 
         $action = "Edit Jadwal";
 
-        // Query murid & unit filtered by zone
+        // Query murid hanya untuk unit yang sama dengan siswa yang sedang diedit (atau ID siswa itu sendiri)
         $query = Head::select('id', 'kelas', 'unit', 'program', 'students', 'done')
-            ->where('done', 0)
+            ->where(function ($q) use ($items) {
+                $q->where('unit', $items->unit)
+                  ->where('done', 0);
+            })
+            ->orWhere('id', $items->id)
             ->with([
                 'murid:id,name',
                 'units:id,name',
@@ -188,7 +192,11 @@ class ScheduleController extends Controller
 
         // Load jadwal per unit sekali saja (1 query), bukan per-head
         $unitIds    = $heads->pluck('unit')->unique()->filter();
-        $unitJadwal = \App\Models\Unit::whereIn('id', $unitIds)->with('jadwal:id,unit_id,name,day,parse,start,end')->get(['id', 'name'])->keyBy('id');
+        $unitJadwal = \App\Models\Unit::whereIn('id', $unitIds)
+            ->with('jadwal:id,unit_id,name,day,parse,start,end')
+            ->get(['id', 'name'])
+            ->each->makeHidden(['kelasn'])
+            ->keyBy('id');
 
         // Suppress $appends dan flatten ke plain array agar json_encode di view tidak memicu Carbon
         $murid = $heads->map(function ($item) use ($unitJadwal) {
@@ -217,7 +225,7 @@ class ScheduleController extends Controller
 
         $selected = [
             'unit'    => $items->unit,
-            'program' => $firstSchedule ? $firstSchedule->program_id : null,
+            'program' => $firstSchedule ? $firstSchedule->program_id : ($items->program ?? null),
             'murid'   => [$items->id],
             'jadwal'  => $items->jadwal->pluck('id')->toArray(),
         ];

@@ -1130,6 +1130,7 @@ export const dataTablePay = (data) => {
 export function dropdownSelect() {
     return {
         init() {
+            if (this.$el.tomselect) return;
             new TomSelect(this.$el, {
                 plugins: ["remove_button"],
                 placeholder: "Pilih Item",
@@ -1322,20 +1323,28 @@ export function reg(kelas, initial = {}) {
 
         initTomSelect() {
             if (this.$refs.selectUnit) {
-                this.tomUnit = new TomSelect(this.$refs.selectUnit, {
-                    placeholder: "Pilih Unit",
-                    onChange: (value) => {
-                        this.selectedUnit = value;
-                    },
-                });
+                if (this.$refs.selectUnit.tomselect) {
+                    this.tomUnit = this.$refs.selectUnit.tomselect;
+                } else {
+                    this.tomUnit = new TomSelect(this.$refs.selectUnit, {
+                        placeholder: "Pilih Unit",
+                        onChange: (value) => {
+                            this.selectedUnit = value;
+                        },
+                    });
+                }
             }
             if (this.$refs.selectProgram) {
-                this.tomProgram = new TomSelect(this.$refs.selectProgram, {
-                    placeholder: "Pilih Program",
-                    onChange: (value) => {
-                        this.selectedProgram = value;
-                    },
-                });
+                if (this.$refs.selectProgram.tomselect) {
+                    this.tomProgram = this.$refs.selectProgram.tomselect;
+                } else {
+                    this.tomProgram = new TomSelect(this.$refs.selectProgram, {
+                        placeholder: "Pilih Program",
+                        onChange: (value) => {
+                            this.selectedProgram = value;
+                        },
+                    });
+                }
             }
         },
 
@@ -1414,18 +1423,16 @@ export function schedule(data, initial = {}) {
         get programs() {
             if (!this.selectedUnit) return [];
             const filtered = data.filter(
-                (p) => String(p.unit) === String(this.selectedUnit),
+                (p) => p && p.programs && String(p.unit) === String(this.selectedUnit),
             );
             const programList = filtered.map((p) => ({
                 id: String(p.programs.id),
                 name: p.programs.name,
             }));
             // Unique by ID
-            return Array.from(new Set(programList.map((a) => a.id))).map(
-                (id) => {
-                    return programList.find((a) => a.id === id);
-                },
-            );
+            return Array.from(new Set(programList.map((a) => a.id)))
+                .map((id) => programList.find((a) => a.id === id))
+                .filter(Boolean);
         },
 
         init() {
@@ -1433,20 +1440,24 @@ export function schedule(data, initial = {}) {
                 this.initTomSelect();
 
                 if (this.tomUnit && this.selectedUnit) {
-                    this.tomUnit.setValue(this.selectedUnit);
+                    this.tomUnit.setValue(this.selectedUnit, true);
                 }
                 if (this.tomProgram && this.selectedProgram) {
                     this.refreshProgram();
-                    this.tomProgram.setValue(this.selectedProgram);
+                    this.tomProgram.setValue(this.selectedProgram, true);
                 }
+                this.refreshMurid();
+                this.refreshJadwal();
 
-                this.$watch("selectedUnit", (value) => {
-                    this.selectedProgram = "";
+                this.$watch("selectedUnit", (value, oldValue) => {
+                    if (oldValue !== undefined && String(oldValue) !== String(value)) {
+                        this.selectedProgram = "";
+                    }
                     if (
                         this.tomUnit &&
                         this.tomUnit.getValue() !== String(value)
                     ) {
-                        this.tomUnit.setValue(String(value));
+                        this.tomUnit.setValue(String(value), true);
                     }
                     this.refreshProgram();
                     this.refreshMurid();
@@ -1458,7 +1469,7 @@ export function schedule(data, initial = {}) {
                         this.tomProgram &&
                         this.tomProgram.getValue() !== String(value)
                     ) {
-                        this.tomProgram.setValue(String(value));
+                        this.tomProgram.setValue(String(value), true);
                     }
                     this.refreshMurid();
                 });
@@ -1467,31 +1478,56 @@ export function schedule(data, initial = {}) {
 
         refreshProgram() {
             if (this.tomProgram) {
-                this.tomProgram.clear();
+                const currentVal = this.tomProgram.getValue();
+                this.tomProgram.clear(true);
                 this.tomProgram.clearOptions();
                 const newProgramOptions = this.programs.map((p) => ({
                     value: String(p.id),
                     text: p.name,
                 }));
                 this.tomProgram.addOptions(newProgramOptions);
+                const targetVal = currentVal || this.selectedProgram;
+                if (targetVal && newProgramOptions.some(o => o.value === String(targetVal))) {
+                    this.tomProgram.setValue(String(targetVal), true);
+                }
             }
         },
 
         refreshMurid() {
             if (this.tom) {
-                this.tom.clear();
+                const currentValues = this.tom.getValue();
+                const targetValues = (Array.isArray(currentValues) && currentValues.length > 0)
+                    ? currentValues
+                    : this.selectedMurid;
+                this.tom.clear(true);
                 this.tom.clearOptions();
                 const newMuridOptions = this.getFilteredMurid();
                 this.tom.addOptions(newMuridOptions);
+                const validValues = Array.isArray(targetValues)
+                    ? targetValues.filter((v) => newMuridOptions.some((o) => o.value === String(v)))
+                    : (newMuridOptions.some((o) => o.value === String(targetValues)) ? [String(targetValues)] : []);
+                if (validValues.length > 0) {
+                    this.tom.setValue(validValues, true);
+                }
             }
         },
 
         refreshJadwal() {
             if (this.tomJadwal) {
-                this.tomJadwal.clear();
+                const currentValues = this.tomJadwal.getValue();
+                const targetValues = (Array.isArray(currentValues) && currentValues.length > 0)
+                    ? currentValues
+                    : this.selectedJadwal;
+                this.tomJadwal.clear(true);
                 this.tomJadwal.clearOptions();
                 const newJadwalOptions = this.getFilteredJadwal();
                 this.tomJadwal.addOptions(newJadwalOptions);
+                const validValues = Array.isArray(targetValues)
+                    ? targetValues.filter((v) => newJadwalOptions.some((o) => o.value === String(v)))
+                    : (newJadwalOptions.some((o) => o.value === String(targetValues)) ? [String(targetValues)] : []);
+                if (validValues.length > 0) {
+                    this.tomJadwal.setValue(validValues, true);
+                }
             }
         },
 
@@ -1507,10 +1543,7 @@ export function schedule(data, initial = {}) {
 
             return found.units.jadwal.map((j) => ({
                 value: String(j.id),
-                text: `${j.parse} - ${j.name} (${j.start.slice(
-                    0,
-                    5,
-                )} - ${j.end.slice(0, 5)})`,
+                text: `${j.parse || ''} - ${j.name || ''} (${j.start ? String(j.start).slice(0, 5) : ''} - ${j.end ? String(j.end).slice(0, 5) : ''})`,
             }));
         },
 
@@ -1520,18 +1553,18 @@ export function schedule(data, initial = {}) {
             let filtered = data.filter(
                 (p) =>
                     String(p.unit) === String(this.selectedUnit) &&
-                    Number(p.done) === 0,
+                    (Number(p.done) === 0 || this.selectedMurid.includes(String(p.id))),
             );
 
             if (this.selectedProgram) {
                 filtered = filtered.filter(
-                    (p) => String(p.program) === String(this.selectedProgram),
+                    (p) => String(p.program) === String(this.selectedProgram) || this.selectedMurid.includes(String(p.id)),
                 );
             }
 
             return filtered.map((p) => ({
                 value: String(p.id),
-                text: `${p.murid.name} (${p.programs.name}) - ${p.class.name}`,
+                text: `${p.murid ? p.murid.name : ''} (${p.programs ? p.programs.name : ''}) - ${p.class ? p.class.name : ''}`,
             }));
         },
 
@@ -1562,25 +1595,34 @@ export function schedule(data, initial = {}) {
             }
 
             if (this.$refs.selectUnit) {
-                this.tomUnit = new TomSelect(this.$refs.selectUnit, {
-                    placeholder: "Pilih Unit",
-                    onChange: (value) => {
-                        this.selectedUnit = value;
-                    },
-                });
+                if (this.$refs.selectUnit.tomselect) {
+                    this.tomUnit = this.$refs.selectUnit.tomselect;
+                } else {
+                    this.tomUnit = new TomSelect(this.$refs.selectUnit, {
+                        placeholder: "Pilih Unit",
+                        onChange: (value) => {
+                            this.selectedUnit = value;
+                        },
+                    });
+                }
             }
 
             if (this.$refs.selectProgram) {
-                this.tomProgram = new TomSelect(this.$refs.selectProgram, {
-                    placeholder: "Pilih Program",
-                    options: this.programs.map((p) => ({
-                        value: String(p.id),
-                        text: p.name,
-                    })),
-                    onChange: (value) => {
-                        this.selectedProgram = value;
-                    },
-                });
+                if (this.$refs.selectProgram.tomselect) {
+                    this.tomProgram = this.$refs.selectProgram.tomselect;
+                } else {
+                    this.tomProgram = new TomSelect(this.$refs.selectProgram, {
+                        placeholder: "Pilih Program",
+                        options: this.programs.map((p) => ({
+                            value: String(p.id),
+                            text: p.name,
+                        })),
+                        items: this.selectedProgram ? [String(this.selectedProgram)] : [],
+                        onChange: (value) => {
+                            this.selectedProgram = value;
+                        },
+                    });
+                }
             }
         },
     };
