@@ -49,6 +49,10 @@
                         <p class="text-sm text-gray-500">Alamat</p>
                         <p class="font-semibold text-gray-800">{{ $teach->addr }}</p>
                     </div>
+                    <div class="sm:col-span-2">
+                        <p class="text-sm text-gray-500">Profit Share</p>
+                        <p class="font-semibold text-gray-800">{{ $teach->profit }}%</p>
+                    </div>
                 </div>
 
                 <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mt-4 mb-2">Informasi Akun</h4>

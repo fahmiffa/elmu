@@ -45,6 +45,7 @@ class TeachController extends Controller
             'addr'  => 'required',
             'study' => 'required',
             'unit'  => 'required',
+            'profit_share' => 'nullable|numeric|min:0|max:100',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
@@ -87,6 +88,7 @@ class TeachController extends Controller
         $item->addr    = $request->addr;
         $item->study   = $request->study;
         $item->user    = $user->id;
+        $item->profit  = $request->profit_share ?? 0;
         $item->save();
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -130,6 +132,7 @@ class TeachController extends Controller
             'addr'  => 'required',
             'study' => 'required',
             'unit'  => 'required',
+            'profit_share' => 'nullable|numeric|min:0|max:100',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'name.required'  => 'Nama sekarang wajib diisi.',
@@ -167,6 +170,7 @@ class TeachController extends Controller
         $teach->addr    = $request->addr;
         $teach->study   = $request->study;
         $teach->unit_id = $request->unit;
+        $teach->profit = $request->profit_share ?? 0;
 
         // Save updated model
         $teach->save();

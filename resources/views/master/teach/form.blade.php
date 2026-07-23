@@ -120,6 +120,16 @@
             <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
             @enderror
         </div>
+                <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-semibold mb-2">Profit Share</label>
+            <div class="relative">
+                <input type="number" name="profit_share" value="{{ old('profit_share', $items->profit_share ?? '0') }}"
+                    class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+            </div>
+            @error('profit_share')
+            <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+            @enderror
+        </div>
     </div>
 
     <div class="flex items-center">
