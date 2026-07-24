@@ -531,7 +531,7 @@ class Home extends Controller
         return view('home.reg.index', compact('items', 'units', 'pro'));
     }
 
-    public function akademik()
+    public function akademik(Request $request)
     {
         $query = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level');
         if (Auth::user()->zone_id) {
@@ -541,7 +541,38 @@ class Home extends Controller
         } else {
             $units = Unit::all();
         }
-        $items = $query->latest()->get();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('murid', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply unit filter
+        if ($request->filled('unit')) {
+            $query->where('unit', $request->unit);
+        }
+
+        // Apply program filter
+        if ($request->filled('program')) {
+            $query->where('program', $request->program);
+        }
+
+        // Apply status filter (done column)
+        if ($request->filled('status')) {
+            $query->where('done', $request->status);
+        }
+
+        $perPage = $request->input('per_page', 50);
+        if ($perPage === 'all') {
+            $items = $query->latest()->get();
+        } else {
+            $items = $query->latest()->paginate(min((int)$perPage, 200))->withQueryString();
+        }
+
         $pro = Program::all();
         return view('home.reg.list', compact('items', 'units', 'pro'));
     }
