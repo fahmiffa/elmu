@@ -516,7 +516,7 @@ class Home extends Controller
         return back()->with('status', 'Semua notifikasi ditandai telah dibaca');
     }
 
-    public function reg()
+    public function reg(Request $request)
     {
         $query = Head::with('murid', 'class', 'programs', 'kontrak', 'units', 'level');
         if (Auth::user()->zone_id) {
@@ -526,7 +526,29 @@ class Home extends Controller
         } else {
             $units = Unit::all();
         }
-        $items = $query->latest()->get();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('murid', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply unit filter
+        if ($request->filled('unit')) {
+            $query->where('unit', $request->unit);
+        }
+
+        // Apply program filter
+        if ($request->filled('program')) {
+            $query->where('program', $request->program);
+        }
+
+        $perPage = $request->input('per_page', 50);
+        $items = $query->latest()->paginate(min((int)$perPage, 200))->withQueryString();
+
         $pro = Program::all();
         return view('home.reg.index', compact('items', 'units', 'pro'));
     }
@@ -1050,7 +1072,7 @@ class Home extends Controller
                 return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil disimpan!']);
             }
 
-            return redirect()->route('dashboard.reg');
+            return redirect()->route('dashboard.reg.index');
         } catch (\Exception $e) {
             DB::rollback();
 
