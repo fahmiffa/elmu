@@ -146,7 +146,7 @@ class Home extends Controller
         return redirect()->route('dashboard.salary')->with('status', 'Salary berhasil di-generate dan tersimpan.');
     }
 
-    public function level()
+    public function level(Request $request)
     {
         $query = Head::has('level')->with('murid:id,name,nama_panggilan', 'level.guru', 'class', 'units', 'programs');
         $units = Unit::all();
@@ -157,7 +157,30 @@ class Home extends Controller
             $units = Unit::whereIn('id', $unitIds)->get();
         }
 
-        $items = $query->get()->map(function ($item) {
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('murid', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply unit filter
+        if ($request->filled('unit')) {
+            $query->where('unit', $request->unit);
+        }
+
+        // Apply program filter
+        if ($request->filled('program')) {
+            $query->where('program', $request->program);
+        }
+
+        $perPage = $request->input('per_page', 50);
+        $items = $query->latest()->paginate(min((int)$perPage, 200))->withQueryString();
+
+        // Format tanggal level setelah pagination
+        $items->getCollection()->transform(function ($item) {
             $item->level->map(function ($lvl) {
                 $lvl->tgl = \Carbon\Carbon::parse($lvl->created_at)->locale('id')->translatedFormat('d F Y');
                 return $lvl;
