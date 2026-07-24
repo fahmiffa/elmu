@@ -1,38 +1,52 @@
 @extends('base.layout')
 @section('title', 'Dashboard Absensi')
 @section('content')
-<div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTableReg({{ json_encode($items) }})">
+<div class="flex flex-col bg-white rounded-lg shadow-md p-6">
+    @php
+        $isPaginator = $items instanceof \Illuminate\Pagination\AbstractPaginator;
+        $collectionItems = $isPaginator ? $items->items() : $items;
+    @endphp
 
     <div class="mb-4 flex flex-wrap items-center gap-2">
-        <input type="text" x-model="search" placeholder="Cari Nama / Panggilan"
-            class="flex-1 min-w-[200px] border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+        <form method="GET" action="{{ route('dashboard.absensi') }}" class="flex flex-wrap items-center gap-2 w-full">
+            <input type="text" name="search" placeholder="Cari Nama / Panggilan" value="{{ request('search') }}"
+                class="flex-1 min-w-[200px] border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
-        <select x-model="filterUnit" @change="resetPage()"
-            class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
-            <option value="">Semua Unit</option>
-            @foreach($units as $u)
-            <option value="{{ $u->id }}">{{ $u->name }}</option>
-            @endforeach
-        </select>
+            <select name="unit" onchange="this.form.submit()"
+                class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Unit</option>
+                @foreach($units as $u)
+                <option value="{{ $u->id }}" {{ request('unit') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                @endforeach
+            </select>
 
-        <select x-model="filterProgram" @change="resetPage()"
-            class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
-            <option value="">Semua Program</option>
-            @foreach($pro as $p)
-            <option value="{{ $p->id }}">{{ $p->name }}</option>
-            @endforeach
-        </select>
+            <select name="program" onchange="this.form.submit()"
+                class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Program</option>
+                @foreach($pro as $p)
+                <option value="{{ $p->id }}" {{ request('program') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                @endforeach
+            </select>
+
+            @if(request()->anyFilled(['search', 'unit', 'program']))
+                <a href="{{ route('dashboard.absensi') }}" class="text-sm text-orange-600 hover:underline">Reset Filter</a>
+            @endif
+
+            <input type="hidden" name="per_page" value="{{ request('per_page', 50) }}" />
+        </form>
     </div>
 
     <div class="flex items-center gap-2 mb-3">
         <span class="text-sm">Show:</span>
-        <select x-model="perPage" @change="resetPage()"
+        <select onchange="window.location.href=this.value"
             class="border border-gray-300 rounded-lg p-2 focus:outline-[#FF9966]">
-            <option value="10">10</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="1000">1000</option>
-            <option value="all">All</option>
+            @php
+                $urlParams = request()->except('per_page');
+            @endphp
+            <option value="{{ route('dashboard.absensi', array_merge($urlParams, ['per_page' => 10])) }}" {{ request('per_page', '50') == '10' ? 'selected' : '' }}>10</option>
+            <option value="{{ route('dashboard.absensi', array_merge($urlParams, ['per_page' => 50])) }}" {{ request('per_page', '50') == '50' ? 'selected' : '' }}>50</option>
+            <option value="{{ route('dashboard.absensi', array_merge($urlParams, ['per_page' => 100])) }}" {{ request('per_page', '50') == '100' ? 'selected' : '' }}>100</option>
+            <option value="{{ route('dashboard.absensi', array_merge($urlParams, ['per_page' => 200])) }}" {{ request('per_page', '50') == '200' ? 'selected' : '' }}>200</option>
         </select>
     </div>
 
@@ -41,76 +55,86 @@
             <thead>
                 <tr class="bg-orange-500 text-left text-white">
                     <th class="px-4 py-2">No</th>
-                    <th @click="sortBy('name')" class="cursor-pointer px-4 py-2">Nama</th>
+                    <th class="px-4 py-2">Nama</th>
                     <th class="px-4 py-2">Panggilan</th>
                     <th class="px-4 py-2">Program</th>
                     <th class="px-4 py-2">Waktu</th>
                 </tr>
             </thead>
             <tbody>
-                <template x-for="(row, index) in paginatedData()" :key="row.id">
+                @forelse($collectionItems as $index => $row)
                     <tr class="border-t border-gray-300">
-                        <td class="px-4 py-2"
-                            x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
+                        <td class="px-4 py-2">
+                            @if($isPaginator)
+                                {{ $items->firstItem() + $index }}
+                            @else
+                                {{ $index + 1 }}
+                            @endif
                         </td>
-                        <td class="px-4 py-2" x-text="row.murid.name"></td>
-                        <td class="px-4 py-2" x-text="row.murid.nama_panggilan"></td>
+                        <td class="px-4 py-2">{{ $row->murid->name ?? '-' }}</td>
+                        <td class="px-4 py-2">{{ $row->murid->nama_panggilan ?? '-' }}</td>
                         <td class="px-4 py-2">
                             <div class="whitespace-nowrap">
                                 <dl>
-                                    <dt x-text="row.units.name" class="font-semibold capitalize"></dt>
+                                    <dt class="font-semibold capitalize">{{ $row->units->name ?? '-' }}</dt>
                                     <dt class="text-xs">
-                                        <span x-text="row.programs.name"></span>
-                                        <span x-text="row.class.name"></span>
+                                        <span>{{ $row->programs->name ?? '-' }}</span>
+                                        <span>{{ $row->class->name ?? '-' }}</span>
                                     </dt>
                                 </dl>
                             </div>
                         </td>
                         <td class="px-4 py-2">
-                            <template x-for="(item, index) in row.present" :key="index">
+                            @forelse($row->present as $item)
                                 <dl class="mb-3 last:mb-0 border-b border-gray-100 pb-2 last:border-0">
-                                    <dt x-text="item.tanggal" class="font-semibold capitalize"></dt>
+                                    <dt class="font-semibold capitalize">{{ $item->tanggal }}</dt>
                                     <div class="flex items-center gap-2">
-                                        <dd class="text-xs text-gray-700 font-medium" x-text="'Guru: ' + (item.guru?.name ?? '-')"></dd>
-                                        <template x-if="item.program">
-                                            <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold" x-text="item.program.name"></span>
-                                        </template>
+                                        <dd class="text-xs text-gray-700 font-medium">Guru: {{ $item->guru->name ?? '-' }}</dd>
+                                        @if($item->program)
+                                            <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold">{{ $item->program->name }}</span>
+                                        @endif
                                     </div>
                                     <div class="mt-1 space-y-0.5">
-                                        <template x-if="item.hal">
+                                        @if($item->hal)
                                             <dd class="text-[11px] text-blue-600 flex items-center gap-1">
-                                                <span class="font-bold">Hal:</span> <span x-text="item.hal"></span>
+                                                <span class="font-bold">Hal:</span> <span>{{ $item->hal }}</span>
                                             </dd>
-                                        </template>
-                                        <template x-if="item.Materi">
+                                        @endif
+                                        @if($item->Materi)
                                             <dd class="text-[11px] text-green-600 flex items-center gap-1">
-                                                <span class="font-bold">Materi:</span> <span x-text="item.Materi"></span>
+                                                <span class="font-bold">Materi:</span> <span>{{ $item->Materi }}</span>
                                             </dd>
-                                        </template>
-                                        <template x-if="item.Keterangan">
+                                        @endif
+                                        @if($item->Keterangan)
                                             <dd class="text-[11px] text-gray-500 italic flex items-start gap-1">
-                                                <span class="font-bold not-italic">Ket:</span> <span x-text="item.Keterangan"></span>
+                                                <span class="font-bold not-italic">Ket:</span> <span>{{ $item->Keterangan }}</span>
                                             </dd>
-                                        </template>
+                                        @endif
                                     </div>
                                 </dl>
-                            </template>
+                            @empty
+                                <span class="text-gray-400 text-xs">Tidak ada absensi</span>
+                            @endforelse
                         </td>
                     </tr>
-                </template>
-                <tr x-show="filteredData().length === 0">
-                    <td colspan="3" class="text-center px-4 py-2 text-gray-500">No results found.</td>
-                </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center px-4 py-2 text-gray-500">Tidak ada data ditemukan.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
+    @if($isPaginator)
     <div class="flex justify-between items-center mt-4">
-        <button @click="prevPage()" :disabled="currentPage === 1"
-            class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Prev</button>
-        <span>Halaman <span x-text="currentPage"></span> dari <span x-text="totalPages()"></span></span>
-        <button @click="nextPage()" :disabled="currentPage === totalPages()"
-            class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Next</button>
+        <div>
+            {{ $items->links() }}
+        </div>
+        <div class="text-sm text-gray-600">
+            Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari {{ $items->total() }} data
+        </div>
     </div>
+    @endif
 </div>
 @endsection

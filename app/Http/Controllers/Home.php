@@ -44,19 +44,39 @@ use App\Models\Zone_units;
 
 class Home extends Controller
 {
-    public function absensi()
+    public function absensi(Request $request)
     {
         $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'present.guru', 'present.program', 'class', 'units', 'programs');
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
         }
-        $items = $query->get();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('murid', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply unit filter
+        if ($request->filled('unit')) {
+            $query->where('unit', $request->unit);
+        }
+
+        // Apply program filter
+        if ($request->filled('program')) {
+            $query->where('program', $request->program);
+        }
+
+        $perPage = $request->input('per_page', 50);
+        $items = $query->latest()->paginate(min((int)$perPage, 200))->withQueryString();
 
         $units = Unit::all();
         if (Auth::user()->role == 4) {
             $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
-            $query->whereIn('unit', $unitIds);
             $units = Unit::whereIn('id', $unitIds)->get();
         }
         $pro   = Program::all();
