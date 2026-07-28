@@ -43,4 +43,9 @@ class StudentPresent extends Model
     {
         return $this->belongsTo(Student::class, 'student_id', 'id');
     }
+
+    public function unitSchedule()
+    {
+        return $this->belongsTo(UnitSchedule::class, 'unit_schedules_id', 'id');
+    }
 }

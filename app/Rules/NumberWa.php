@@ -41,13 +41,13 @@ class NumberWa implements ValidationRule
         // Hilangkan spasi / karakter non-digit
         $value = preg_replace('/\D/', '', $value);
 
-        // Awalan 0 → ubah menjadi 62
+        // Awalan 0 → ubah menjadi 62 (default Indonesia)
         if (preg_match('/^0[0-9]+$/', $value)) {
             return '62' . substr($value, 1);
         }
 
-        // Sudah format 62xxxx
-        if (preg_match('/^62[0-9]+$/', $value)) {
+        // Sudah format angka dan memiliki panjang minimal 8 digit (asumsi valid dengan kode negara)
+        if (strlen($value) >= 8) {
             return $value;
         }
 

@@ -276,7 +276,10 @@ class StudentController extends Controller
             $level->status     = 1;
             $level->save();
 
-            $to       = '62' . substr($user->nomor, 1);
+            $to = preg_replace('/\D/', '', $user->nomor);
+            if (strpos($to, '0') === 0) {
+                $to = '62' . substr($to, 1);
+            }
             $message  = "Selamat Anda berhasil bergabung dengan Murika\n*username : {$user->name}*\n*password : murik@*\n\n_Terima kasih atas partisipasinya_";
             \App\Jobs\SendWhatsAppJob::dispatch($to, $message);
 

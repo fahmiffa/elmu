@@ -120,6 +120,9 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::resource('kelas', KelasController::class);
         Route::resource('payment', PaymentController::class);
         Route::resource('teach', TeachController::class);
+        Route::post('student/export', [StudentController::class, 'export'])->name('student.export');
+        Route::get('student/export/status/{filename}', [StudentController::class, 'exportStatus'])->name('student.export.status');
+        Route::get('student/export/download/{filename}', [StudentController::class, 'downloadExport'])->name('student.export.download');
         Route::resource('student', StudentController::class);
         Route::resource('program', ProgramController::class);
         Route::resource('layanan', AddonController::class);

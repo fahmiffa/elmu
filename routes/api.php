@@ -52,6 +52,7 @@ Route::middleware('jwt')->group(function () {
     Route::post('/bill', [BillingController::class, 'billStore']);
     Route::get('/price/{kelas}/{product}', [AcademicController::class, 'price']);
     Route::get('/jadwal', [AcademicController::class, 'jadwal']);
+    Route::get('/present', [AcademicController::class, 'present']);
     Route::post('/jadwal', [AcademicController::class, 'UpJadwal']);
     Route::post('/report', [ContentController::class, 'ureport']);
     Route::get('/report', [ContentController::class, 'report']);

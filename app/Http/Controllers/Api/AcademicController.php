@@ -272,14 +272,16 @@ class AcademicController extends Controller
                 $m = $head->murid->toArray();
                 $m['program_id'] = $head->program;
 
-                // Check if this student already was present TODAY for THIS HEAD (program registration)
-                $isPresent = DB::table('student_presents')
+                // Check which schedules this student already was present TODAY for THIS HEAD
+                $presentSchedules = DB::table('student_presents')
                     ->where('student_id', $head->students)
                     ->where('head_id', $head->id)
                     ->whereDate('created_at', $today)
-                    ->exists();
+                    ->pluck('unit_schedules_id')
+                    ->toArray();
 
-                $m['absen'] = $isPresent ? 1 : 0;
+                $m['absen'] = empty($presentSchedules) ? 0 : 1;
+                $m['absen_hari_ini'] = $presentSchedules;
                 $allMurid->push($m);
             }
         }
@@ -302,6 +304,61 @@ class AcademicController extends Controller
                 'murid' => $da,
             ]);
         }
+    }
+
+    public function present()
+    {
+        $role = JWTAuth::user()->role;
+        $id   = JWTAuth::user()->id;
+        
+        if ($role == 3) {
+            $da = Teach::where('user', $id)->first();
+            if (!$da) return response()->json(['items' => []]);
+
+            $items = StudentPresent::where('teach_id', $da->id)
+                ->with(['student:id,name', 'unitSchedule:id,name', 'program:id,name', 'reg.units:id,name'])
+                ->latest()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id_siswa'   => $item->student->id ?? null,
+                        'nama_siswa'   => $item->student->name ?? null,
+                        'nama_sessi'   => $item->unitSchedule->name ?? null,
+                        'id_program'   => $item->program->id ?? null,
+                        'nama_program' => $item->program->name ?? null,
+                        'id_unit'      => $item->reg->units->id ?? null,
+                        'nama_unit'    => $item->reg->units->name ?? null,
+                        'hal'          => $item->hal,
+                        'materi'       => $item->Materi,
+                        'keterangan'   => $item->Keterangan,
+                        'tanggal'      => $item->tanggal,
+                    ];
+                });
+        } else {
+            $da = Student::where('user', $id)->first();
+            if (!$da) return response()->json(['items' => []]);
+
+            $items = StudentPresent::where('student_id', $da->id)
+                ->with(['guru:id,name', 'unitSchedule:id,name', 'program:id,name', 'reg.units:id,name'])
+                ->latest()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'nama_sessi'   => $item->unitSchedule->name ?? null,
+                        'id_program'   => $item->program->id ?? null,
+                        'nama_program' => $item->program->name ?? null,
+                        'id_unit'      => $item->reg->units->id ?? null,
+                        'nama_unit'    => $item->reg->units->name ?? null,
+                        'hal'          => $item->hal,
+                        'materi'       => $item->Materi,
+                        'keterangan'   => $item->Keterangan,
+                        'tanggal'      => $item->tanggal,
+                        'nama_guru'    => $item->guru->name ?? null,
+                    ];
+                });
+        }
+
+        return response()->json(['items' => $items]);
     }
 
     public function UpJadwal(Request $request)

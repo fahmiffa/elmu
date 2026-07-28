@@ -10,17 +10,21 @@ use App\Models\Payment;
 use App\Models\Price;
 use App\Models\Order;
 use App\Models\Paid;
+use App\Models\Program;
 use App\Models\Raport;
 use App\Models\Report;
 use App\Models\Schedules_students;
 use App\Models\Student;
 use App\Models\StudentPresent;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\Vidoes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use Illuminate\Http\Request;
+use App\Exports\StudentExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
@@ -30,11 +34,30 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $items   = Student::with('users')->get();
-        $kelas   = Kelas::with('program:id,name', 'units:id,name')->get();
-        $kontrak = Payment::all();
-        $grade   = Grade::all();
-        return view('master.students.index', compact('items', 'kelas', 'grade', 'kontrak'));
+        $items    = Student::with('users')->get();
+        $kelas    = Kelas::with('program:id,name', 'units:id,name')->get();
+        $kontrak  = Payment::all();
+        $grade    = Grade::all();
+        $units    = Unit::all();
+        $programs = Program::all();
+
+        // Cek apakah ada file export yang sudah siap (fresh < 1 jam)
+        $exportFile = null;
+        $exportDir = storage_path('app/public/exports/');
+        if (is_dir($exportDir)) {
+            $files = glob($exportDir . 'students_export_*.xlsx');
+            if (!empty($files)) {
+                usort($files, function($a, $b) {
+                    return filemtime($b) - filemtime($a);
+                });
+                $latestFile = basename($files[0]);
+                if (filemtime($files[0]) > time() - 3600) {
+                    $exportFile = $latestFile;
+                }
+            }
+        }
+
+        return view('master.students.index', compact('items', 'kelas', 'grade', 'kontrak', 'units', 'programs', 'exportFile'));
     }
 
     /**
@@ -293,6 +316,72 @@ class StudentController extends Controller
 
             return back()->withErrors('Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Dispatch export job to queue and return filename for polling.
+     */
+    public function export(Request $request)
+    {
+        $filename = 'data_murid_' . now()->format('Ymd_His') . '.xlsx';
+
+        // Tandai status awal di cache
+        Cache::put("export_status_{$filename}", 'processing', now()->addHours(2));
+
+        \App\Jobs\ExportStudentsJob::dispatch(
+            $filename,
+            $request->grade ?: null,
+            $request->kelas ?: null,
+            $request->unit  ?: null,
+            $request->program ?: null
+        );
+
+        return response()->json([
+            'filename'   => $filename,
+            'status_url' => route('dashboard.master.student.export.status', $filename),
+        ]);
+    }
+
+    /**
+     * Check export job status.
+     */
+    public function exportStatus($filename)
+    {
+        // Validasi nama file untuk keamanan
+        if (!preg_match('/^data_murid_\d{8}_\d{6}\.xlsx$/', $filename)) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid filename'], 400);
+        }
+
+        $status   = Cache::get("export_status_{$filename}", 'processing');
+        $filePath = storage_path('app/public/exports/' . $filename);
+        $exists   = file_exists($filePath);
+
+        if ($exists && $status === 'done') {
+            return response()->json([
+                'status'       => 'done',
+                'download_url' => route('dashboard.master.student.export.download', $filename),
+            ]);
+        }
+
+        if (str_starts_with($status, 'error')) {
+            return response()->json(['status' => 'error', 'message' => $status]);
+        }
+
+        return response()->json(['status' => 'processing']);
+    }
+
+    /**
+     * Download exported file.
+     */
+    public function downloadExport($filename)
+    {
+        $path = storage_path('app/public/exports/' . $filename);
+
+        if (!file_exists($path)) {
+            return back()->with('err', 'File export tidak ditemukan. Silakan export ulang.');
+        }
+
+        return response()->download($path, $filename)->deleteFileAfterSend(false);
     }
 
     /**
