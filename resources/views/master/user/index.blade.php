@@ -61,7 +61,7 @@
                         <td class="px-4 py-2" x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)"></td>
                         <td class="px-4 py-2" x-text="row.name"></td>
                         <td class="px-4 py-2" x-text="row.data ? row.data.nama_panggilan : '-'"></td>
-                        <td class="px-4 py-2" x-text="row.data ? row.data.name : row.name"></td>
+                        <td class="px-4 py-2" x-text="row.role == 2 ? row.student?.name : row.teach?.name"></td>
                         <td class="px-4 py-2" x-text="row.email"></td>
                         <td class="px-4 py-2" x-text="row.nomor"></td>
                         <td class="px-4 py-2" x-text="row.roles"></td>

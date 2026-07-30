@@ -63,6 +63,14 @@
                 <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
                 @enderror
             </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Pertemuan per Bulan</label>
+                <input type="number" name="session" value="{{ old('session', $items->session ?? '') }}"
+                    class="border border-gray-300  ring-0 rounded-xl px-3 py-2 w-full focus:outline-[#FF9966]">
+                @error('level')
+                <p class="text-red-500 text-xs italic mt-2">{{ $message }}</p>
+                @enderror
+            </div>
             <div class="mb-4 col-span-2" x-data="paket({{ json_encode(isset($data) ? $data : []) }})">
                 <div class="flex items-end space-x-3">
                     <div class="w-1/3">
@@ -83,7 +91,7 @@
 
                 <template x-for="(field, index) in fields" :key="index">
                     <div class="w-1/2 mb-3">
-                        <label class="text-xs" x-text="'Harga Kelas ' + field.name"></label>
+                        <label class="text-xs" x-text="'Harga Kelas ' + field.name+' per Bulan'"></label>
                         <div class="flex items-center space-x-2">
                             <input type="hidden" :value="field.price" :name="'price[' + index + ']'">
                             <input type="hidden" :value="field.id" :name="'id[' + index + ']'">

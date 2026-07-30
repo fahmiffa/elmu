@@ -315,7 +315,7 @@ class Home extends Controller
 
     public function user()
     {
-        $items = User::with('data', 'zone')->where('role', '!=', 0)->get();
+        $items = User::with('teach','student', 'zone')->where('role', '!=', 0)->get();
         return view('master.user.index', compact('items'));
     }
 

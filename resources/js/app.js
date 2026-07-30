@@ -2,8 +2,10 @@ import Alpine from "alpinejs";
 import "trix";
 import "trix/dist/trix.css";
 import "./alignment-elements.js";
+import Swal from "sweetalert2";
 
 window.Trix = Trix; // Don't need to bind to the window, but useful for debugging.
+window.Swal = Swal;
 Trix.config.toolbar.getDefaultHTML = toolbarDefaultHTML;
 
 Trix.config.blockAttributes.alignLeft = {

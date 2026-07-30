@@ -151,9 +151,9 @@ class ProgramController extends Controller
 
         DB::beginTransaction();
         try {
-            $kelas   = $request->id;
+            $kelas   = array_values($request->id);
             $idPrice = $request->price;
-            $harga   = $request->harga;
+            $harga   = array_values($request->harga);
 
             $item          = $program;
             $item->name    = $request->name;
@@ -171,6 +171,7 @@ class ProgramController extends Controller
             if (! empty($toDelete)) {
                 Price::whereIn('id', $toDelete)->delete();
             }
+
 
             if ($kelas) {
                 for ($i = 0; $i < count($kelas); $i++) {
@@ -196,6 +197,7 @@ class ProgramController extends Controller
 
             return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil diperbarui!');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             DB::rollback();
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['status' => 'error', 'message' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);

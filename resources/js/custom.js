@@ -285,6 +285,7 @@ export const dataTable = (data) => {
         filterProgram: "",
         filterRole: "",
         filterStatus: "",
+        filterTipe: "",
         sortColumn: "name",
         sortAsc: true,
         currentPage: 1,
@@ -349,12 +350,18 @@ export const dataTable = (data) => {
                 const matchesStatus =
                     this.filterStatus === "" || row.status == this.filterStatus;
 
+                const matchesTipe =
+                    this.filterTipe === "" ||
+                    (this.filterTipe === "extend" && row.extend) ||
+                    (this.filterTipe === "reguler" && !row.extend);
+
                 return (
                     matchesSearch &&
                     matchesUnit &&
                     matchesProgram &&
                     matchesRole &&
-                    matchesStatus
+                    matchesStatus &&
+                    matchesTipe
                 );
             });
 

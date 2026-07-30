@@ -328,7 +328,7 @@ class StudentController extends Controller
         // Tandai status awal di cache
         Cache::put("export_status_{$filename}", 'processing', now()->addHours(2));
 
-        \App\Jobs\ExportStudentsJob::dispatch(
+        \App\Jobs\ExportStudentsJob::dispatchSync(
             $filename,
             $request->grade ?: null,
             $request->kelas ?: null,
@@ -343,7 +343,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Check export job status.
+     * Check export job status by file existence.
      */
     public function exportStatus($filename)
     {
@@ -352,19 +352,19 @@ class StudentController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Invalid filename'], 400);
         }
 
-        $status   = Cache::get("export_status_{$filename}", 'processing');
         $filePath = storage_path('app/public/exports/' . $filename);
-        $exists   = file_exists($filePath);
 
-        if ($exists && $status === 'done') {
+        if (file_exists($filePath)) {
             return response()->json([
                 'status'       => 'done',
                 'download_url' => route('dashboard.master.student.export.download', $filename),
             ]);
         }
 
-        if (str_starts_with($status, 'error')) {
-            return response()->json(['status' => 'error', 'message' => $status]);
+        // Cek apakah ada error di cache
+        $cacheStatus = Cache::get("export_status_{$filename}", 'processing');
+        if (str_starts_with((string) $cacheStatus, 'error')) {
+            return response()->json(['status' => 'error', 'message' => $cacheStatus]);
         }
 
         return response()->json(['status' => 'processing']);

@@ -3,16 +3,6 @@
 @section('content')
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="formHandler('{{ route('dashboard.master.teach.index') }}')">
     <div class="font-semibold mb-3 text-xl">{{ $action }}</div>
-
-    {{-- @if ($errors->any())
-            <div class="text-red-500">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-    @endforeach
-    </ul>
-</div>
-@endif --}}
 <form method="POST"
     action="{{ isset($items) ? route('dashboard.master.teach.update', $items->id) : route('dashboard.master.teach.store') }}"
     class="flex flex-col" enctype="multipart/form-data" @submit.prevent="submit">

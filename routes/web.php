@@ -91,6 +91,9 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::post('/user/{id}/update-profile', [Home::class, 'updateProfile'])->name('user.update-profile');
     Route::get('/invoice/{id}', [Home::class, 'invoice'])->name('invoice');
     Route::get('/absensi', [Home::class, 'absensi'])->name('absensi');
+    Route::post('/presensi/get-schedule', [\App\Http\Controllers\PermitController::class, 'getSchedule'])->name('presensi.get-schedule');
+    Route::post('/presensi/get-student-info', [\App\Http\Controllers\PermitController::class, 'getStudentInfo'])->name('presensi.get-student-info');
+    Route::resource('presensi', \App\Http\Controllers\PermitController::class);
     Route::resource('video', VidoesController::class);
     Route::get('/salary', [Home::class, 'salary'])->name('salary');
     Route::post('/salary/generate', [Home::class, 'salaryGenerate'])->name('salary.generate');

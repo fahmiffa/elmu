@@ -4,9 +4,23 @@
 
 <div class="flex flex-col bg-white rounded-lg shadow-md p-6" x-data="dataTable({{ json_encode($items) }})">
 
-    <div class="mb-4 flex justify-between items-center gap-2">
+    <div class="mb-4 flex flex-wrap justify-between items-center gap-2">
         <input type="text" x-model="search" placeholder="Cari Nama"
-            class="w-full md:w-1/2 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+            class="w-full md:w-1/3 border border-gray-300  ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+        <select x-model="filterTipe" @change="currentPage = 1"
+            class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966] text-sm">
+            <option value="">Semua Tipe</option>
+            <option value="reguler">Reguler</option>
+            <option value="extend">Extend</option>
+        </select>
+
+        <select x-model="perPage" @change="currentPage = 1"
+            class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966] text-sm">
+            <option value="10">10 Data</option>
+            <option value="50">50 Data</option>
+            <option value="all">Semua Data</option>
+        </select>
 
         <a href="{{ route('dashboard.master.program.create') }}"
             class="cursor-pointer bg-orange-500 text-xs hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-2xl focus:outline-none focus:shadow-outline">
@@ -23,7 +37,7 @@
                     <th class="px-4 py-2">Tipe</th>
                     <th class="px-4 py-2">Deskripsi</th>
                     <th class="px-4 py-2">Staterkit</th>
-                    <th class="px-4 py-2">Level</th>
+                    <th class="px-4 py-2">Data</th>
                     <th class="px-4 py-2">Harga</th>
                     <th class="px-4 py-2">Action</th>
                 </tr>
@@ -42,13 +56,28 @@
                             <div x-text="formatNumber(row.kit)"></div>
                             <div x-text="row.kit_des"></div>
                         </td>
-                        <td class="px-4 py-2 text-center" x-text="row.level"></td>
+                        <td class="px-4 py-2 text-center text-nowrap">
+                            <table class="w-full">
+                                    <tr>
+                                        <td class="p-1 text-sm text-gray-700 text-right">
+                                            Level
+                                            <span x-text="row.level"></span>
+                                        </td>
+                                    </tr>
+                                       <tr>
+                                        <td class="p-1 text-sm text-gray-700 text-right">
+                                            Pertemuan
+                                            <span x-text="row.session"></span>
+                                        </td>
+                                    </tr>
+                            </table>
+                        </td>
                         <td class="px-4 py-2">
                             <table class="w-full">
                                 <template x-for="(col, index) in row.price" :key="index">
                                     <tr>
                                         <td class="p-1 text-sm text-gray-700 text-right">
-                                            <span x-text="col.class.name ?? 'Tanpa Kelas'"></span>
+                                            <span x-text="col.class?.name ?? 'Tanpa Kelas'"></span>
                                             <span x-text="formatNumber(col.harga)"></span>
                                         </td>
                                     </tr>

@@ -63,6 +63,7 @@ public function getTotalAttribute()
 {
     $hargaBulan = (int) $this->reg->prices->harga;
     $kit        = (int) $this->reg->programs->kit;
+    $session    = (int) $this->reg->programs->session;
     $first      = (int) $this->first;
 
     // Hari daftar (WIB)
@@ -85,7 +86,7 @@ public function getTotalAttribute()
     }
 
     // Harga per pertemuan
-    $pricePerMeeting = $hargaBulan / 8;
+    $pricePerMeeting = $hargaBulan / $session;
 
     // Total biaya kelas
     $total = $meetings * $pricePerMeeting;

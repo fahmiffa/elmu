@@ -58,6 +58,18 @@ class User extends Authenticatable implements JWTSubject
         }
     }
 
+
+    public function teach()
+    {
+        return $this->hasOne(Teach::class, 'user', 'id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user', 'id');
+    }
+
+
     /**
      * The attributes that are mass assignable.
      *
