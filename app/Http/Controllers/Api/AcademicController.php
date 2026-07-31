@@ -398,6 +398,7 @@ class AcademicController extends Controller
                         'keterangan'   => $item->Keterangan,
                         'meet'         => $item->meet,
                         'tanggal'      => $item->tanggal,
+                        'present'      => isset($item->present) ? (bool)$item->present : true,
                     ];
                 });
         } else {
@@ -421,6 +422,7 @@ class AcademicController extends Controller
                         'meet'         => $item->meet,
                         'tanggal'      => $item->tanggal,
                         'nama_guru'    => $item->guru->name ?? null,
+                        'present'      => isset($item->present) ? (bool)$item->present : true,
                     ];
                 });
         }
@@ -431,7 +433,7 @@ class AcademicController extends Controller
     public function UpJadwal(Request $request)
     {
         $currentHour = (int) date('H');
-        if ($currentHour < 13 || $currentHour >= 21) {
+        if ($currentHour < 6 || $currentHour >= 21) {
             return response()->json([
                 'errors' => ['message' => ['Absensi hanya dapat diisi pada jam 06:00 pagi sampai 21:00 malam.']]
             ], 400);
@@ -465,6 +467,8 @@ class AcademicController extends Controller
         $processed = 0;
         $failed    = [];
 
+        $isPresentInput = filter_var($request->input('present', true), FILTER_VALIDATE_BOOLEAN);
+
         foreach ($users as $studentId) {
             // 2. Get head_id mapping for this student and schedule combination
             $mappingQuery = Schedules_students::where('student_id', $studentId)
@@ -494,9 +498,10 @@ class AcademicController extends Controller
                     $present->program_id        = $mapping->program_id;
                     // Safely get teach_id if data exists
                     $present->teach_id          = optional(JWTAuth::user()->data)->id;
-                    $present->hal               = $request->hal;
-                    $present->Materi            = $request->Materi;
-                    $present->Keterangan        = $request->Keterangan;
+                    $present->present           = $isPresentInput;
+                    $present->hal               = $isPresentInput ? $request->hal : null;
+                    $present->Materi            = $isPresentInput ? $request->Materi : null;
+                    $present->Keterangan        = $isPresentInput ? $request->Keterangan : $request->Keterangan;
                     $present->meet              = $meetCount + 1;
                     $present->save();
 
