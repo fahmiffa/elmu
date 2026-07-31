@@ -16,6 +16,7 @@ use App\Models\StudentPresent;
 use App\Models\Schedules_students;
 use App\Models\Teach;
 use App\Models\Unit;
+use App\Models\Permit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -257,12 +258,47 @@ class AcademicController extends Controller
                 ->get()
                 ->keyBy('unit_schedules_id');
 
-            $jadwalWithProgram = $head->jadwal->map(function ($j) use ($pivotData) {
+            $jadwalCollection = $head->jadwal;
+
+            // 1. Hilangkan jadwal jika ada permit dengan tanggal = hari ini
+            $jadwalCollection = $jadwalCollection->filter(function ($j) use ($head, $today, $pivotData) {
+                $scheduleStudent = $pivotData->get($j->id);
+                
+                if ($scheduleStudent) {
+                    $isPermitTanggal = Permit::where('student_id', $scheduleStudent->student_id ?? $head->students)
+                        ->where('schedule_student_id', $scheduleStudent->id)
+                        ->whereDate('tanggal', $today)
+                        ->exists();
+                    return !$isPermitTanggal;
+                }
+                
+                return true;
+            });
+
+            // 2. Tambahkan jadwal jika ada permit dengan new_date = hari ini
+            $permitsToday = Permit::where('student_id', $head->students)
+                ->whereDate('new_date', $today)
+                ->with('unitSchedule')
+                ->get();
+
+            foreach ($permitsToday as $permit) {
+                if ($permit->unitSchedule) {
+                    if (!$jadwalCollection->contains('id', $permit->unit_schedules_id)) {
+                        $jadwalCollection->push($permit->unitSchedule);
+                    }
+                }
+            }
+
+            if ($jadwalCollection->isEmpty()) {
+                continue; // Jika jadwal kosong, tidak perlu memproses murid ini
+            }
+
+            $jadwalWithProgram = $jadwalCollection->map(function ($j) use ($pivotData, $head) {
                 $pData = $pivotData->get($j->id);
                 $item = $j->toArray();
                 unset($item['pivot']);
-                $item['program_name'] = $pData?->program?->name;
-                $item['program_id']    = $pData?->program_id;
+                $item['program_name'] = $pData?->program?->name ?? $head->programs->name ?? null;
+                $item['program_id']    = $pData?->program_id ?? $head->program;
                 return $item;
             });
 
@@ -271,6 +307,30 @@ class AcademicController extends Controller
             if ($role == 3) {
                 $m = $head->murid->toArray();
                 $m['program_id'] = $head->program;
+
+                // Update schedules array on murid object based on permit
+                if (isset($m['schedules'])) {
+                    $m['schedules'] = array_filter($m['schedules'], function($sched) use ($today) {
+                        $isPermitTanggal = Permit::where('student_id', $sched['student_id'])
+                            ->where('schedule_student_id', $sched['id'])
+                            ->whereDate('tanggal', $today)
+                            ->exists();
+                        return !$isPermitTanggal;
+                    });
+                    
+                    foreach ($permitsToday as $permit) {
+                        if ($permit->unitSchedule) {
+                            $m['schedules'][] = [
+                                'id' => $permit->schedule_student_id,
+                                'head' => $head->id,
+                                'unit_schedules_id' => $permit->unit_schedules_id,
+                                'student_id' => $permit->student_id,
+                                'program_id' => $head->program,
+                            ];
+                        }
+                    }
+                    $m['schedules'] = array_values($m['schedules']);
+                }
 
                 // Check which schedules this student already was present TODAY for THIS HEAD
                 $presentSchedules = DB::table('student_presents')
