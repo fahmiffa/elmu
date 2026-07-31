@@ -652,7 +652,11 @@ class Home extends Controller
             'data.reg.lay.product.item',
             'data.reg.units',
             'data.reg.programs',
-            'data.reg.class'
+            'data.reg.class',
+            'data.reg.present.guru',
+            'data.reg.present.program',
+            'data.schedules.sch',
+            'data.schedules.program'
         ])
             ->where(DB::raw('md5(id)'), $id)
             ->firstOrFail();

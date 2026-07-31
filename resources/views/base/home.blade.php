@@ -60,7 +60,7 @@
                 <path d="M22 10v6" />
                 <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
             </svg>
-        </span> AKademik
+        </span> Akademik
     </li>
 </a>
 @if(Auth::user()->role != 4 || Auth::user()->role == 4)

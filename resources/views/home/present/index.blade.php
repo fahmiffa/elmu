@@ -89,7 +89,7 @@
                                 <dl class="mb-3 last:mb-0 border-b border-gray-100 pb-2 last:border-0">
                                     <dt class="font-semibold capitalize">{{ $item->tanggal }}</dt>
                                     <div class="flex items-center gap-2">
-                                        <dd class="text-xs text-gray-700 font-medium">Guru: {{ $item->guru->name ?? '-' }}</dd>
+                                        <dd class="text-xs text-gray-700 font-medium">Miska: {{ $item->guru->name ?? '-' }}</dd>
                                         @if($item->program)
                                             <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold">{{ $item->program->name }}</span>
                                         @endif

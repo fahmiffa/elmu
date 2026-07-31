@@ -32,7 +32,7 @@
         <div class="mb-4">
             <label class="block text-gray-700 font-bold mb-2">Dari Tanggal</label>
             <input type="date" id="tanggal" name="tanggal"
-                   value="{{ old('tanggal', date('Y-m-d')) }}" required
+                   value="{{ old('tanggal', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}" required
                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500">
             <p id="tanggal_label" class="text-sm font-semibold text-orange-600 mt-1"></p>
             <p id="tanggal_error" class="text-sm text-red-500 mt-1 hidden"></p>
@@ -143,6 +143,7 @@
 
     // ── Tom Select for Siswa ──────────────────────────────────────────────────
     const tsStudent = new TomSelect('#student_id', {
+        plugins: ['clear_button'],
         placeholder: 'Cari nama siswa...',
         allowEmptyOption: true,
         maxOptions: 200,
@@ -152,11 +153,14 @@
     function onStudentChange(studentId) {
         const infoBox  = document.getElementById('student_info');
         const schedSel = document.getElementById('schedule_student_id');
+        const targetSel = document.getElementById('unit_schedules_id');
 
         // Reset
         infoBox.classList.add('hidden');
         schedSel.innerHTML = '<option value="">Pilih Sesi Jadwal</option>';
+        targetSel.innerHTML = '<option value="">Pilih Ke Sesi Jadwal</option>';
         document.getElementById('tanggal_error').classList.add('hidden');
+        document.getElementById('new_date_error').classList.add('hidden');
 
         if (!studentId) return;
 
@@ -177,6 +181,7 @@
 
         // ── Jadwal siswa ────────────────────────────────────────────────────
         schedSel.innerHTML = '<option value="">Memuat jadwal...</option>';
+        targetSel.innerHTML = '<option value="">Memuat jadwal tujuan...</option>';
         fetch('{{ route("dashboard.presensi.get-schedule") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
@@ -185,17 +190,33 @@
         .then(r => r.json())
         .then(data => {
             schedSel.innerHTML = data.options;
+            targetSel.innerHTML = data.target_options;
             checkTanggalAsal(); // re-check setelah jadwal dimuat
+            checkNewDate();
         })
-        .catch(() => { schedSel.innerHTML = '<option value="">Gagal memuat jadwal</option>'; });
+        .catch(() => { 
+            schedSel.innerHTML = '<option value="">Gagal memuat jadwal</option>';
+            targetSel.innerHTML = '<option value="">Gagal memuat jadwal tujuan</option>';
+        });
     }
 
     // ── Validasi: Dari Tanggal vs Dari Sesi Jadwal ────────────────────────────
     function updateTanggalLabel() {
         const val = document.getElementById('tanggal').value;
         document.getElementById('tanggal_label').textContent = val ? formatHariTanggal(val) : '';
+        
+        // Update min attribute untuk tanggal pengganti (tidak boleh kurang dari tanggal asal)
+        if (val) {
+            const newDateEl = document.getElementById('new_date');
+            newDateEl.setAttribute('min', val);
+            
+            // Reset jika tanggal pengganti yang sudah dipilih ternyata kurang dari tanggal asal
+            if (newDateEl.value && newDateEl.value < val) {
+                newDateEl.value = '';
+                updateNewDateLabel();
+            }
+        }
     }
-
     function checkTanggalAsal() {
         const dateVal  = document.getElementById('tanggal').value;
         const schedSel = document.getElementById('schedule_student_id');
@@ -283,12 +304,15 @@
     // Restore schedule setelah fetch selesai (delay kecil)
     setTimeout(() => {
         const sel = document.getElementById('schedule_student_id');
+        const targetSel = document.getElementById('unit_schedules_id');
         // Tunggu options dimuat lalu set value
         const trySet = setInterval(() => {
             if (sel.options.length > 1) {
                 sel.value = '{{ old("schedule_student_id") }}';
+                targetSel.value = '{{ old("unit_schedules_id") }}';
                 clearInterval(trySet);
                 checkTanggalAsal();
+                checkNewDate();
             }
         }, 100);
         setTimeout(() => clearInterval(trySet), 5000);

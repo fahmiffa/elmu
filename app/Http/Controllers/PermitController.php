@@ -19,22 +19,25 @@ class PermitController extends Controller
     public function create()
     {
         $students = Student::orderBy('name')->get(); 
-        $unitSchedules = UnitSchedule::orderBy('parse')->orderBy('start')->get();
+        // Awalnya kosong, akan diisi via AJAX saat siswa dipilih
+        $unitSchedules = collect(); 
         return view('permit.create', compact('students', 'unitSchedules'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal'             => 'required|date',
+            'tanggal'             => 'required|date|after_or_equal:today',
             'student_id'          => 'required|exists:students,id',
             'schedule_student_id' => 'required|exists:schedules_students,id',
             'unit_schedules_id'   => 'required|exists:unit_schedules,id',
-            'new_date'            => 'required|date',
+            'new_date'            => 'required|date|after_or_equal:tanggal',
             'why'                 => 'required|string',
         ], [
             'tanggal.required'             => 'Tanggal asal wajib diisi.',
+            'tanggal.after_or_equal'       => 'Tanggal asal tidak boleh kurang dari hari ini.',
             'new_date.required'            => 'Tanggal pengganti wajib diisi.',
+            'new_date.after_or_equal'      => 'Tanggal pengganti tidak boleh kurang dari tanggal asal.',
             'schedule_student_id.required' => 'Sesi jadwal asal wajib dipilih.',
             'unit_schedules_id.required'   => 'Sesi jadwal tujuan wajib dipilih.',
         ]);
@@ -68,22 +71,31 @@ class PermitController extends Controller
     {
         $students = Student::orderBy('name')->get();
         $schedules = Schedules_students::with('sch')->where('student_id', $presensi->student_id)->get();
-        $unitSchedules = UnitSchedule::orderBy('parse')->orderBy('start')->get();
+        
+        $student = Student::with(['reg' => fn($q) => $q->where('done', 0)])->find($presensi->student_id);
+        $unit_id = $student?->reg->where('done', 0)->first()?->unit;
+        
+        $unitSchedules = $unit_id 
+            ? UnitSchedule::where('unit_id', $unit_id)->orderBy('parse')->orderBy('start')->get()
+            : UnitSchedule::orderBy('parse')->orderBy('start')->get();
+            
         return view('permit.edit', compact('presensi', 'students', 'schedules', 'unitSchedules'));
     }
 
     public function update(Request $request, Permit $presensi)
     {
         $request->validate([
-            'tanggal'             => 'required|date',
+            'tanggal'             => 'required|date|after_or_equal:today',
             'student_id'          => 'required|exists:students,id',
             'schedule_student_id' => 'required|exists:schedules_students,id',
             'unit_schedules_id'   => 'required|exists:unit_schedules,id',
-            'new_date'            => 'required|date',
+            'new_date'            => 'required|date|after_or_equal:tanggal',
             'why'                 => 'required|string',
         ], [
             'tanggal.required'             => 'Tanggal asal wajib diisi.',
+            'tanggal.after_or_equal'       => 'Tanggal asal tidak boleh kurang dari hari ini.',
             'new_date.required'            => 'Tanggal pengganti wajib diisi.',
+            'new_date.after_or_equal'      => 'Tanggal pengganti tidak boleh kurang dari tanggal asal.',
             'schedule_student_id.required' => 'Sesi jadwal asal wajib dipilih.',
             'unit_schedules_id.required'   => 'Sesi jadwal tujuan wajib dipilih.',
         ]);
@@ -118,18 +130,38 @@ class PermitController extends Controller
     public function getSchedule(Request $request)
     {
         $student_id = $request->student_id;
+        
+        // 1. Jadwal Asal (berdasarkan tabel pivot schedules_students)
         $schedules = Schedules_students::with('sch')->where('student_id', $student_id)->get();
         
         $options = '<option value="">Pilih Sesi Jadwal</option>';
         foreach($schedules as $sch) {
             foreach($sch->sch as $session) {
-                // Check hari format, let's assume session has 'hari' property or similar if needed. We just output ID.
                 $hari = $session->parse ?? 'Jadwal';
                 $name = $session->name ?? 'Sesi';
                 $options .= '<option value="'.$sch->id.'" data-hari="'.strtolower($hari).'">'.$hari.' - '.$name.' ('.$session->start_time.' s/d '.$session->end_time.')</option>';
             }
         }
-        return response()->json(['options' => $options]);
+
+        // 2. Jadwal Tujuan (difilter berdasarkan unit_id siswa)
+        $student = \App\Models\Student::with(['reg' => fn($q) => $q->where('done', 0)])->find($student_id);
+        $unit_id = $student?->reg->where('done', 0)->first()?->unit;
+        
+        $targetOptions = '<option value="">Pilih Ke Sesi Jadwal</option>';
+        if ($unit_id) {
+            $unitSchedules = \App\Models\UnitSchedule::where('unit_id', $unit_id)
+                                ->orderBy('parse')->orderBy('start')->get();
+            foreach($unitSchedules as $sch) {
+                $hari = $sch->parse ?? 'Jadwal';
+                $name = $sch->name ?? 'Sesi';
+                $targetOptions .= '<option value="'.$sch->id.'" data-hari="'.strtolower($hari).'">'.$hari.' - '.$name.' ('.$sch->start_time.' s/d '.$sch->end_time.')</option>';
+            }
+        }
+        
+        return response()->json([
+            'options' => $options,
+            'target_options' => $targetOptions
+        ]);
     }
 
     /**

@@ -77,6 +77,14 @@ Akademik > {{ $user->data->name ?? $user->name }}
             class="px-6 py-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
             Pembayaran
         </button>
+        <button @click="activeTab = 'jadwal'" :class="activeTab === 'jadwal' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-orange-500'"
+            class="px-6 py-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
+            Jadwal
+        </button>
+        <button @click="activeTab = 'absensi'" :class="activeTab === 'absensi' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-orange-500'"
+            class="px-6 py-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap">
+            Absensi
+        </button>
     </div>
 
     <!-- Tabs Content -->
@@ -353,6 +361,122 @@ Akademik > {{ $user->data->name ?? $user->name }}
             @else
             <div class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed">
                 <p class="text-gray-400 font-medium">Siswa belum memiliki riwayat pembayaran.</p>
+            </div>
+            @endif
+        </div>
+
+        <!-- TAB JADWAL -->
+        <div x-show="activeTab === 'jadwal'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
+            @if($user->data && $user->data->schedules->count() > 0)
+            <div class="mb-6">
+                <h4 class="text-lg font-bold text-orange-600 mb-4 pb-2 border-b border-orange-100 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Jadwal Siswa
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($user->data->schedules as $jadwal)
+                        @foreach($jadwal->sch as $sch)
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-orange-500 hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start mb-3">
+                                <h5 class="font-bold text-gray-800 text-sm capitalize">{{ $sch->name ?? '-' }}</h5>
+                                <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">{{ $sch->day }}</span>
+                            </div>
+                            <div class="text-xs text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg">
+                                <p class="flex items-center gap-2 font-medium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    {{ $sch->start_time }} - {{ $sch->end_time }}
+                                </p>
+                                <p class="flex items-center gap-2 font-medium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                                    {{ $jadwal->program ? $jadwal->program->name : '-' }}
+                                </p>
+                            </div>
+                        </div>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-gray-500 font-medium">Siswa belum memiliki jadwal aktif.</p>
+                @if(Auth::user()->role != 2 && Auth::user()->role != 3)
+                <a href="{{ route('dashboard.jadwal.create') }}" class="mt-4 inline-block px-5 py-2.5 bg-orange-50 text-orange-600 rounded-xl text-sm font-bold border border-orange-200 hover:bg-orange-100 hover:border-orange-300 transition-all shadow-sm">
+                    Tambah Jadwal Sekarang
+                </a>
+                @endif
+            </div>
+            @endif
+        </div>
+
+        <!-- TAB ABSENSI -->
+        <div x-show="activeTab === 'absensi'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
+            @if($user->data && $user->data->reg->count() > 0)
+                @foreach($user->data->reg as $reg)
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-orange-600 mb-4 pb-2 border-b border-orange-100 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Absensi {{ $reg->programs->name ?? '-' }} ({{ $reg->units->name ?? '-' }})
+                    </h4>
+                    <div class="overflow-x-auto bg-white rounded-xl border border-gray-100 shadow-sm mb-4">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Waktu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($reg->present as $item)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
+                                        {{ $item->tanggal }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-xs text-gray-700 font-medium">Guru: {{ $item->guru->name ?? '-' }}</span>
+                                            @if($item->program)
+                                                <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md font-bold">{{ $item->program->name }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="space-y-0.5">
+                                            @if($item->hal)
+                                                <div class="text-[11px] text-blue-600 flex items-center gap-1">
+                                                    <span class="font-bold">Hal:</span> <span>{{ $item->hal }}</span>
+                                                </div>
+                                            @endif
+                                            @if($item->Materi)
+                                                <div class="text-[11px] text-green-600 flex items-center gap-1">
+                                                    <span class="font-bold">Materi:</span> <span>{{ $item->Materi }}</span>
+                                                </div>
+                                            @endif
+                                            @if($item->Keterangan)
+                                                <div class="text-[11px] text-gray-500 italic flex items-start gap-1">
+                                                    <span class="font-bold not-italic">Ket:</span> <span>{{ $item->Keterangan }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="2" class="px-6 py-8 text-center text-gray-400 italic">Tidak ada absensi.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endforeach
+            @else
+            <div class="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+                <p class="text-gray-500 font-medium">Siswa belum memiliki data pendaftaran untuk absensi.</p>
             </div>
             @endif
         </div>
