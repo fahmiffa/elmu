@@ -231,7 +231,9 @@ class AcademicController extends Controller
 
             $items = Head::where('unit', $da->unit_id)
                 ->where('done', 0)
-                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'murid.present', 'murid.schedules'])
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'murid.present' => function ($q) {
+                    $q->select('id', 'unit_schedules_id', 'program_id', 'student_id', 'head_id', 'teach_id', 'hal', 'materi', 'keterangan', 'meet', 'created_at');
+                }, 'murid.schedules'])
                 ->get();
         } else {
             $da = Student::where('user', $id)->first();
@@ -240,7 +242,9 @@ class AcademicController extends Controller
             $items = Head::where('students', $da->id)
                 ->where('done', 0)
                 ->has('jadwal')
-                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'murid.present', 'murid.schedules'])
+                ->with(['jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'murid.present' => function ($q) {
+                    $q->select('id', 'unit_schedules_id', 'program_id', 'student_id', 'head_id', 'teach_id', 'hal', 'materi', 'keterangan', 'meet', 'created_at');
+                }, 'murid.schedules'])
                 ->get();
         }
 
@@ -376,13 +380,14 @@ class AcademicController extends Controller
             if (!$da) return response()->json(['items' => []]);
 
             $items = StudentPresent::where('teach_id', $da->id)
-                ->with(['student:id,name', 'unitSchedule:id,name', 'program:id,name', 'reg.units:id,name'])
+                ->with(['student:id,name,nama_panggilan', 'unitSchedule:id,name', 'program:id,name', 'reg.units:id,name'])
                 ->latest()
                 ->get()
                 ->map(function ($item) {
                     return [
-                        'id_siswa'   => $item->student->id ?? null,
+                        'id_siswa'     => $item->student->id ?? null,
                         'nama_siswa'   => $item->student->name ?? null,
+                        'nama_panggilan' => $item->student->nama_panggilan ?? null,
                         'nama_sessi'   => $item->unitSchedule->name ?? null,
                         'id_program'   => $item->program->id ?? null,
                         'nama_program' => $item->program->name ?? null,
@@ -391,6 +396,7 @@ class AcademicController extends Controller
                         'hal'          => $item->hal,
                         'materi'       => $item->Materi,
                         'keterangan'   => $item->Keterangan,
+                        'meet'         => $item->meet,
                         'tanggal'      => $item->tanggal,
                     ];
                 });
@@ -412,6 +418,7 @@ class AcademicController extends Controller
                         'hal'          => $item->hal,
                         'materi'       => $item->Materi,
                         'keterangan'   => $item->Keterangan,
+                        'meet'         => $item->meet,
                         'tanggal'      => $item->tanggal,
                         'nama_guru'    => $item->guru->name ?? null,
                     ];
@@ -423,6 +430,13 @@ class AcademicController extends Controller
 
     public function UpJadwal(Request $request)
     {
+        $currentHour = (int) date('H');
+        if ($currentHour < 13 || $currentHour >= 21) {
+            return response()->json([
+                'errors' => ['message' => ['Absensi hanya dapat diisi pada jam 06:00 pagi sampai 21:00 malam.']]
+            ], 400);
+        }
+
         $validator = Validator::make($request->all(), [
             'jadwal' => 'required',
             'user'   => 'required|array',
@@ -470,6 +484,9 @@ class AcademicController extends Controller
                     ->exists();
 
                 if (!$alreadyExists) {
+                    // Hitung urutan meet (pertemuan ke-x) untuk student ini
+                    $meetCount = StudentPresent::where('student_id', $studentId)->count();
+
                     $present                    = new StudentPresent;
                     $present->student_id        = $studentId;
                     $present->unit_schedules_id = $request->jadwal;
@@ -480,6 +497,7 @@ class AcademicController extends Controller
                     $present->hal               = $request->hal;
                     $present->Materi            = $request->Materi;
                     $present->Keterangan        = $request->Keterangan;
+                    $present->meet              = $meetCount + 1;
                     $present->save();
 
                     $processed++;

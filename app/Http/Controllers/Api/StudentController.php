@@ -25,18 +25,30 @@ class StudentController extends Controller
 
         if ($role == 2) {
             $student = User::select('id', 'name', 'email', 'status', 'role')
-                ->with('data')
+                ->with(['data', 'teach', 'student'])
                 ->where('id', $id)->first();
 
-            $induk          = optional($student->data->reg->first())->induk;
-            $student->induk = $induk ? substr($induk, 0, -4) : null;
-            $student->data->makeHidden('reg');
+            if ($student) {
+                if ($student->student && !empty($student->student->name)) {
+                    $student->name = $student->student->name;
+                }
+                $induk          = optional($student->data->reg->first())->induk;
+                $student->induk = $induk ? substr($induk, 0, -4) : null;
+                $student->data->makeHidden('reg');
+            }
 
             return response()->json($student);
         }
 
         if ($role == 3) {
-            $student = User::select('id', 'name', 'email', 'status', 'role')->where('id', $id)->first();
+            $student = User::select('id', 'name', 'email', 'status', 'role')
+                ->with('teach')
+                ->where('id', $id)->first();
+
+            if ($student && $student->teach && !empty($student->teach->name)) {
+                $student->name = $student->teach->name;
+            }
+
             return response()->json($student);
         }
     }

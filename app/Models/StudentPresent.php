@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class StudentPresent extends Model
 {
     protected $hidden = ['created_at', 'updated_at'];
-    protected $fillable = ['student_id', 'unit_schedules_id', 'teach_id', 'hal', 'Materi', 'Keterangan', 'head_id', 'program_id'];
+    protected $fillable = ['student_id', 'unit_schedules_id', 'teach_id', 'hal', 'Materi', 'Keterangan', 'head_id', 'program_id','meet'];
 
     protected $appends = ['tanggal'];
 
