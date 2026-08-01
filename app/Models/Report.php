@@ -12,4 +12,14 @@ class Report extends Model
     {
         return $this->belongsTo(User::class, 'user');
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'user','user');
+    }
+
+    public function teach()
+    {
+        return $this->belongsTo(Teach::class, 'user','user');
+    }
 }

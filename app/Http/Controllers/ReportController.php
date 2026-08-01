@@ -12,9 +12,7 @@ class ReportController extends Controller
 
     public function index()
     {
-        $items = Report::with('users.data.reg.class','users.data.reg.programs','users.data.reg.units')->get();
-
-        // return response()->json($items);
+        $items = Report::with('users.data.reg.class','users.data.reg.programs','users.data.reg.units','users','teach','student')->get();
         return view('home.report.index', compact('items'));
     }
 

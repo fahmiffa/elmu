@@ -47,8 +47,8 @@
                         <td class="px-4 py-2"
                             x-text="(perPage === 'all' ? index + 1 : ((currentPage - 1) * perPage) + index + 1)">
                         </td>
-                        <td class="px-4 py-2" x-text="row.users?.name ?? '-'"></td>
-                        <td class="px-4 py-2" x-text="row.users?.data?.nama_panggilan ?? '-'"></td>
+                        <td class="px-4 py-2" x-text="row.users.role == 2 ? row.student?.name : row.teach?.name"></td>
+                        <td class="px-4 py-2" x-text="row.users.role == 2 ? row.student?.nama_panggilan : '-'"></td>
                         <td class="px-4 py-2">
                             <div class="whitespace-nowrap" x-show="row.users?.data?.reg?.length">
                                 <template x-for="(item, index) in row.users?.data?.reg" :key="index">

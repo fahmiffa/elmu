@@ -279,6 +279,7 @@ export const layout = () => {
 };
 
 export const dataTable = (data) => {
+    console.log(data);
     return {
         search: "",
         filterUnit: "",

@@ -148,7 +148,7 @@
         </span> Video
     </li>
 </a>
-@if(Auth::user()->role == 0)
+{{-- @if(Auth::user()->role == 0)
 <a href="{{ route('dashboard.salary') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.salary') ? 'bg-orange-100' : null }}">
@@ -162,7 +162,7 @@
         </span> Salary
     </li>
 </a>
-@endif
+@endif --}}
 <a href="{{ route('dashboard.raport.index') }}">
     <li
         class="flex items-center px-4 py-3 border-b border-gray-300 hover:bg-orange-100 {{ Route::is('dashboard.raport.*') ? 'bg-orange-100' : null }}">
