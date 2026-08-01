@@ -7,18 +7,38 @@ use App\Models\Student;
 use App\Models\Schedules_students;
 use App\Models\UnitSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PermitController extends Controller
 {
     public function index()
     {
-        $permits = Permit::with(['student', 'scheduleStudent.sch', 'unitSchedule'])->latest()->get();
+        $query = Permit::with(['student', 'scheduleStudent.sch', 'unitSchedule'])->latest();
+        
+        if (Auth::user()->role == 4) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereHas('student.reg', function($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+        }
+        
+        $permits = $query->get();
         return view('permit.index', compact('permits'));
     }
 
     public function create()
     {
-        $students = Student::orderBy('name')->get(); 
+        $query = Student::orderBy('name');
+        
+        if (Auth::user()->role == 4) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereHas('reg', function($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+        }
+        
+        $students = $query->get(); 
         // Awalnya kosong, akan diisi via AJAX saat siswa dipilih
         $unitSchedules = collect(); 
         return view('permit.create', compact('students', 'unitSchedules'));
@@ -69,7 +89,16 @@ class PermitController extends Controller
 
     public function edit(Permit $presensi)
     {
-        $students = Student::orderBy('name')->get();
+        $query = Student::orderBy('name');
+        
+        if (Auth::user()->role == 4) {
+            $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+            $query->whereHas('reg', function($q) use ($unitIds) {
+                $q->whereIn('unit', $unitIds);
+            });
+        }
+        
+        $students = $query->get();
         $schedules = Schedules_students::with('sch')->where('student_id', $presensi->student_id)->get();
         
         $student = Student::with(['reg' => fn($q) => $q->where('done', 0)])->find($presensi->student_id);
