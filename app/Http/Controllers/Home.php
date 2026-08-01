@@ -46,7 +46,34 @@ class Home extends Controller
 {
     public function absensi(Request $request)
     {
-        $query = Head::has('present')->with('jadwal:id,name,day,parse,start,end', 'murid:id,name,nama_panggilan', 'present.guru', 'present.program', 'class', 'units', 'programs');
+        $presentQuery = function($q) use ($request) {
+            if ($request->filled('guru')) {
+                $q->whereHas('guru', function($q2) use ($request) {
+                    $q2->where('name', 'like', "%{$request->guru}%");
+                });
+            }
+            if ($request->filled('hari')) {
+                $hari = (int) $request->hari;
+                // DAYOFWEEK() in MySQL: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+                // User input: 1 = Senin, 2 = Selasa, ..., 7 = Minggu
+                $dayOfWeek = $hari == 7 ? 1 : $hari + 1;
+                $q->whereRaw('DAYOFWEEK(created_at) = ?', [$dayOfWeek]);
+            }
+        };
+
+        $query = Head::whereHas('present', $presentQuery)
+            ->with([
+                'jadwal:id,name,day,parse,start,end', 
+                'murid:id,name,nama_panggilan', 
+                'class', 
+                'units', 
+                'programs',
+                'present' => function($q) use ($presentQuery) {
+                    $presentQuery($q);
+                    $q->with(['guru', 'program']);
+                }
+            ]);
+
         if (Auth::user()->zone_id) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);

@@ -9,7 +9,22 @@
 
     <div class="mb-4 flex flex-wrap items-center gap-2">
         <form method="GET" action="{{ route('dashboard.absensi') }}" class="flex flex-wrap items-center gap-2 w-full">
-            <input type="text" name="search" placeholder="Cari Nama / Panggilan" value="{{ request('search') }}"
+            <select name="hari" onchange="this.form.submit()"
+                class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]">
+                <option value="">Semua Hari</option>
+                <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin</option>
+                <option value="2" {{ request('hari') == '2' ? 'selected' : '' }}>Selasa</option>
+                <option value="3" {{ request('hari') == '3' ? 'selected' : '' }}>Rabu</option>
+                <option value="4" {{ request('hari') == '4' ? 'selected' : '' }}>Kamis</option>
+                <option value="5" {{ request('hari') == '5' ? 'selected' : '' }}>Jum'at</option>
+                <option value="6" {{ request('hari') == '6' ? 'selected' : '' }}>Sabtu</option>
+                <option value="7" {{ request('hari') == '7' ? 'selected' : '' }}>Minggu</option>
+            </select>
+
+            <input type="text" name="guru" placeholder="Cari Guru / Miska" value="{{ request('guru') }}"
+                class="flex-1 min-w-[200px] border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+
+            <input type="text" name="search" placeholder="Cari Nama / Panggilan Siswa" value="{{ request('search') }}"
                 class="flex-1 min-w-[200px] border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
 
             <select name="unit" onchange="this.form.submit()"
@@ -28,9 +43,13 @@
                 @endforeach
             </select>
 
-            @if(request()->anyFilled(['search', 'unit', 'program']))
+            @if(request()->anyFilled(['search', 'unit', 'program', 'hari', 'guru']))
                 <a href="{{ route('dashboard.absensi') }}" class="text-sm text-orange-600 hover:underline">Reset Filter</a>
             @endif
+
+            <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition">
+                Cari
+            </button>
 
             <input type="hidden" name="per_page" value="{{ request('per_page', 50) }}" />
         </form>
