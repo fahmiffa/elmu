@@ -26,7 +26,7 @@
             <tbody class="text-gray-700 font-light">
                 @foreach ($permits as $item)
                 @php
-                    $sesAsal   = $item->scheduleStudent->sch->first() ?? null;
+                    $sesAsal   = $item->scheduleStudent?->sch?->first() ?? null;
                     $sesTujuan = $item->unitSchedule ?? null;
                 @endphp
                 <tr class="border-b border-gray-200 hover:bg-orange-50 transition-colors">
