@@ -24,11 +24,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 
 
-// Route::any('{any}', function () {
-//    abort(404, 'Data karyawan tidak ditemukan');
-// });
-
-
 Route::get('/kebijakan-privasi', function () {
     return view('policy');
 });
@@ -39,9 +34,8 @@ Route::get('/payment/{par}', function ($par) {
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
-    Artisan::call('db:seed');
-    File::put(storage_path('logs/laravel.log'), '');
-    return 'Log cleared';
+        File::put(storage_path('logs/laravel.log'), '');
+        return 'Log cleared';
 });
 
 Route::get('/video/{id}', [AuthController::class, 'video']);

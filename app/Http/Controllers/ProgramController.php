@@ -46,6 +46,7 @@ class ProgramController extends Controller
             'harga.*' => 'required',
             'id'      => 'required|array',
             'id.*'    => 'required',
+            'session' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
@@ -71,6 +72,7 @@ class ProgramController extends Controller
             $item->extend  = $request->tipe === 'extend' ? true : null;
             $item->kit     = $request->nominal;
             $item->kit_des = $request->kit_des;
+            $item->session = $request->session;
             $item->save();
 
             for ($i = 0; $i < count($kelas); $i++) {
@@ -139,6 +141,7 @@ class ProgramController extends Controller
             'level' => 'required',
             'price' => 'required',
             'nominal' => 'required',
+            'session' => 'required',
         ], [
             'required' => 'Field wajib diisi.',
         ]);
@@ -162,6 +165,7 @@ class ProgramController extends Controller
             $item->des     = $request->des;
             $item->level   = $request->level;
             $item->extend  = $request->tipe === 'extend' ? true : null;
+            $item->session = $request->session;
             $item->kit     = $request->nominal;
             $item->kit_des = $request->kit_des;
             $item->save();
@@ -198,7 +202,6 @@ class ProgramController extends Controller
 
             return redirect()->route('dashboard.master.program.index')->with('status', 'Program berhasil diperbarui!');
         } catch (\Exception $e) {
-            dd($e->getMessage());
             DB::rollback();
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['status' => 'error', 'message' => 'Terjadi Kesalahan: ' . $e->getMessage()], 500);
