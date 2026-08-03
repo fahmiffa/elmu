@@ -17,7 +17,7 @@ class ProgramController extends Controller
      */
     public function index()
     {
-        $items = Program::with(['price.class'])->latest()->limit(2)->get();
+        $items = Program::with(['price.class'])->latest()->get();
         return view('master.program.index', compact('items'));
     }
 
