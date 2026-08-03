@@ -33,6 +33,15 @@ class ScheduleController extends Controller
         $items = $query->get()->map(function ($item) {
             $firstSchedule = $item->schedules->first();
             $item->present_program = $firstSchedule ? $firstSchedule->program : null;
+
+            if ($item->murid) {
+                $item->murid->makeHidden(['absen']);
+            }
+            
+            if ($item->units) {
+                $item->units->makeHidden(['kelasn']);
+            }
+
             return $item;
         });
 
