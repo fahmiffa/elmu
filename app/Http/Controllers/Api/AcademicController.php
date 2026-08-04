@@ -478,13 +478,30 @@ class AcademicController extends Controller
                 $mappingQuery->where('program_id', $request->program_id);
             }
 
+            $move = Permit::with('scheduleStudent')
+                ->where('student_id', $studentId)
+                ->where('unit_schedules_id', $request->jadwal)
+                ->whereDate('new_date', $today)
+                ->first();
+
             $mapping = $mappingQuery->first();
 
-            if ($mapping) {
+            if ($mapping || $move) {
+
+                if ($move && $move->scheduleStudent) {
+                    $head = $move->scheduleStudent->head;
+                    $program = $move->scheduleStudent->program_id;
+                } elseif ($mapping) {
+                    $head = $mapping->head;
+                    $program = $mapping->program_id;
+                } else {
+                    continue;
+                }
+
                 $alreadyExists = StudentPresent::where('student_id', $studentId)
                     ->whereDate('created_at', $today)
                     ->where('unit_schedules_id', $request->jadwal)
-                    ->where('head_id', $mapping->head)
+                    ->where('head_id', $head)
                     ->exists();
 
                 if (!$alreadyExists) {
@@ -494,8 +511,8 @@ class AcademicController extends Controller
                     $present                    = new StudentPresent;
                     $present->student_id        = $studentId;
                     $present->unit_schedules_id = $request->jadwal;
-                    $present->head_id           = $mapping->head;
-                    $present->program_id        = $mapping->program_id;
+                    $present->head_id           = $head;
+                    $present->program_id        = $program;
                     // Safely get teach_id if data exists
                     $present->teach_id          = optional(JWTAuth::user()->data)->id;
                     $present->present           = $isPresentInput;

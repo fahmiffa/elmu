@@ -26,12 +26,25 @@ Schedule::call(function () {
 
       foreach ($head as $val) {
             $paid = Paid::where('bulan', $month)->where('tahun', $year)->where('head', $val->id)->exists();
+
+            $first = 1;
+
+            if($val->old == 1)
+            {
+                  $first = 0; 
+            }
+
+            if(Paid::where('first', 1)->where('head', $val->id)->exists() && $val->old == 0)
+            {
+                  $first = 0;
+            }
+
             if ($paid == false) {
                   $da[] = [
                         'head'       => $val->id,
                         'bulan'      => $month,
                         'tahun'      => $year,
-                        'first'      => $val->old == 0 ? 1 : 0,
+                        'first'      => $first,
                         'created_at' => $now,
                         'updated_at' => $now
                   ];
