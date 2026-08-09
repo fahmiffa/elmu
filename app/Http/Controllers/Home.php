@@ -1062,7 +1062,7 @@ class Home extends Controller
                 $user->name     = UserName($request->name);
                 $user->email    = $request->email;
                 $user->role     = 2;
-                $user->status   = 0;
+                $user->status   = 1;
                 $user->password = bcrypt('murik@');
                 $user->save();
 
