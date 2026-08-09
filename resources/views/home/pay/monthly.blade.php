@@ -145,14 +145,14 @@
                                             </svg>
                                         </button>
 
-                                        <a x-show="row.status == 1" :href="'/dashboard/invoice/' + md5Component(row.id)" target="_blank"
+                                        <!-- <a x-show="row.status == 1" :href="'/dashboard/invoice/' + md5Component(row.id)" target="_blank"
                                             class="text-blue-600 p-1" title="Cetak Invoice">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M6 9V2h12v7" />
                                                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                                                 <rect width="12" height="8" x="6" y="14" />
                                             </svg>
-                                        </a>
+                                        </a> -->
 
                                         <div x-show="modal.activeModal === row.id" x-cloak x-transition
                                             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

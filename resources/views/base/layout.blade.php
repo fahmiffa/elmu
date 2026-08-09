@@ -49,8 +49,11 @@
         <!-- MAIN CONTENT (Takes remaining height) -->
         <main class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12">
 
+            <!-- Overlay for mobile sidebar -->
+            <div x-show="sidebarMobileOpen" x-cloak @click="closeSidebarOnMobile()" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" style="display: none;"></div>
+
             <!-- SIDEBAR (Fixed flex layout, scrollable) -->
-            <div class="md:col-span-3 lg:col-span-2 hidden md:block overflow-y-auto scroll-show scroll-hidden px-4 py-4">
+            <div :class="sidebarMobileOpen ? 'fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl block' : 'hidden'" class="md:col-span-3 lg:col-span-2 md:block md:relative md:w-auto md:bg-transparent md:shadow-none md:z-auto overflow-y-auto scroll-show scroll-hidden px-4 py-4">
                 @include('base.side')
             </div>
 

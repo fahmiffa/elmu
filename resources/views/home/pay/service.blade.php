@@ -78,7 +78,6 @@
                             <th class="px-4 py-2">Harga</th>
                             <th class="px-4 py-2">Status</th>
                             <th class="px-4 py-2">Tipe</th>
-                            <th class="px-4 py-2 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>

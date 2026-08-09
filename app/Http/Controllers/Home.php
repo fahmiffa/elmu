@@ -340,9 +340,40 @@ class Home extends Controller
         return Transaction::hook($data);
     }
 
-    public function user()
+    public function user(Request $request)
     {
-        $items = User::with('teach','student', 'zone')->where('role', '!=', 0)->get();
+        $query = User::with('teach', 'student', 'zone', 'data')->where('role', '!=', 0);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('student', function($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%")
+                         ->orWhere('nama_panggilan', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('teach', function($q3) use ($search) {
+                      $q3->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $perPage = $request->input('per_page', 50);
+        
+        if ($perPage === 'all') {
+            $items = $query->latest()->get();
+        } else {
+            $items = $query->latest()->paginate((int)$perPage)->withQueryString();
+        }
+
         return view('master.user.index', compact('items'));
     }
 

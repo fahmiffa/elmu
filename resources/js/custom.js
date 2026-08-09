@@ -242,6 +242,7 @@ export function materiForm({ initialRole }) {
 export const layout = () => {
     return {
         sidebarOpen: true,
+        sidebarMobileOpen: false,
         modal: null,
         init() {
             this.sidebarOpen = localStorage.getItem("sidebarOpen") === "true";
@@ -252,11 +253,11 @@ export const layout = () => {
             localStorage.setItem("sidebarOpen", this.sidebarOpen);
         },
         toggleSidebarMobile() {
-            this.sidebarOpen = !this.sidebarOpen;
+            this.sidebarMobileOpen = !this.sidebarMobileOpen;
         },
         closeSidebarOnMobile() {
             if (window.innerWidth < 768) {
-                this.sidebarOpen = false;
+                this.sidebarMobileOpen = false;
             }
         },
         md5Component(da) {
