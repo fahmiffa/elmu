@@ -34,7 +34,6 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $items    = Student::with('users')->get();
         $kelas    = Kelas::with('program:id,name', 'units:id,name')->get();
         $kontrak  = Payment::all();
         $grade    = Grade::all();
@@ -57,7 +56,131 @@ class StudentController extends Controller
             }
         }
 
-        return view('master.students.index', compact('items', 'kelas', 'grade', 'kontrak', 'units', 'programs', 'exportFile'));
+        return view('master.students.index', compact('kelas', 'grade', 'kontrak', 'units', 'programs', 'exportFile'));
+    }
+
+    /**
+     * Server-side datatable: pagination, search, filter.
+     */
+    public function datatable(Request $request)
+    {
+        $search   = $request->input('search', '');
+        $perPage  = (int) $request->input('per_page', 15);
+        $page     = (int) $request->input('page', 1);
+        $grade    = $request->input('grade', '');
+        $unit     = $request->input('unit', '');
+        $program  = $request->input('program', '');
+        $kelas    = $request->input('kelas', '');
+        $gender   = $request->input('gender', '');
+        $sortCol  = $request->input('sort', 'name');
+        $sortDir  = $request->input('direction', 'asc');
+
+        // Whitelist sort columns
+        $allowedSorts = ['name', 'nama_panggilan', 'birth', 'gender', 'created_at'];
+        if (!in_array($sortCol, $allowedSorts)) {
+            $sortCol = 'name';
+        }
+        $sortDir = $sortDir === 'desc' ? 'desc' : 'asc';
+
+        $query = DB::table('students')
+            ->join('users', 'users.id', '=', 'students.user')
+            ->leftJoin('head', function ($join) {
+                $join->on('head.students', '=', 'students.id')
+                     ->where('head.done', 0)
+                     ->whereNull('head.deleted_at');
+            })
+            ->leftJoin('units', 'units.id', '=', 'head.unit')
+            ->leftJoin('programs', 'programs.id', '=', 'head.program')
+            ->leftJoin('kelas', 'kelas.id', '=', 'head.kelas')
+            ->leftJoin('grades', 'grades.id', '=', 'students.grade_id')
+            ->select(
+                'students.id',
+                'students.name',
+                'students.nama_panggilan',
+                'students.birth',
+                'students.gender',
+                'students.alamat_sekolah',
+                'students.grade_id',
+                'grades.name as grade_name',
+                'users.id as user_id',
+                'units.id as unit_id',
+                'units.name as unit_name',
+                'programs.id as program_id',
+                'programs.name as program_name',
+                'kelas.id as kelas_id',
+                'kelas.name as kelas_name'
+            )
+            ->groupBy(
+                'students.id', 'students.name', 'students.nama_panggilan',
+                'students.birth', 'students.gender', 'students.alamat_sekolah',
+                'students.grade_id', 'grades.name', 'users.id',
+                'units.id', 'units.name', 'programs.id', 'programs.name',
+                'kelas.id', 'kelas.name'
+            );
+
+        // Search
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('students.name', 'like', "%{$search}%")
+                  ->orWhere('students.nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+
+        // Filters
+        if ($grade !== '')    $query->where('students.grade_id', $grade);
+        if ($unit !== '')     $query->where('head.unit', $unit);
+        if ($program !== '')  $query->where('head.program', $program);
+        if ($kelas !== '')    $query->where('head.kelas', $kelas);
+        if ($gender !== '')   $query->where('students.gender', $gender);
+
+        $total = DB::table(DB::raw("({$query->toSql()}) as sub"))
+            ->mergeBindings($query)
+            ->count();
+
+        $data = $query->orderBy("students.{$sortCol}", $sortDir)
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get()
+            ->map(function ($row) {
+                // Compute age without Carbon appends overhead
+                $age = null;
+                if ($row->birth) {
+                    $age = \Carbon\Carbon::parse($row->birth)->age . ' Tahun';
+                }
+                // Gender label
+                $genderLabel = match ((int)$row->gender) {
+                    1 => 'Laki-laki',
+                    2 => 'Perempuan',
+                    default => null,
+                };
+                return [
+                    'id'             => $row->id,
+                    'name'           => $row->name,
+                    'nama_panggilan' => $row->nama_panggilan,
+                    'birth'          => $row->birth,
+                    'age'            => $age,
+                    'gender'         => $row->gender,
+                    'genders'        => $genderLabel,
+                    'alamat_sekolah' => $row->alamat_sekolah,
+                    'grade_id'       => $row->grade_id,
+                    'grade_name'     => $row->grade_name,
+                    'user_id'        => $row->user_id,
+                    'unit_id'        => $row->unit_id,
+                    'unit_name'      => $row->unit_name,
+                    'program_id'     => $row->program_id,
+                    'program_name'   => $row->program_name,
+                    'kelas_id'       => $row->kelas_id,
+                    'kelas_name'     => $row->kelas_name,
+                ];
+            });
+
+        return response()->json([
+            'data'         => $data,
+            'total'        => $total,
+            'per_page'     => $perPage,
+            'current_page' => $page,
+            'last_page'    => (int) ceil($total / $perPage),
+        ]);
     }
 
     /**
