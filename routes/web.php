@@ -117,7 +117,6 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
         Route::resource('kelas', KelasController::class);
         Route::resource('payment', PaymentController::class);
         Route::resource('teach', TeachController::class);
-        Route::get('student/datatable', [StudentController::class, 'datatable'])->name('student.datatable');
         Route::post('student/export', [StudentController::class, 'export'])->name('student.export');
         Route::get('student/export/status/{filename}', [StudentController::class, 'exportStatus'])->name('student.export.status');
         Route::get('student/export/download/{filename}', [StudentController::class, 'downloadExport'])->name('student.export.download');
