@@ -1122,6 +1122,15 @@ class Home extends Controller
                 $level->head       = $head->id;
                 $level->status     = 1;
                 $level->save();
+
+
+            $to = preg_replace('/\D/', '', $user->nomor);
+            if (strpos($to, '0') === 0) {
+                $to = '62' . substr($to, 1);
+            }
+            $message  = "Selamat Anda berhasil bergabung dengan Murika\n*username : {$user->name}*\n*password : murik@*\n\n_Terima kasih atas partisipasinya_";
+            \App\Jobs\SendWhatsAppJob::dispatch($to, $message);
+
             } else {
 
                 $parent = Head::where('id', $request->murid)->firstOrFail();
