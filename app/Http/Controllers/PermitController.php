@@ -34,7 +34,7 @@ class PermitController extends Controller
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereHas('reg', function($q) use ($unitIds) {
-                $q->whereIn('unit', $unitIds);
+                $q->whereIn('unit', $unitIds)->where('done',0);
             });
         }
         
@@ -48,11 +48,12 @@ class PermitController extends Controller
     {
         $request->validate([
             'tanggal'             => 'required|date|after_or_equal:today',
-            'student_id'          => 'required|exists:students,id',
+            // 'student_id'          => 'required|exists:students,id',
             'schedule_student_id' => 'required|exists:schedules_students,id',
             'unit_schedules_id'   => 'required|exists:unit_schedules,id',
             'new_date'            => 'required|date|after_or_equal:tanggal',
             'why'                 => 'required|string',
+            'student_id'          => 'required|exists:head,students,done,0'
         ], [
             'tanggal.required'             => 'Tanggal asal wajib diisi.',
             'tanggal.after_or_equal'       => 'Tanggal asal tidak boleh kurang dari hari ini.',
