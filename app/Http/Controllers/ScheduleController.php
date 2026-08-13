@@ -16,28 +16,36 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $query = Head::has('jadwal')->where('done',0)->with('jadwal', 'murid', 'class', 'units', 'programs');
+        $query = Head::has('jadwal')
+            ->where('done', 0)
+            ->with([
+                'jadwal',
+                'murid',
+                'class',
+                'units',
+                'programs',
+                'schedules' => function ($q) {
+                    $q->with('program')->limit(1);
+                },
+            ]);
+
         $unitsQuery = \App\Models\Unit::query();
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
             $query->whereIn('unit', $unitIds);
             $unitsQuery->whereIn('id', $unitIds);
         }
-        $units = $unitsQuery->get(['id', 'name']);
+        $units    = $unitsQuery->get(['id', 'name']);
         $programs = \App\Models\Program::get(['id', 'name']);
 
-        $query->with(['schedules' => function ($q) {
-            $q->with('program')->limit(1);
-        }]);
-
-        $items = $query->get()->map(function ($item) {
+        $items = $query->get()->each->setAppends([])->map(function ($item) {
             $firstSchedule = $item->schedules->first();
             $item->present_program = $firstSchedule ? $firstSchedule->program : null;
 
             if ($item->murid) {
-                $item->murid->makeHidden(['absen']);
+                $item->murid->makeHidden(['absen', 'nomor_induk']);
             }
-            
+
             if ($item->units) {
                 $item->units->makeHidden(['kelasn']);
             }
