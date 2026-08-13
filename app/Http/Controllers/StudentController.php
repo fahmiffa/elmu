@@ -34,7 +34,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $items    = Student::with('users')->get()->makeHidden('absen');
+        $items    = Student::with('users', 'reg.programs', 'reg.units')->get()->makeHidden('absen');
         $kelas    = Kelas::with('program:id,name', 'units:id,name')->get();
         $kontrak  = Payment::all();
         $grade    = Grade::all();

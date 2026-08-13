@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class Student extends Model
 {
-    protected $appends = ['age', 'absen', 'genders'];
+    protected $appends = ['age', 'absen', 'genders', 'nomor_induk'];
     protected $hidden  = ['created_at', 'updated_at'];
 
     public function reg()
@@ -62,6 +62,23 @@ class Student extends Model
     public function users()
     {
         return $this->hasOne(User::class, 'id', 'user');
+    }
+
+    public function getNomorIndukAttribute()
+    {
+        $head = $this->reg->where('done', 0)->first()
+               ?? $this->reg->sortByDesc('id')->first();
+
+        if (!$head) {
+            return null;
+        }
+
+        $munit  = str_pad($head->number, 3, '0', STR_PAD_LEFT);
+        $global = str_pad($head->global, 4, '0', STR_PAD_LEFT);
+        $unit   = str_pad($head->unit, 3, '0', STR_PAD_LEFT);
+        $kode   = optional($head->programs)->kode ?? '';
+
+        return $global . $unit . $munit . '/' . $kode;
     }
 
     public function getabsenAttribute()
