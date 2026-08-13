@@ -29,7 +29,9 @@ class PermitController extends Controller
 
     public function create()
     {
-        $query = Student::orderBy('name');
+        $query = Student::wherehas('reg',function($q){
+            $q->where('done',0);
+        })->orderBy('name');
         
         if (Auth::user()->role == 4) {
             $unitIds = DB::table('zone_units')->where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
