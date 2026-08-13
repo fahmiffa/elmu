@@ -159,10 +159,15 @@ class PermitController extends Controller
 
     public function getSchedule(Request $request)
     {
+        $head_id = $request->head_id;
         $student_id = $request->student_id;
         
         // 1. Jadwal Asal (berdasarkan tabel pivot schedules_students)
-        $schedules = Schedules_students::with('sch')->where('student_id', $student_id)->get();
+        $schedulesQuery = Schedules_students::with('sch')->where('student_id', $student_id);
+        if ($head_id) {
+            $schedulesQuery->where('head', $head_id);
+        }
+        $schedules = $schedulesQuery->get();
         
         $options = '<option value="">Pilih Sesi Jadwal</option>';
         foreach($schedules as $sch) {
@@ -173,9 +178,15 @@ class PermitController extends Controller
             }
         }
 
-        // 2. Jadwal Tujuan (difilter berdasarkan unit_id siswa)
-        $student = \App\Models\Student::with(['reg' => fn($q) => $q->where('done', 0)])->find($student_id);
-        $unit_id = $student?->reg->where('done', 0)->first()?->unit;
+        // 2. Jadwal Tujuan (difilter berdasarkan unit_id head)
+        $unit_id = null;
+        if ($head_id) {
+            $head = \App\Models\Head::find($head_id);
+            $unit_id = $head?->unit;
+        } else {
+            $student = \App\Models\Student::with(['reg' => fn($q) => $q->where('done', 0)])->find($student_id);
+            $unit_id = $student?->reg->where('done', 0)->first()?->unit;
+        }
         
         $targetOptions = '<option value="">Pilih Ke Sesi Jadwal</option>';
         if ($unit_id) {
@@ -194,9 +205,6 @@ class PermitController extends Controller
         ]);
     }
 
-    /**
-     * Mengembalikan info siswa (nama, program, unit) untuk ditampilkan di form
-     */
     public function getStudentInfo(Request $request)
     {
         $student = \App\Models\Student::with([
@@ -207,14 +215,20 @@ class PermitController extends Controller
             return response()->json(['error' => 'Siswa tidak ditemukan'], 404);
         }
 
-        $head    = $student->reg->where('done', 0)->first();
-        $unit    = $head?->units?->name ?? '-';
-        $program = $head?->programs?->name ?? '-';
+        $heads = $student->reg->where('done', 0);
+        $programs = [];
+        foreach($heads as $head) {
+            $programs[] = [
+                'head_id'      => $head->id,
+                'unit_id'      => $head->unit,
+                'unit_name'    => $head->units?->name ?? '-',
+                'program_name' => $head->programs?->name ?? '-',
+            ];
+        }
 
         return response()->json([
-            'name'    => $student->name,
-            'unit'    => $unit,
-            'program' => $program,
+            'name'     => $student->name,
+            'programs' => $programs,
         ]);
     }
 

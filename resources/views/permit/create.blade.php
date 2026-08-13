@@ -61,6 +61,13 @@
                     <span>📚 <span id="info_program"></span></span>
                 </div>
             </div>
+            {{-- Program Selection --}}
+            <div id="program_container" class="hidden mt-3">
+                <label class="block text-gray-700 font-bold mb-2">Pilih Program</label>
+                <select id="head_id" name="head_id" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500">
+                    <option value="">Pilih Program</option>
+                </select>
+            </div>
         </div>
 
         {{-- ── Dari Sesi Jadwal ── --}}
@@ -152,11 +159,15 @@
 
     function onStudentChange(studentId) {
         const infoBox  = document.getElementById('student_info');
+        const progCont = document.getElementById('program_container');
+        const progSel  = document.getElementById('head_id');
         const schedSel = document.getElementById('schedule_student_id');
         const targetSel = document.getElementById('unit_schedules_id');
 
         // Reset
         infoBox.classList.add('hidden');
+        progCont.classList.add('hidden');
+        progSel.innerHTML = '<option value="">Pilih Program</option>';
         schedSel.innerHTML = '<option value="">Pilih Sesi Jadwal</option>';
         targetSel.innerHTML = '<option value="">Pilih Ke Sesi Jadwal</option>';
         document.getElementById('tanggal_error').classList.add('hidden');
@@ -173,25 +184,59 @@
         .then(r => r.json())
         .then(data => {
             if (data.error) return;
-            document.getElementById('info_name').textContent    = data.name;
-            document.getElementById('info_unit').textContent    = data.unit;
-            document.getElementById('info_program').textContent = data.program;
-            infoBox.classList.remove('hidden');
+            document.getElementById('info_name').textContent = data.name;
+            
+            if (data.programs && data.programs.length > 0) {
+                if (data.programs.length === 1) {
+                    const p = data.programs[0];
+                    document.getElementById('info_unit').textContent = p.unit_name;
+                    document.getElementById('info_program').textContent = p.program_name;
+                    infoBox.classList.remove('hidden');
+                    loadSchedules(studentId, p.head_id);
+                } else {
+                    let opts = '<option value="">Pilih Program</option>';
+                    data.programs.forEach(p => {
+                        opts += `<option value="${p.head_id}">${p.program_name} (Unit: ${p.unit_name})</option>`;
+                    });
+                    progSel.innerHTML = opts;
+                    progCont.classList.remove('hidden');
+                    infoBox.classList.add('hidden');
+                }
+            }
         });
+    }
 
-        // ── Jadwal siswa ────────────────────────────────────────────────────
+    document.getElementById('head_id').addEventListener('change', function() {
+        const headId = this.value;
+        const studentId = document.getElementById('student_id').value;
+        if (headId && studentId) {
+            loadSchedules(studentId, headId);
+        } else {
+            document.getElementById('schedule_student_id').innerHTML = '<option value="">Pilih Sesi Jadwal</option>';
+            document.getElementById('unit_schedules_id').innerHTML = '<option value="">Pilih Ke Sesi Jadwal</option>';
+        }
+    });
+
+    function loadSchedules(studentId, headId = null) {
+        const schedSel = document.getElementById('schedule_student_id');
+        const targetSel = document.getElementById('unit_schedules_id');
+        
         schedSel.innerHTML = '<option value="">Memuat jadwal...</option>';
         targetSel.innerHTML = '<option value="">Memuat jadwal tujuan...</option>';
+        
+        const payload = { student_id: studentId };
+        if (headId) payload.head_id = headId;
+
         fetch('{{ route("dashboard.presensi.get-schedule") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({ student_id: studentId })
+            body: JSON.stringify(payload)
         })
         .then(r => r.json())
         .then(data => {
             schedSel.innerHTML = data.options;
             targetSel.innerHTML = data.target_options;
-            checkTanggalAsal(); // re-check setelah jadwal dimuat
+            checkTanggalAsal(); 
             checkNewDate();
         })
         .catch(() => { 
