@@ -221,10 +221,14 @@ class AcademicController extends Controller
         return response()->json(['status' => true], 200);
     }
 
-    public function jadwal()
+    public function jadwal(Request $request)
     {
         $role = JWTAuth::user()->role;
         $id   = JWTAuth::user()->id;
+        
+        $hariFilter = $request->input('hari') ?? $request->input('day');
+        $sessiFilter = $request->input('sessi') ?? $request->input('session_id');
+
         if ($role == 3) {
             $da = Teach::where('user', $id)->first();
             if (!$da) return response()->json(['jadwal' => [], 'murid' => []]);
@@ -291,6 +295,19 @@ class AcademicController extends Controller
                         $jadwalCollection->push($permit->unitSchedule);
                     }
                 }
+            }
+
+            // Apply filters
+            if (!is_null($hariFilter)) {
+                $jadwalCollection = $jadwalCollection->filter(function ($j) use ($hariFilter) {
+                    return $j->day == $hariFilter;
+                });
+            }
+
+            if (!is_null($sessiFilter)) {
+                $jadwalCollection = $jadwalCollection->filter(function ($j) use ($sessiFilter) {
+                    return $j->id == $sessiFilter || $j->name == $sessiFilter;
+                });
             }
 
             if ($jadwalCollection->isEmpty()) {
