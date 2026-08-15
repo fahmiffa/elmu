@@ -37,14 +37,6 @@ class SendWhatsAppJob implements ShouldQueue
                     'message' => $this->message,
                 ]);
 
-            if (!$response->successful()) {
-                Log::error('WA send failed', [
-                    'body' => $response->body(),
-                ]);
-
-                throw new \Exception('WA API failed');
-            }
-
         } catch (\Throwable $e) {
             Log::error('WA Job Error: ' . $e->getMessage());
             throw $e;

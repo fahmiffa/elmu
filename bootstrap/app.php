@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Http;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -38,11 +40,31 @@ return Application::configure(basePath: dirname(__DIR__))
                     return;
                 }
 
-                $message = "🚨 *Terjadi Error Aplikasi!*\n\n";
+                $user = null;
+
+                // Coba dari Auth/session
+                if (Auth::check()) {
+                    $user = Auth::user();
+                }
+
+                // Kalau belum dapat, coba dari JWT
+                if (!$user) {
+                    try {
+                        $user = JWTAuth::user();
+                    } catch (\Throwable $jwtException) {
+                        $user = null;
+                    }
+                }
+
+                // Ambil ID user
+                $userId = $user?->id ?? 'Guest';
+
+                $message = "*Terjadi Error Aplikasi!*\n\n";
                 $message .= "*Message:* " . $e->getMessage() . "\n";
                 $message .= "*File:* " . $e->getFile() . "\n";
                 $message .= "*Line:* " . $e->getLine() . "\n";
                 $message .= "\n*URL:* " . request()->fullUrl();
+                $message .= "\n*USER:* " . $userId;
 
                 try {
                     Http::post("https://api.telegram.org/bot{$telegramBotToken}/sendMessage", [
