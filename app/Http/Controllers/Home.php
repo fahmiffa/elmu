@@ -1488,6 +1488,7 @@ class Home extends Controller
     public function monthly(Request $request)
     {
         $queryPaid = Paid::has('reg')
+            ->whereHas('reg.murid')
             ->with('reg.murid.users', 'reg.class', 'reg.programs', 'reg.kontrak', 'reg.units', 'reg.prices')
             ->orderBy('bulan', 'asc');
 
@@ -1612,7 +1613,7 @@ class Home extends Controller
         }
 
         $items = $query->get()->map(function ($unit) use ($bulan, $tahun) {
-            $headIds = Head::where('unit', $unit->id)->where('done', 0)->pluck('id');
+            $headIds = Head::has('murid')->where('unit', $unit->id)->where('done', 0)->pluck('id');
 
             $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {
                 $q->where('unit', $unit->id)->where('done', 0);
@@ -1757,7 +1758,7 @@ class Home extends Controller
         if ($par == 'pay') {
 
             $query = Paid::whereHas('reg', function ($q) {
-                $q->where('done', 0);
+                $q->where('done', 0)->has('murid');
             });
             if (Auth::user()->role == 4 && Auth::user()->zone_id) {
                 $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
@@ -1899,7 +1900,7 @@ class Home extends Controller
 
             if ($par == 'unit-pay-monthly') {
                 $query = Paid::whereHas('reg', function ($q) {
-                    $q->where('done', 0);
+                    $q->where('done', 0)->has('murid');
                 });
                 if (Auth::user()->role == 4 && Auth::user()->zone_id) {
                     $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
@@ -1920,7 +1921,7 @@ class Home extends Controller
                 }
             } else {
                 $query = Order::whereHas('reg', function ($q) {
-                    $q->where('done', 0);
+                    $q->where('done', 0)->has('murid');
                 })->with('product', 'reg.units');
 
                 if (Auth::user()->role == 4 && Auth::user()->zone_id) {

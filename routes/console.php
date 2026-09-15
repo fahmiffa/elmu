@@ -13,11 +13,11 @@ Schedule::call(function () {})->everyMinute();
 
 Schedule::call(function () {
       $head = Head::select('id', 'old')
-            ->whereHas('kontrak', function ($q) {
-                  $q->where('month', 1);
-            })
-            ->with('murid.users')
-            ->where("done", 0)->get();
+                  ->whereHas('kontrak', function ($q) {
+                        $q->where('month', 1);
+                  })
+                  ->with('murid.users')
+                  ->where("done", 0)->get();
 
       $da  = [];
       $now = now();
