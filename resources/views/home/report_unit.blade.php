@@ -5,7 +5,7 @@
 @section('content')
 <div class="bg-white rounded-lg shadow-md p-6">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h2 class="text-xl font-bold text-gray-800">Laporan Pembayaran & Layanan per Unit</h2>
+        <h2 class="text-xl font-bold text-gray-800">Laporan Pembayaran & Layanan per {{ request('tipe') == 'program' ? 'Program' : 'Unit' }}</h2>
 
         <form action="{{ route('dashboard.report.unit') }}" method="GET" class="flex flex-wrap items-center gap-3">
             <div>
@@ -25,7 +25,7 @@
             <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition shadow-sm text-sm font-medium">
                 Filter
             </button>
-            <a href="{{ route('dashboard.report.unit.export', ['bulan' => $bulan, 'tahun' => $tahun]) }}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition shadow-sm text-sm font-medium flex items-center gap-2">
+            <a href="{{ route('dashboard.report.unit.export', ['bulan' => $bulan, 'tahun' => $tahun, 'tipe' => request('tipe', 'siswa')]) }}" class="hidden bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition shadow-sm text-sm font-medium flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Drawing 12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -38,13 +38,19 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th rowspan="2" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border">Unit</th>
-                    <th rowspan="2" class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border">Total Siswa</th>
+                    <th rowspan="2" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border">{{ request('tipe') == 'program' ? 'Unit & Program' : 'Unit' }}</th>
+                    @if(request('tipe', 'siswa') == 'siswa')
+                    <th colspan="2" class="px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border bg-purple-50">Program Aktif</th>
+                    @endif
                     <th colspan="2" class="px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border bg-blue-50">Pembayaran Bulanan</th>
                     <th colspan="2" class="px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border bg-green-50">Layanan</th>
                     <th rowspan="2" class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border bg-orange-50">Total Bayar</th>
                 </tr>
                 <tr>
+                    @if(request('tipe', 'siswa') == 'siswa')
+                    <th class="px-4 py-2 text-center text-xs font-medium text-purple-700 border bg-purple-50/50">Nama Program</th>
+                    <th class="px-4 py-2 text-center text-xs font-medium text-purple-700 border bg-purple-50/50">Jumlah</th>
+                    @endif
                     <th class="px-4 py-2 text-center text-xs font-medium text-blue-700 border bg-blue-50/50">Lunas</th>
                     <th class="px-4 py-2 text-center text-xs font-medium text-red-700 border bg-blue-50/50">Belum</th>
                     <th class="px-4 py-2 text-center text-xs font-medium text-green-700 border bg-green-50/50">Lunas</th>
@@ -57,9 +63,26 @@
                     <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border">
                         {{ $item->name }}
                     </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-center text-gray-700 border">
-                        {{ number_format($item->total_siswa) }}
+                    @if(request('tipe', 'siswa') == 'siswa')
+                    <td class="px-0 py-0 text-sm text-gray-600 border bg-purple-50/30 align-top">
+                        <table class="w-full">
+                            @foreach($item->active_programs as $prog)
+                            <tr class="{{ !$loop->last ? 'border-b border-gray-200' : '' }}">
+                                <td class="px-3 py-1.5">{{ $prog->name }}</td>
+                            </tr>
+                            @endforeach
+                        </table>
                     </td>
+                    <td class="px-0 py-0 text-sm text-center text-gray-700 border bg-purple-50/30 align-top">
+                        <table class="w-full">
+                            @foreach($item->active_programs as $prog)
+                            <tr class="{{ !$loop->last ? 'border-b border-gray-200' : '' }}">
+                                <td class="px-3 py-1.5 text-center font-semibold">{{ $prog->total }}</td>
+                            </tr>
+                            @endforeach
+                        </table>
+                    </td>
+                    @endif
                     <td class="px-4 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium border">
                         Rp {{ number_format($item->paid_monthly, 0, ',', '.') }}
                     </td>
@@ -81,7 +104,9 @@
             <tfoot class="bg-gray-100 font-bold">
                 <tr>
                     <td class="px-4 py-4 text-sm border font-bold">TOTAL KESELURUHAN</td>
-                    <td class="px-4 py-4 text-center text-sm border">{{ number_format($items->sum('total_siswa')) }}</td>
+                    @if(request('tipe', 'siswa') == 'siswa')
+                    <td colspan="2" class="px-4 py-4 text-sm border"></td>
+                    @endif
                     <td class="px-4 py-4 text-right text-sm border text-blue-700">Rp {{ number_format($items->sum('paid_monthly'), 0, ',', '.') }}</td>
                     <td class="px-4 py-4 text-right text-sm border text-red-600">Rp {{ number_format($items->sum('unpaid_monthly'), 0, ',', '.') }}</td>
                     <td class="px-4 py-4 text-right text-sm border text-green-700">Rp {{ number_format($items->sum('paid_service'), 0, ',', '.') }}</td>
