@@ -247,7 +247,8 @@ class Home extends Controller
                         ],
                     ],
                 ];
-                FirebaseMessage::sendFCMMessage($message);
+               $res = FirebaseMessage::sendFCMMessage($message);
+            //    dd($res);
             }
 
             return back();
