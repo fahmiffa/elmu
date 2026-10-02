@@ -2066,7 +2066,7 @@ class Home extends Controller
         // Data Murid (Head) - semua untuk grafik
         $allHeads = \App\Models\Head::with(['murid', 'programs', 'class'])->where('unit', $id)->get();
 
-        // Data Murid (Head) - paginated dengan search
+        // Data Murid (Head) - paginated dengan search & filter
         $headsQuery = \App\Models\Head::with(['murid', 'programs', 'class'])->where('unit', $id);
         if ($request->filled('search')) {
             $search = $request->search;
@@ -2075,7 +2075,16 @@ class Home extends Controller
                   ->orWhere('nama_panggilan', 'like', "%{$search}%");
             });
         }
+        if ($request->filled('status')) {
+            $headsQuery->where('done', $request->status);
+        }
+        if ($request->filled('program')) {
+            $headsQuery->where('program', $request->program);
+        }
         $heads = $headsQuery->paginate(10)->withQueryString();
+
+        // Data untuk dropdown filter
+        $programs = \App\Models\Program::all();
         
         // Data Grafik Murid Aktif berdasarkan Program
         $activeHeads = $allHeads->where('done', 0);
@@ -2138,7 +2147,7 @@ class Home extends Controller
 
         return view('home.unit_info_detail', compact(
             'unit', 'heads', 'studentChartLabels', 'studentChartData', 
-            'months', 'statusMuridData', 'statusBayarData', 'filterYear', 'years'
+            'months', 'statusMuridData', 'statusBayarData', 'filterYear', 'years', 'programs'
         ));
     }
 }

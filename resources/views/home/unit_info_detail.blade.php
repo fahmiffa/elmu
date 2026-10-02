@@ -91,13 +91,32 @@
     <div class="mt-8">
         <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Daftar Murid Terdaftar</h3>
         
-        <!-- Search Form -->
+        <!-- Search & Filter Form -->
         <form method="GET" class="mb-4 flex flex-wrap items-center gap-2">
             <input type="hidden" name="year" value="{{ $filterYear }}">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / nama panggilan..."
-                class="w-full md:w-1/3 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+                class="w-full md:w-1/4 border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966]" />
+            
+            <select name="status" onchange="this.form.submit()"
+                class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966] text-sm">
+                <option value="">Semua Status</option>
+                <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Aktif</option>
+                <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Lulus</option>
+                <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Cuti</option>
+                <option value="3" {{ request('status') === '3' ? 'selected' : '' }}>Keluar</option>
+                <option value="4" {{ request('status') === '4' ? 'selected' : '' }}>Pindah</option>
+            </select>
+
+            <select name="program" onchange="this.form.submit()"
+                class="border border-gray-300 ring-0 rounded-xl px-3 py-2 focus:outline-[#FF9966] text-sm">
+                <option value="">Semua Program</option>
+                @foreach($programs as $prog)
+                    <option value="{{ $prog->id }}" {{ request('program') == $prog->id ? 'selected' : '' }}>{{ $prog->name }}</option>
+                @endforeach
+            </select>
+
             <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 transition text-sm">Cari</button>
-            @if(request('search'))
+            @if(request('search') || request('status') !== null && request('status') !== '' || request('program'))
                 <a href="{{ route('dashboard.unit.info.detail', $unit->id) }}?year={{ $filterYear }}" class="bg-gray-400 text-white px-4 py-2 rounded-xl hover:bg-gray-500 transition text-sm">Reset</a>
             @endif
         </form>
