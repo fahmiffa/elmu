@@ -1606,49 +1606,103 @@ class Home extends Controller
     {
         $bulan = $request->input('bulan', (int)date('m'));
         $tahun = $request->input('tahun', (int)date('Y'));
+        $tipe = $request->input('tipe', 'siswa'); // 'siswa' or 'program'
 
-        $query = Unit::query();
-        if (Auth::user()->role == 4) {
-            $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
-            $query->whereIn('id', $unitIds);
+        if ($tipe === 'program') {
+            $query = Head::with('units', 'programs')->has('murid')->where('done', 0);
+            if (Auth::user()->role == 4) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $query->whereIn('unit', $unitIds);
+            }
+
+            $heads = $query->get();
+            $grouped = $heads->groupBy(function($item) {
+                return $item->unit . '-' . $item->program;
+            });
+
+            $items = collect();
+            foreach ($grouped as $group) {
+                $first = $group->first();
+                $headIds = $group->pluck('id');
+
+                $paidMonthly = Paid::whereIn('head', $headIds)
+                    ->where('bulan', $bulan)
+                    ->where('tahun', $tahun)
+                    ->get();
+                
+                $paidService = Order::whereIn('head', $headIds)
+                    ->whereMonth('created_at', $bulan)
+                    ->whereYear('created_at', $tahun)
+                    ->with('product')
+                    ->get();
+
+                $items->push((object)[
+                    'name' => ($first->units->name ?? 'Unknown') . ' - ' . ($first->programs->name ?? 'Unknown'),
+                    'total_siswa' => $group->count(),
+                    'paid_monthly' => $paidMonthly->where('status', 1)->sum('total'),
+                    'unpaid_monthly' => $paidMonthly->where('status', '!=', 1)->sum('total'),
+                    'paid_service' => $paidService->where('status', 1)->sum(function($o) { return $o->product->harga ?? 0; }),
+                    'unpaid_service' => $paidService->where('status', '!=', 1)->sum(function($o) { return $o->product->harga ?? 0; }),
+                ]);
+            }
+            $items = $items->sortBy('name')->values();
+        } else {
+            $query = Unit::query();
+            if (Auth::user()->role == 4) {
+                $unitIds = Zone_units::where('zone_id', Auth::user()->zone_id)->pluck('unit_id');
+                $query->whereIn('id', $unitIds);
+            }
+
+            $items = $query->get()->map(function ($unit) use ($bulan, $tahun) {
+                $headIds = Head::has('murid')->where('unit', $unit->id)->where('done', 0)->pluck('id');
+
+                $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {
+                    $q->where('unit', $unit->id)->where('done', 0);
+                })->count();
+
+                $unit->active_programs = Head::with('programs')
+                    ->where('unit', $unit->id)
+                    ->where('done', 0)
+                    ->has('murid')
+                    ->get()
+                    ->groupBy(function ($head) {
+                        return $head->programs->name ?? 'Unknown';
+                    })
+                    ->map(function ($group, $name) {
+                        return (object)['name' => $name, 'total' => $group->count()];
+                    })
+                    ->values();
+
+                // Total Monthly Payment
+                $paidMonthly = Paid::whereIn('head', $headIds)
+                    ->where('bulan', $bulan)
+                    ->where('tahun', $tahun)
+                    ->get();
+
+                $unit->paid_monthly = $paidMonthly->where('status', 1)->sum(function ($p) {
+                    return $p->total;
+                });
+                $unit->unpaid_monthly = $paidMonthly->where('status', '!=', 1)->sum(function ($p) {
+                    return $p->total;
+                });
+
+                // Total Service Payment
+                $paidService = Order::whereIn('head', $headIds)
+                    ->whereMonth('created_at', $bulan)
+                    ->whereYear('created_at', $tahun)
+                    ->with('product')
+                    ->get();
+
+                $unit->paid_service = $paidService->where('status', 1)->sum(function ($o) {
+                    return $o->product->harga ?? 0;
+                });
+                $unit->unpaid_service = $paidService->where('status', '!=', 1)->sum(function ($o) {
+                    return $o->product->harga ?? 0;
+                });
+
+                return $unit;
+            });
         }
-
-        $items = $query->get()->map(function ($unit) use ($bulan, $tahun) {
-            $headIds = Head::has('murid')->where('unit', $unit->id)->where('done', 0)->pluck('id');
-
-            $unit->total_siswa = Student::whereHas('reg', function ($q) use ($unit) {
-                $q->where('unit', $unit->id)->where('done', 0);
-            })->count();
-
-            // Total Monthly Payment
-            $paidMonthly = Paid::whereIn('head', $headIds)
-                ->where('bulan', $bulan)
-                ->where('tahun', $tahun)
-                ->get();
-
-            $unit->paid_monthly = $paidMonthly->where('status', 1)->sum(function ($p) {
-                return $p->total;
-            });
-            $unit->unpaid_monthly = $paidMonthly->where('status', '!=', 1)->sum(function ($p) {
-                return $p->total;
-            });
-
-            // Total Service Payment
-            $paidService = Order::whereIn('head', $headIds)
-                ->whereMonth('created_at', $bulan)
-                ->whereYear('created_at', $tahun)
-                ->with('product')
-                ->get();
-
-            $unit->paid_service = $paidService->where('status', 1)->sum(function ($o) {
-                return $o->product->harga ?? 0;
-            });
-            $unit->unpaid_service = $paidService->where('status', '!=', 1)->sum(function ($o) {
-                return $o->product->harga ?? 0;
-            });
-
-            return $unit;
-        });
 
         $now   = (int) date('Y');
         $start = (int) env('APP_START', 2025);
@@ -1679,6 +1733,7 @@ class Home extends Controller
     {
         $bulan = $request->input('bulan', (int)date('m'));
         $tahun = $request->input('tahun', (int)date('Y'));
+        $tipe = $request->input('tipe', 'siswa');
 
         $bulanMap = [
             1 => 'Januari',
@@ -1697,7 +1752,7 @@ class Home extends Controller
 
         $bulanName = $bulanMap[$bulan];
 
-        return Excel::download(new UnitReportExport($bulan, $tahun, $bulanName), 'Laporan-Unit-' . $bulanName . '-' . $tahun . '.xlsx');
+        return Excel::download(new UnitReportExport($bulan, $tahun, $bulanName, $tipe), 'Laporan-Unit-' . $bulanName . '-' . $tahun . '.xlsx');
     }
 
     public function chart($par)
