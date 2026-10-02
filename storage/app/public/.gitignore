@@ -1,2 +1,14 @@
 *
 !.gitignore
+
+!campaign/
+!campaign/**
+
+!images/
+!images/**
+
+!materi/
+!materi/**
+
+!raport/
+!raport/**
