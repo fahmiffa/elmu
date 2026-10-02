@@ -126,6 +126,7 @@ class ProgramController extends Controller
 
         $action = "Edit Program";
         $kelas  = Kelas::all();
+        dd($data,$items);
         return view('master.program.form', compact('items', 'action', 'kelas', 'data'));
     }
 

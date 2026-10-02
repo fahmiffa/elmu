@@ -51,6 +51,8 @@ Route::prefix('dashboard')->middleware('auth')->name('dashboard.')->group(functi
     Route::get('/', [Home::class, 'index'])->name('home');
     Route::get('/akademik', [Home::class, 'akademik'])->name('akademik');
     Route::get('/akademik/{id}/detail', [Home::class, 'akademikDetail'])->middleware('isRole')->name('akademik.detail');
+    Route::get('/unit-info', [Home::class, 'unitInfo'])->name('unit.info');
+    Route::get('/unit-info/{id}', [Home::class, 'unitInfoDetail'])->name('unit.info.detail');
     Route::get('/laporan-unit', [Home::class, 'reportUnit'])->middleware('isRole')->name('report.unit');
     Route::get('/laporan-unit/export', [Home::class, 'reportUnitExport'])->middleware('isRole')->name('report.unit.export');
     Route::get('/fierbase', [Home::class, 'fcm'])->name('fcm');

@@ -2040,4 +2040,105 @@ class Home extends Controller
 
         return back()->with('success', 'Password berhasil diperbarui.');
     }
+
+    public function unitInfo()
+    {
+        $units = \App\Models\Unit::all();
+        $data = [];
+        foreach ($units as $unit) {
+            $heads = \App\Models\Head::where('unit', $unit->id)->where('done', 0)->get();
+            $data[] = (object)[
+                'id' => $unit->id,
+                'name' => $unit->name,
+                'student_count' => $heads->pluck('students')->unique()->count(),
+                'program_count' => $heads->pluck('program')->unique()->count(),
+            ];
+        }
+
+        return view('home.unit_info', compact('data'));
+    }
+
+    public function unitInfoDetail(\Illuminate\Http\Request $request, $id)
+    {
+        $unit = \App\Models\Unit::with('zone')->findOrFail($id);
+        $filterYear = $request->input('year', date('Y'));
+        
+        // Data Murid (Head) - semua untuk grafik
+        $allHeads = \App\Models\Head::with(['murid', 'programs', 'class'])->where('unit', $id)->get();
+
+        // Data Murid (Head) - paginated dengan search
+        $headsQuery = \App\Models\Head::with(['murid', 'programs', 'class'])->where('unit', $id);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $headsQuery->whereHas('murid', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nama_panggilan', 'like', "%{$search}%");
+            });
+        }
+        $heads = $headsQuery->paginate(10)->withQueryString();
+        
+        // Data Grafik Murid Aktif berdasarkan Program
+        $activeHeads = $allHeads->where('done', 0);
+        $studentChartLabels = [];
+        $studentChartData = [];
+        foreach($activeHeads->groupBy(function($q) { return $q->programs->name ?? 'Unknown'; }) as $prog => $group) {
+            $studentChartLabels[] = $prog;
+            $studentChartData[] = $group->count();
+        }
+
+        // --- CHART STATUS MURID PER BULAN (Berdasarkan Waktu Daftar) ---
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $statusMuridData = [
+            'Aktif' => array_fill(0, 12, 0),
+            'Lulus' => array_fill(0, 12, 0),
+            'Cuti' => array_fill(0, 12, 0),
+            'Keluar' => array_fill(0, 12, 0),
+            'Pindah' => array_fill(0, 12, 0),
+        ];
+
+        foreach ($allHeads as $head) {
+            $date = \Carbon\Carbon::parse($head->created_at);
+            if ($date->year == $filterYear) {
+                $monthIndex = $date->month - 1;
+                $statusMuridData[$head->status][$monthIndex]++;
+            }
+        }
+
+        // --- CHART STATUS PEMBAYARAN PER BULAN ---
+        $payments = \App\Models\Paid::whereHas('reg', function($q) use ($id) {
+                $q->where('unit', $id);
+            })
+            ->where('tahun', $filterYear)
+            ->get();
+            
+        $statusBayarData = [
+            'Lunas' => array_fill(0, 12, 0),
+            'Tagihan' => array_fill(0, 12, 0),
+            'Menunggu' => array_fill(0, 12, 0),
+        ];
+
+        foreach ($payments as $pay) {
+            $mIndex = intval($pay->bulan) - 1;
+            if ($mIndex >= 0 && $mIndex < 12) {
+                if ($pay->status == 1) {
+                    $statusBayarData['Lunas'][$mIndex]++;
+                } elseif ($pay->status == 2) {
+                    $statusBayarData['Menunggu'][$mIndex]++;
+                } else {
+                    $statusBayarData['Tagihan'][$mIndex]++;
+                }
+            }
+        }
+
+        $years = [];
+        $startYear = intval(env('APP_START', 2025));
+        for ($y = date('Y'); $y >= $startYear; $y--) {
+            $years[] = $y;
+        }
+
+        return view('home.unit_info_detail', compact(
+            'unit', 'heads', 'studentChartLabels', 'studentChartData', 
+            'months', 'statusMuridData', 'statusBayarData', 'filterYear', 'years'
+        ));
+    }
 }
