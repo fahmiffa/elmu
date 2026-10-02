@@ -210,6 +210,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Client-side Pagination (Alpine.js) -->
+            <div class="flex justify-between items-center mt-4 text-sm" x-show="totalPages() > 1">
+                <button @click="prevPage()" :disabled="currentPage === 1"
+                    class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Prev</button>
+
+                <span class="text-gray-600">Halaman <span x-text="currentPage"></span> dari <span x-text="totalPages()"></span></span>
+
+                <button @click="nextPage()" :disabled="currentPage === totalPages()"
+                    class="px-3 py-1 text-white rounded bg-orange-500 hover:bg-orange-600 disabled:opacity-50">Next</button>
+            </div>
+
+            <!-- Server-side Pagination (Laravel) -->
             <div class="mt-4">
                 {{ $items->links() }}
             </div>
